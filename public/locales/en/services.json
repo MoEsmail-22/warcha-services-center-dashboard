@@ -1,1 +1,40 @@
-﻿{}
+﻿{
+  "title": "Services & Pricing",
+  "subtitle": "Control what you offer and what customers see.",
+  "addService": "Add Service",
+  "loading": "Loading services...",
+  "table": {
+    "serviceName": "Service Name",
+    "category": "Category",
+    "duration": "Duration",
+    "price": "Price",
+    "status": "Status"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "categories": {
+    "maintenance": "Maintenance",
+    "repair": "Repair",
+    "diagnostics": "Diagnostics",
+    "bodywork": "Bodywork"
+  },
+  "modal": {
+    "title": "Add Service"
+  },
+  "fields": {
+    "nameEn": "Service Name (English)",
+    "nameAr": "Service Name (Arabic)",
+    "category": "Category",
+    "selectCategory": "Select category",
+    "price": "Price (EGP)",
+    "duration": "Duration (minutes)",
+    "descriptionEn": "Description (English)",
+    "descriptionAr": "Description (Arabic)"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "save": "Add Service"
+  }
+}

@@ -1,156 +1,38 @@
 import { useState, useMemo } from 'react';
-import {
-  Search,
-  SlidersHorizontal,
-  Plus,
-  MoreHorizontal,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { Search, SlidersHorizontal, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useBookings } from '../contexts/BookingsContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import StatusBadge from '../components/widgets/StatusBadge';
 import Avatar from '../components/ui/Avatar';
-import NewBookingDrawer from '../components/widgets/NewBookingDrawer';
 import FilterBookingsDrawer from '../components/widgets/FilterBookingsDrawer';
 import BookingDetailsDrawer from '../components/widgets/BookingDetailsDrawer';
-
-const FILTER_TABS = [
-  { key: 'all', label: 'All' },
-  { key: 'today', label: 'Today' },
-  { key: 'week', label: 'Week' },
-  { key: 'month', label: 'Month' },
-];
-
-const SERVICE_TO_STATUS = {
-  'Brake Check': 'Brake Check',
-  'Oil Change': 'Oil Change',
-  Engine: 'Engine Diagnostic',
-  'AC Repair': 'AC Repair',
-};
-
-function formatDate(isoDate) {
-  if (!isoDate) return '';
-  const d = new Date(isoDate);
-  if (isNaN(d)) return isoDate;
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-}
-
-function isToday(isoDate) {
-  if (!isoDate) return false;
-  const today = new Date().toISOString().split('T')[0];
-  return isoDate === today;
-}
-
-function isThisWeek(isoDate) {
-  if (!isoDate) return false;
-  const date = new Date(isoDate);
-  if (isNaN(date)) return false;
-  const now = new Date();
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start
-  startOfWeek.setHours(0, 0, 0, 0);
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 7);
-  return date >= startOfWeek && date < endOfWeek;
-}
-
-function isThisMonth(isoDate) {
-  if (!isoDate) return false;
-  const date = new Date(isoDate);
-  if (isNaN(date)) return false;
-  const now = new Date();
-  return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-}
-
-// Main filter: tab + search + advanced filters
-function applyFilters(bookings, { tab, search, advanced }) {
-  let result = bookings;
-
-  // ---- Tab filter ----
-  if (tab === 'today') result = result.filter((b) => isToday(b.date));
-  else if (tab === 'week') result = result.filter((b) => isThisWeek(b.date));
-  else if (tab === 'month') result = result.filter((b) => isThisMonth(b.date));
-
-  // ---- Advanced filter: customer name search (from filter panel) ----
-  if (advanced?.search?.trim()) {
-    const q = advanced.search.toLowerCase();
-    result = result.filter((b) => b.customer.name.toLowerCase().includes(q));
-  }
-
-  // ---- Advanced filter: service types (checkboxes) ----
-  if (advanced?.services?.length > 0) {
-    result = result.filter((b) =>
-      advanced.services.some((s) => {
-        const mapped = SERVICE_TO_STATUS[s] ?? s;
-        return b.service.toLowerCase().includes(mapped.toLowerCase());
-      })
-    );
-  }
-
-  // ---- Advanced filter: status ----
-  if (advanced?.status) {
-    const statusMap = {
-      Pending: 'pending',
-      Confirmed: 'confirmed',
-      'In Progress': 'in_progress',
-      Completed: 'completed',
-    };
-    const targetStatus = statusMap[advanced.status] ?? advanced.status.toLowerCase();
-    result = result.filter((b) => b.status === targetStatus);
-  }
-
-  // ---- Advanced filter: date range ----
-  if (advanced?.dateFrom) {
-    result = result.filter((b) => b.date >= advanced.dateFrom);
-  }
-  if (advanced?.dateTo) {
-    result = result.filter((b) => b.date <= advanced.dateTo);
-  }
-
-  // ---- Top search bar (separate from advanced filter search) ----
-  if (search?.trim()) {
-    const q = search.toLowerCase();
-    result = result.filter(
-      (b) =>
-        b.id.toLowerCase().includes(q) ||
-        b.customer.name.toLowerCase().includes(q) ||
-        b.vehicle.toLowerCase().includes(q) ||
-        b.service.toLowerCase().includes(q) ||
-        b.technician.name.toLowerCase().includes(q)
-    );
-  }
-
-  return result;
-}
+import Pagination from '../components/widgets/Pagination';
+import { BOOKING_FILTER_TABS, BOOKINGS_PAGE_SIZE } from '../constants/bookingFilters';
+import { filterBookings, formatBookingDate } from '../utils/bookingHelpers';
 
 export default function BookingsPage() {
   const { t } = useAppTranslation('bookings');
-  const { bookings, addBooking, updateBookingStatus } = useBookings();
+  const { bookings } = useBookings();
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [advancedFilters, setAdvancedFilters] = useState(null);
-  const pageSize = 8;
 
   // ---- Drawer state ----
-  const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
 
   const filtered = useMemo(
-    () => applyFilters(bookings, { tab: activeTab, search, advanced: advancedFilters }),
+    () => filterBookings(bookings, { tab: activeTab, search, advanced: advancedFilters }),
     [bookings, activeTab, search, advancedFilters]
   );
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / BOOKINGS_PAGE_SIZE));
   const currentPageSafe = Math.min(currentPage, totalPages);
-  const paginated = filtered.slice((currentPageSafe - 1) * pageSize, currentPageSafe * pageSize);
-
-  // ---- Handlers (NOW ACTUALLY MUTATE STATE) ----
-  const handleCreateBooking = (formData) => {
-    addBooking(formData); // adds to context state → table updates instantly
-  };
+  const paginated = filtered.slice(
+    (currentPageSafe - 1) * BOOKINGS_PAGE_SIZE,
+    currentPageSafe * BOOKINGS_PAGE_SIZE
+  );
 
   const handleApplyFilters = (filters) => {
     setAdvancedFilters(filters);
@@ -161,21 +43,6 @@ export default function BookingsPage() {
     setAdvancedFilters(null);
     setCurrentPage(1);
   };
-
-  const handleAccept = (booking) => {
-    updateBookingStatus(booking.id, 'confirmed');
-    setSelectedBooking(null);
-  };
-
-  const handleDecline = (booking) => {
-    updateBookingStatus(booking.id, 'cancelled');
-    setSelectedBooking(null);
-  };
-
-  // Keep selectedBooking in sync after status change (so drawer shows updated timeline)
-  const selectedBookingLive = selectedBooking
-    ? (bookings.find((b) => b.id === selectedBooking.id) ?? null)
-    : null;
 
   // Check if advanced filters are active
   const hasActiveFilters =
@@ -201,21 +68,12 @@ export default function BookingsPage() {
             {t('subtitle', { defaultValue: 'Manage and schedule incoming service requests.' })}
           </p>
         </div>
-
-        <button
-          onClick={() => setNewBookingOpen(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-lg px-4 text-white shadow-sm transition-opacity hover:opacity-90"
-          style={{ backgroundColor: '#0E5C5B', height: '40px', fontWeight: 600, fontSize: '14px' }}
-        >
-          <Plus className="h-4 w-4" />
-          {t('newBooking', { defaultValue: 'New booking' })}
-        </button>
       </div>
 
       {/* ============ FILTERS + SEARCH ============ */}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          {FILTER_TABS.map((tab) => (
+          {BOOKING_FILTER_TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => {
@@ -350,7 +208,7 @@ export default function BookingsPage() {
                     </td>
                     <td className="px-4 py-3.5 text-sm text-[#15201F]">
                       <div>
-                        <p>{formatDate(booking.date)}</p>
+                        <p>{formatBookingDate(booking.date)}</p>
                         <p className="text-xs text-[#5A6968]">{booking.time}</p>
                       </div>
                     </td>
@@ -373,66 +231,73 @@ export default function BookingsPage() {
           </table>
         </div>
 
-        {/* ============ PAGINATION ============ */}
-        <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
-          <p className="text-xs text-[#5A6968]">
-            {t('showing', { defaultValue: 'Showing' })}{' '}
-            <span className="font-semibold text-[#15201F]">
-              {filtered.length === 0 ? 0 : (currentPageSafe - 1) * pageSize + 1}–
-              {Math.min(currentPageSafe * pageSize, filtered.length)}
-            </span>{' '}
-            {t('of', { defaultValue: 'of' })}{' '}
-            <span className="font-semibold text-[#15201F]">{filtered.length}</span>
-          </p>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPageSafe === 1}
-              className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+        <Pagination
+          currentPage={currentPageSafe}
+          totalItems={filtered.length}
+          pageSize={BOOKINGS_PAGE_SIZE}
+          onPageChange={setCurrentPage}
+          labels={{
+            showing: t('showing', { defaultValue: 'Showing' }),
+            of: t('of', { defaultValue: 'of' }),
+            previous: t('previousPage', { defaultValue: 'Previous page' }),
+            next: t('nextPage', { defaultValue: 'Next page' }),
+          }}
+        />
+
+        {false && (
+          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
+            <p className="text-xs text-[#5A6968]">
+              {t('showing', { defaultValue: 'Showing' })}{' '}
+              <span className="font-semibold text-[#15201F]">
+                {filtered.length === 0 ? 0 : (currentPageSafe - 1) * BOOKINGS_PAGE_SIZE + 1}–
+                {Math.min(currentPageSafe * BOOKINGS_PAGE_SIZE, filtered.length)}
+              </span>{' '}
+              {t('of', { defaultValue: 'of' })}{' '}
+              <span className="font-semibold text-[#15201F]">{filtered.length}</span>
+            </p>
+            <div className="flex items-center gap-1">
               <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-semibold transition-colors ${
-                  currentPageSafe === page
-                    ? 'bg-[#0E5C5B] text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPageSafe === 1}
+                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {page}
+                <ChevronLeft className="h-4 w-4" />
               </button>
-            ))}
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPageSafe === totalPages}
-              className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-semibold transition-colors ${
+                    currentPageSafe === page
+                      ? 'bg-[#0E5C5B] text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPageSafe === totalPages}
+                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ============ DRAWERS ============ */}
-      <NewBookingDrawer
-        open={newBookingOpen}
-        onClose={() => setNewBookingOpen(false)}
-        onCreate={handleCreateBooking}
-      />
       <FilterBookingsDrawer
         open={filterOpen}
         onClose={() => setFilterOpen(false)}
         onApply={handleApplyFilters}
       />
       <BookingDetailsDrawer
-        open={!!selectedBookingLive}
+        open={!!selectedBooking}
         onClose={() => setSelectedBooking(null)}
-        booking={selectedBookingLive}
-        onAccept={handleAccept}
-        onDecline={handleDecline}
+        booking={selectedBooking}
       />
     </div>
   );

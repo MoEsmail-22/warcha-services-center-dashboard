@@ -20,32 +20,36 @@ export function Toggle({ checked, onChange, label, description, id, disabled }) 
       )}
 
       <div className="relative inline-flex items-center">
-        <input
-          id={id}
-          type="checkbox"
-          checked={checked}
-          disabled={disabled}
-          onChange={(e) => onChange?.(e.target.checked)}
-          className="peer sr-only"
-        />
+        <label className="relative inline-flex cursor-pointer items-center">
+          <input
+            id={id}
+            type="checkbox"
+            checked={checked}
+            disabled={disabled}
+            onChange={(e) => onChange?.(e.target.checked)}
+            className="peer sr-only"
+          />
 
-        {/* Track */}
-        <span
-          className={cn(
-            'block h-6 w-11 rounded-full transition-colors duration-200',
-            checked ? 'bg-primary' : 'bg-gray-300',
-            disabled && 'cursor-not-allowed opacity-50'
-          )}
-        />
+          {/* Track */}
+          <span
+            className={cn(
+              'block h-6 w-11 rounded-full transition-colors duration-200',
+              checked ? 'bg-primary' : 'bg-gray-300',
+              disabled && 'cursor-not-allowed opacity-50'
+            )}
+          />
 
-        {/* Thumb — RTL-aware positioning + movement */}
-        <span
-          className={cn(
-            'pointer-events-none absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200',
-            'ltr:left-0.5 rtl:right-0.5',
-            checked ? 'ltr:translate-x-5 rtl:-translate-x-5' : 'ltr:translate-x-0 rtl:translate-x-0'
-          )}
-        />
+          {/* Thumb — RTL-aware positioning + movement */}
+          <span
+            className={cn(
+              'pointer-events-none absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200',
+              'ltr:left-0.5 rtl:right-0.5',
+              checked
+                ? 'ltr:translate-x-5 rtl:-translate-x-5'
+                : 'ltr:translate-x-0 rtl:translate-x-0'
+            )}
+          />
+        </label>
       </div>
     </div>
   );
