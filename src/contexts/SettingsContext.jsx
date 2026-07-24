@@ -66,12 +66,9 @@ export function SettingsProvider({ children }) {
     return () => clearTimeout(timer);
   }, []);
 
-  const updateWorkshop = (updates) =>
-    dispatch({ type: 'UPDATE_WORKSHOP', payload: updates });
-  const updatePreferences = (updates) =>
-    dispatch({ type: 'UPDATE_PREFERENCES', payload: updates });
-  const togglePreference = (key) =>
-    dispatch({ type: 'TOGGLE_PREFERENCE', payload: key });
+  const updateWorkshop = (updates) => dispatch({ type: 'UPDATE_WORKSHOP', payload: updates });
+  const updatePreferences = (updates) => dispatch({ type: 'UPDATE_PREFERENCES', payload: updates });
+  const togglePreference = (key) => dispatch({ type: 'TOGGLE_PREFERENCE', payload: key });
 
   const value = {
     ...state,
@@ -80,9 +77,7 @@ export function SettingsProvider({ children }) {
     togglePreference,
   };
 
-  return (
-    <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
-  );
+  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }
 
 export function useSettings() {

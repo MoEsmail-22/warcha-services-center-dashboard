@@ -10,6 +10,7 @@
  *   const { data: bookings, loading, error } = useBookings();
  */
 import { createContext, useContext, useState } from 'react';
+import { MOCK_AVATAR_COLORS, MOCK_BOOKING_DEFAULTS } from '@/mocks/constants';
 // import mockBookings from '@/mocks/bookings.json';
 
 const BookingsContext = createContext(null);
@@ -17,13 +18,13 @@ const BookingsContext = createContext(null);
 const mockBookings = [
   {
     id: 'BK-9402',
-    customer: { name: 'Sara K.', initials: 'SK', avatarColor: '#3B82F6' },
+    customer: { name: 'Sara K.', initials: 'SK', avatarColor: MOCK_AVATAR_COLORS.customer },
     vehicle: 'Hyundai Elantra 2020',
     service: 'Brake Check',
-    technician: { name: 'Hazem M.', initials: 'HM', avatarColor: '#9CA3AF' },
+    technician: { name: 'Hazem M.', initials: 'HM', avatarColor: MOCK_AVATAR_COLORS.technician },
     date: '2026-07-13',
     time: '10:30 AM',
-    status: 'pending',
+    status: MOCK_BOOKING_DEFAULTS.status,
     createdAt: 'July 11, 2024 at 11:20 AM',
     serviceBreakdown: [
       {
@@ -45,17 +46,17 @@ const mockBookings = [
         id: 2,
         label: 'Technician Confirmation',
         timestamp: null,
-        note: 'Pending approval',
+        note: MOCK_BOOKING_DEFAULTS.pendingApprovalNote,
         done: false,
       },
     ],
   },
   {
     id: 'BK-9403',
-    customer: { name: 'John D.', initials: 'JD', avatarColor: '#3B82F6' },
+    customer: { name: 'John D.', initials: 'JD', avatarColor: MOCK_AVATAR_COLORS.customer },
     vehicle: 'Toyota Camry 2021',
     service: 'Oil Change',
-    technician: { name: 'Omar T.', initials: 'OT', avatarColor: '#9CA3AF' },
+    technician: { name: 'Omar T.', initials: 'OT', avatarColor: MOCK_AVATAR_COLORS.technician },
     date: '2026-07-13',
     time: '11:45 AM',
     status: 'confirmed',
@@ -87,10 +88,10 @@ const mockBookings = [
   },
   {
     id: 'BK-9404',
-    customer: { name: 'Mike R.', initials: 'MR', avatarColor: '#3B82F6' },
+    customer: { name: 'Mike R.', initials: 'MR', avatarColor: MOCK_AVATAR_COLORS.customer },
     vehicle: 'Ford F-150 2022',
     service: 'Brake Pad',
-    technician: { name: 'Youssef H.', initials: 'YH', avatarColor: '#9CA3AF' },
+    technician: { name: 'Youssef H.', initials: 'YH', avatarColor: MOCK_AVATAR_COLORS.technician },
     date: '2026-07-13',
     time: '2:00 PM',
     status: 'in_progress',
@@ -122,10 +123,10 @@ const mockBookings = [
   },
   {
     id: 'BK-9405',
-    customer: { name: 'Alice L.', initials: 'AL', avatarColor: '#3B82F6' },
+    customer: { name: 'Alice L.', initials: 'AL', avatarColor: MOCK_AVATAR_COLORS.customer },
     vehicle: 'Honda Civic 2019',
     service: 'Tire Rotation',
-    technician: { name: 'Zara M.', initials: 'ZM', avatarColor: '#9CA3AF' },
+    technician: { name: 'Zara M.', initials: 'ZM', avatarColor: MOCK_AVATAR_COLORS.technician },
     date: '2026-07-14',
     time: '9:00 AM',
     status: 'completed',
@@ -157,10 +158,10 @@ const mockBookings = [
   },
   {
     id: 'BK-9406',
-    customer: { name: 'Nadia F.', initials: 'NF', avatarColor: '#3B82F6' },
+    customer: { name: 'Nadia F.', initials: 'NF', avatarColor: MOCK_AVATAR_COLORS.customer },
     vehicle: 'Nissan Sunny 2021',
     service: 'General Check',
-    technician: { name: 'Hazem M.', initials: 'HM', avatarColor: '#9CA3AF' },
+    technician: { name: 'Hazem M.', initials: 'HM', avatarColor: MOCK_AVATAR_COLORS.technician },
     date: '2026-07-14',
     time: '1:00 PM',
     status: 'cancelled',
@@ -192,13 +193,13 @@ const mockBookings = [
   },
   {
     id: 'BK-9407',
-    customer: { name: 'Khaled A.', initials: 'KA', avatarColor: '#3B82F6' },
+    customer: { name: 'Khaled A.', initials: 'KA', avatarColor: MOCK_AVATAR_COLORS.customer },
     vehicle: 'Kia Sportage 2022',
     service: 'AC Repair',
-    technician: { name: 'Omar T.', initials: 'OT', avatarColor: '#9CA3AF' },
+    technician: { name: 'Omar T.', initials: 'OT', avatarColor: MOCK_AVATAR_COLORS.technician },
     date: '2026-07-15',
     time: '3:30 PM',
-    status: 'pending',
+    status: MOCK_BOOKING_DEFAULTS.status,
     createdAt: 'July 12, 2024 at 4:00 PM',
     serviceBreakdown: [
       {
@@ -220,7 +221,7 @@ const mockBookings = [
         id: 2,
         label: 'Technician Confirmation',
         timestamp: null,
-        note: 'Pending approval',
+        note: MOCK_BOOKING_DEFAULTS.pendingApprovalNote,
         done: false,
       },
     ],
@@ -290,7 +291,7 @@ export function BookingsProvider({ children }) {
       breakdownLabel: formData.serviceType,
       description: '',
       price: 0,
-      duration: '60 mins est.',
+      duration: MOCK_BOOKING_DEFAULTS.estimatedDuration,
     };
 
     // Generate next booking ID (e.g., BK-9408)
@@ -333,18 +334,18 @@ export function BookingsProvider({ children }) {
       customer: {
         name: formData.customerName,
         initials: customerInitials,
-        avatarColor: '#3B82F6',
+        avatarColor: MOCK_AVATAR_COLORS.customer,
       },
       vehicle: formData.vehicle,
       service: formData.serviceType,
       technician: {
         name: formData.technician,
         initials: TECHNICIAN_INITIALS[formData.technician] ?? 'TE',
-        avatarColor: '#9CA3AF',
+        avatarColor: MOCK_AVATAR_COLORS.technician,
       },
       date: formData.date,
       time: formatTime(formData.time),
-      status: 'pending',
+      status: MOCK_BOOKING_DEFAULTS.status,
       createdAt,
       serviceBreakdown: [
         {
@@ -369,7 +370,7 @@ export function BookingsProvider({ children }) {
           id: 2,
           label: 'Technician Confirmation',
           timestamp: null,
-          note: 'Pending approval',
+          note: MOCK_BOOKING_DEFAULTS.pendingApprovalNote,
           done: false,
         },
       ],

@@ -1,65 +1,31 @@
 import { createContext, useContext, useState } from 'react';
+import { MOCK_AVATAR_COLORS, MOCK_QUOTE_DEFAULTS } from '@/mocks/constants';
+import quoteMockData from '@/mocks/quotes.json';
 
 const QuotesContext = createContext(null);
 
-const mockRecentQuotes = [
-  {
-    id: 'Q-2401',
-    customer: { name: 'Omar T.', initials: 'OT', avatarColor: '#3B82F6' },
-    vehicle: 'Kia Sportage',
-    service: 'A/C repair',
-    amount: 1850,
-    status: 'sent',
-    sentAt: 'Jul 12, 2026',
-  },
-  {
-    id: 'Q-2402',
-    customer: { name: 'Youssef H.', initials: 'YH', avatarColor: '#3B82F6' },
-    vehicle: 'Honda Civic',
-    service: 'Oil + filter',
-    amount: 470,
-    status: 'accepted',
-    sentAt: 'Jul 11, 2026',
-  },
-  {
-    id: 'Q-2403',
-    customer: { name: 'Mostafa R.', initials: 'MR', avatarColor: '#3B82F6' },
-    vehicle: 'Chevrolet Optra',
-    service: 'Suspension',
-    amount: 2400,
-    status: 'accepted',
-    sentAt: 'Jul 10, 2026',
-  },
-  {
-    id: 'Q-2404',
-    customer: { name: 'Laila S.', initials: 'LS', avatarColor: '#3B82F6' },
-    vehicle: 'Toyota Yaris',
-    service: 'Battery',
-    amount: 1100,
-    status: 'rejected',
-    sentAt: 'Jul 09, 2026',
-  },
-];
+const createDefaultLineItems = () => quoteMockData.defaultLineItems.map((item) => ({ ...item }));
 
-// Default line items for a new quote
-const defaultLineItems = [
-  { id: 1, label: 'Oil change (labor + 5W-30)', amount: 250 },
-  { id: 2, label: 'Oil filter replacement', amount: 120 },
-  { id: 3, label: 'Air filter (worn out)', amount: 190 },
-];
+// JSON cannot import JavaScript constants, so apply the shared avatar default
+// while reading the quote mock data.
+const createRecentQuotes = () =>
+  quoteMockData.recentQuotes.map((quote) => ({
+    ...quote,
+    customer: { ...quote.customer, avatarColor: MOCK_AVATAR_COLORS.customer },
+  }));
 
 export function QuotesProvider({ children }) {
-  const [recentQuotes, setRecentQuotes] = useState(mockRecentQuotes);
-  const [lineItems, setLineItems] = useState(defaultLineItems);
+  // quotes.json is the single source of truth for the initial quote data.
+  const [recentQuotes, setRecentQuotes] = useState(createRecentQuotes);
+  const [lineItems, setLineItems] = useState(createDefaultLineItems);
 
-  // ---- Line item CRUD ----
   const addLineItem = () => {
-    setLineItems((prev) => [...prev, { id: Date.now(), label: '', amount: 0 }]);
+    setLineItems((previous) => [...previous, { id: Date.now(), label: '', amount: 0 }]);
   };
 
   const updateLineItem = (id, field, value) => {
-    setLineItems((prev) =>
-      prev.map((item) =>
+    setLineItems((previous) =>
+      previous.map((item) =>
         item.id === id
           ? { ...item, [field]: field === 'amount' ? Number(value) || 0 : value }
           : item
@@ -68,47 +34,44 @@ export function QuotesProvider({ children }) {
   };
 
   const removeLineItem = (id) => {
-    setLineItems((prev) => prev.filter((item) => item.id !== id));
+    setLineItems((previous) => previous.filter((item) => item.id !== id));
   };
 
-  // ---- Send quote to customer ----
   const sendQuote = ({ customer, vehicle }) => {
     const total = lineItems.reduce((sum, item) => sum + (item.amount || 0), 0);
     const newQuote = {
       id: `Q-${2400 + recentQuotes.length + 1}`,
       customer: {
-        name: customer || 'Walk-in customer',
+        name: customer || MOCK_QUOTE_DEFAULTS.customerName,
         initials:
           customer
             ?.split(' ')
-            .map((n) => n[0])
+            .map((name) => name[0])
             .join('')
             .toUpperCase()
             .slice(0, 2) ?? 'WC',
-        avatarColor: '#3B82F6',
+        avatarColor: MOCK_AVATAR_COLORS.customer,
       },
       vehicle: vehicle || '—',
       service:
         lineItems
-          .map((i) => i.label)
+          .map((item) => item.label)
           .filter(Boolean)
-          .join(', ') || 'Custom quote',
+          .join(', ') || MOCK_QUOTE_DEFAULTS.serviceName,
       amount: total,
-      status: 'sent',
+      status: MOCK_QUOTE_DEFAULTS.status,
       sentAt: new Date().toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
       }),
     };
-    setRecentQuotes((prev) => [newQuote, ...prev]);
-    // Reset line items
-    setLineItems(defaultLineItems);
+    setRecentQuotes((previous) => [newQuote, ...previous]);
+    setLineItems(createDefaultLineItems());
     return newQuote;
   };
 
   const total = lineItems.reduce((sum, item) => sum + (item.amount || 0), 0);
-
   const value = {
     recentQuotes,
     lineItems,
@@ -123,7 +86,7 @@ export function QuotesProvider({ children }) {
 }
 
 export function useQuotes() {
-  const ctx = useContext(QuotesContext);
-  if (!ctx) throw new Error('useQuotes must be used inside a <QuotesProvider>');
-  return ctx;
+  const context = useContext(QuotesContext);
+  if (!context) throw new Error('useQuotes must be used inside a <QuotesProvider>');
+  return context;
 }

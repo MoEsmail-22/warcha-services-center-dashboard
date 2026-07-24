@@ -2,12 +2,11 @@
  * Topbar — the white header bar at the top of every dashboard page.
  *
  * Layout (left to right):
- *   [☰]                    [🔍 Search...]            [AR] [🔔] [AA Ahmed Auto ▼]
+ *   [☰]                    [🔍 Search...]            [AR] [AA Ahmed Auto ▼]
  *                                                       (mobile only shows dropdown)
  *
  * Matches Figma:
  *   - NO page title on the left (the search bar takes that space on desktop)
- *   - Notification bell in a rounded SQUARE (gray background)
  *   - Avatar in a rounded SQUARE (teal background, white initials)
  *   - User name + role ("Owner") next to avatar
  *
@@ -16,15 +15,7 @@
  *   user        → the current user object from AuthContext { name, email, ... }
  */
 import { useState, useRef, useEffect } from 'react';
-import {
-  Menu,
-  Bell,
-  Search,
-  Globe,
-  LogOut,
-  Settings as SettingsIcon,
-  ChevronDown,
-} from 'lucide-react';
+import { Menu, Search, Globe, LogOut, Settings as SettingsIcon, ChevronDown } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
@@ -65,7 +56,7 @@ export default function Topbar({ onMenuClick, user }) {
       {/* Spacer on mobile so the right-side icons push to the end */}
       <div className="flex-1 lg:hidden" />
 
-      {/* ===== RIGHT: Lang + Bell + User menu ===== */}
+      {/* ===== RIGHT: Language + user menu ===== */}
       <div className="ms-auto flex items-center gap-2">
         {/* Language toggle — desktop only */}
         <button
@@ -75,16 +66,6 @@ export default function Topbar({ onMenuClick, user }) {
         >
           <Globe className="h-4 w-4" />
           {lang === 'en' ? 'AR' : 'EN'}
-        </button>
-
-        {/* Notification bell — inside a rounded SQUARE (matches Figma) */}
-        <button
-          className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200"
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-          {/* Red dot with white ring for unread count */}
-          <span className="absolute end-1 top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
         </button>
 
         {/* User avatar + dropdown menu */}
@@ -142,7 +123,7 @@ function UserMenu({ user }) {
   // Handlers — each closes the dropdown then performs its action
   const handleSettings = () => {
     setOpen(false);
-    navigate(`/${urlLang}/dev/settings`);
+    navigate(`/${urlLang}/settings`);
   };
 
   const handleLogout = () => {

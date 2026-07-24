@@ -26,6 +26,7 @@
   "status": {
     "pending": "قيد الانتظار",
     "confirmed": "مؤكد",
+    "in_service": "قيد الصيانة",
     "in_progress": "قيد التنفيذ",
     "completed": "مكتمل",
     "cancelled": "ملغي"

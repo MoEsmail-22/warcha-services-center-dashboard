@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Plus, Trash2, Send, Search } from 'lucide-react';
+import { Plus, Send, Search } from 'lucide-react';
 import { useQuotes } from '../contexts/QuotesContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import Avatar from '../components/ui/Avatar';
-import QuoteStatusBadge from '../components/widgets/QuoteStatusBadge';
+import { StatusBadge } from '../components/widgets';
+import QuoteLineItemRow from '../components/quotes/QuoteLineItemRow';
+import { filterQuotes, formatQuoteCurrency } from '../utils/quotes';
 
 export default function QuotesPage() {
-  const { t } = useAppTranslation('quotes');
+  const { t, i18n } = useAppTranslation('quotes');
   const { recentQuotes, lineItems, total, addLineItem, updateLineItem, removeLineItem, sendQuote } =
     useQuotes();
 
@@ -21,15 +23,10 @@ export default function QuotesPage() {
   };
 
   // Filter recent quotes by search
-  const filteredQuotes = recentQuotes.filter((q) => {
-    if (!search.trim()) return true;
-    const s = search.toLowerCase();
-    return (
-      q.customer.name.toLowerCase().includes(s) ||
-      q.vehicle.toLowerCase().includes(s) ||
-      q.service.toLowerCase().includes(s)
-    );
-  });
+  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const currency = i18n.language?.startsWith('ar') ? 'ج.م' : 'EGP';
+  //utitlys
+  const filteredQuotes = filterQuotes(recentQuotes, search);
 
   return (
     <div className="flex h-full flex-col">
@@ -107,43 +104,17 @@ export default function QuotesPage() {
           </div>
 
           <div className="flex-1 space-y-2 overflow-y-auto">
+            {/*custom componat/quots  */}
             {lineItems.map((item) => (
-              <div
+              <QuoteLineItemRow
                 key={item.id}
-                className="flex items-center gap-2 rounded-md border border-gray-100 bg-white px-2 py-1.5"
-              >
-                {/* Description — takes most of the width */}
-                <input
-                  type="text"
-                  value={item.label}
-                  onChange={(e) => updateLineItem(item.id, 'label', e.target.value)}
-                  placeholder={t('itemPlaceholder', { defaultValue: 'Service description' })}
-                  className="h-7 flex-1 rounded border border-transparent bg-transparent px-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0E5C5B] focus:bg-white focus:ring-1 focus:ring-[#0E5C5B]/10 focus:outline-none"
-                />
-
-                {/* Amount with EGP prefix — fixed width */}
-                <div className="flex h-7 w-28 items-center overflow-hidden rounded border border-transparent bg-gray-50 focus-within:border-[#0E5C5B] focus-within:bg-white focus-within:ring-1 focus-within:ring-[#0E5C5B]/10">
-                  <span className="pl-2 text-xs text-gray-400">EGP</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="10"
-                    value={item.amount}
-                    onChange={(e) => updateLineItem(item.id, 'amount', e.target.value)}
-                    className="h-full w-full bg-transparent px-1.5 text-right text-sm font-semibold text-gray-900 focus:outline-none"
-                  />
-                </div>
-
-                {/* Delete button — always visible */}
-                <button
-                  onClick={() => removeLineItem(item.id)}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-                  aria-label="Remove item"
-                  title="Remove item"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
+                item={item}
+                onChange={updateLineItem}
+                onRemove={removeLineItem}
+                descriptionPlaceholder={t('itemPlaceholder', {
+                  defaultValue: 'Service description',
+                })}
+              />
             ))}
 
             {lineItems.length === 0 && (
@@ -174,8 +145,7 @@ export default function QuotesPage() {
                 className="text-2xl font-bold text-[#15201F]"
                 style={{ fontFamily: "'Sora', sans-serif" }}
               >
-                {total.toLocaleString()}{' '}
-                <span className="text-sm font-medium text-[#5A6968]">EGP</span>
+                {formatQuoteCurrency(total, locale, currency)}
               </p>
             </div>
             <button
@@ -258,13 +228,13 @@ export default function QuotesPage() {
                         className="text-sm font-bold text-[#0E5C5B]"
                         style={{ fontFamily: "'Sora', sans-serif" }}
                       >
-                        {quote.amount.toLocaleString()} EGP
+                        {formatQuoteCurrency(quote.amount, locale, currency)}
                       </p>
                       <p className="mt-0.5 text-[10px] text-[#5A6968]">{quote.sentAt}</p>
                     </div>
                   </div>
                   <div className="mt-2.5">
-                    <QuoteStatusBadge status={quote.status} />
+                    <StatusBadge status={quote.status} />
                   </div>
                 </div>
               ))

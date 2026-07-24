@@ -5,6 +5,7 @@
  * Pill shape (rounded-full), white space-agnostic, works in LTR + RTL.
  */
 import { cn } from '@/utils/cn';
+import { useAppTranslation } from '@/hooks/useAppTranslation';
 
 const STATUS_STYLES = {
   // Booking statuses — soft tints
@@ -24,6 +25,8 @@ const STATUS_STYLES = {
 
   // Quote statuses
   draft: 'bg-status-draft/10 text-status-draft',
+  sent: 'bg-gray-100 text-gray-600',
+  accepted: 'bg-status-completed/10 text-status-completed',
   awaiting: 'bg-status-pending/10 text-status-pending',
   approved: 'bg-status-completed/10 text-status-completed',
   rejected: 'bg-status-cancelled/10 text-status-cancelled',
@@ -49,6 +52,8 @@ const DEFAULT_LABELS = {
   delayed: 'Delayed',
   urgent: 'Urgent',
   draft: 'Draft',
+  sent: 'Sent - awaiting',
+  accepted: 'Approved',
   awaiting: 'Awaiting',
   approved: 'Approved',
   rejected: 'Rejected',
@@ -60,8 +65,11 @@ const DEFAULT_LABELS = {
 };
 
 export function StatusBadge({ status, children, className }) {
+  const { t } = useAppTranslation('common');
   const styleClass = STATUS_STYLES[status] ?? 'bg-gray-400/10 text-gray-500';
-  const label = children ?? DEFAULT_LABELS[status] ?? status;
+  // A shared status label keeps every page consistent and follows AR/EN selection.
+  const label =
+    children ?? t(`status.${status}`, { defaultValue: DEFAULT_LABELS[status] ?? status });
 
   return (
     <span

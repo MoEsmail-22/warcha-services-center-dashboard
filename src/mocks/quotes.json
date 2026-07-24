@@ -1,168 +1,57 @@
-[
-  {
-    "id": "Q-001",
-    "repairJobId": "RJ-004",
-    "customerId": "C-005",
-    "vehicleId": "V-005",
-    "status": "awaiting",
-    "items": [
-      {
-        "id": "QI-001-1",
-        "serviceId": "S-007",
-        "description": "AC compressor replacement",
-        "quantity": 1,
-        "unitPrice": 1800,
-        "total": 1800
-      },
-      {
-        "id": "QI-001-2",
-        "serviceId": null,
-        "description": "Refrigerant + labor",
-        "quantity": 1,
-        "unitPrice": 700,
-        "total": 700
-      }
-    ],
-    "subtotal": 2500,
-    "tax": 0,
-    "discount": 0,
-    "total": 2500,
-    "notes": "Quote valid for 14 days",
-    "approvedAt": null,
-    "createdAt": "2026-07-11T16:30:00Z",
-    "updatedAt": "2026-07-11T16:30:00Z"
-  },
-  {
-    "id": "Q-002",
-    "repairJobId": "RJ-005",
-    "customerId": "C-006",
-    "vehicleId": "V-006",
-    "status": "approved",
-    "items": [
-      {
-        "id": "QI-002-1",
-        "serviceId": "S-005",
-        "description": "Battery replacement",
-        "quantity": 1,
-        "unitPrice": 600,
-        "total": 600
-      }
-    ],
-    "subtotal": 600,
-    "tax": 0,
-    "discount": 0,
-    "total": 600,
-    "notes": "",
-    "approvedAt": "2026-07-11T17:05:00Z",
-    "createdAt": "2026-07-11T17:00:00Z",
-    "updatedAt": "2026-07-11T17:05:00Z"
-  },
-  {
-    "id": "Q-003",
-    "repairJobId": "RJ-003",
-    "customerId": "C-003",
-    "vehicleId": "V-003",
-    "status": "draft",
-    "items": [
-      {
-        "id": "QI-003-1",
-        "serviceId": "S-003",
-        "description": "Tire rotation",
-        "quantity": 1,
-        "unitPrice": 200,
-        "total": 200
-      }
-    ],
-    "subtotal": 200,
-    "tax": 0,
-    "discount": 0,
-    "total": 200,
-    "notes": "Draft — not yet sent to customer",
-    "approvedAt": null,
-    "createdAt": "2026-07-11T13:15:00Z",
-    "updatedAt": "2026-07-11T13:15:00Z"
-  },
-  {
-    "id": "Q-004",
-    "repairJobId": "RJ-006",
-    "customerId": "C-008",
-    "vehicleId": "V-008",
-    "status": "approved",
-    "items": [
-      {
-        "id": "QI-004-1",
-        "serviceId": "S-002",
-        "description": "Front brake pads",
-        "quantity": 1,
-        "unitPrice": 400,
-        "total": 400
-      },
-      {
-        "id": "QI-004-2",
-        "serviceId": null,
-        "description": "Labor",
-        "quantity": 1,
-        "unitPrice": 800,
-        "total": 800
-      }
-    ],
-    "subtotal": 1200,
-    "tax": 0,
-    "discount": 0,
-    "total": 1200,
-    "notes": "",
-    "approvedAt": "2026-07-11T18:35:00Z",
-    "createdAt": "2026-07-11T18:30:00Z",
-    "updatedAt": "2026-07-11T18:35:00Z"
-  },
-  {
-    "id": "Q-005",
-    "repairJobId": "RJ-001",
-    "customerId": "C-001",
-    "vehicleId": "V-001",
-    "status": "expired",
-    "items": [
-      {
-        "id": "QI-005-1",
-        "serviceId": "S-001",
-        "description": "Oil change",
-        "quantity": 1,
-        "unitPrice": 350,
-        "total": 350
-      }
-    ],
-    "subtotal": 350,
-    "tax": 0,
-    "discount": 0,
-    "total": 350,
-    "notes": "Customer did not respond — quote expired",
-    "approvedAt": null,
-    "createdAt": "2026-06-20T10:00:00Z",
-    "updatedAt": "2026-07-04T10:00:00Z"
-  },
-  {
-    "id": "Q-006",
-    "repairJobId": "RJ-010",
-    "customerId": "C-004",
-    "vehicleId": "V-004",
-    "status": "approved",
-    "items": [
-      {
-        "id": "QI-006-1",
-        "serviceId": "S-008",
-        "description": "Transmission rebuild",
-        "quantity": 1,
-        "unitPrice": 3500,
-        "total": 3500
-      }
-    ],
-    "subtotal": 3500,
-    "tax": 0,
-    "discount": 100,
-    "total": 3400,
-    "notes": "Loyalty discount applied",
-    "approvedAt": "2026-07-09T13:05:00Z",
-    "createdAt": "2026-07-08T14:00:00Z",
-    "updatedAt": "2026-07-09T13:05:00Z"
-  }
-]
+{
+  "defaultLineItems": [
+    {
+      "id": 1,
+      "label": "Oil change (labor + 5W-30)",
+      "amount": 250
+    },
+    {
+      "id": 2,
+      "label": "Oil filter replacement",
+      "amount": 120
+    },
+    {
+      "id": 3,
+      "label": "Air filter (worn out)",
+      "amount": 190
+    }
+  ],
+  "recentQuotes": [
+    {
+      "id": "Q-2401",
+      "customer": { "name": "Omar T.", "initials": "OT" },
+      "vehicle": "Kia Sportage",
+      "service": "A/C repair",
+      "amount": 1850,
+      "status": "sent",
+      "sentAt": "Jul 12, 2026"
+    },
+    {
+      "id": "Q-2402",
+      "customer": { "name": "Youssef H.", "initials": "YH" },
+      "vehicle": "Honda Civic",
+      "service": "Oil + filter",
+      "amount": 470,
+      "status": "accepted",
+      "sentAt": "Jul 11, 2026"
+    },
+    {
+      "id": "Q-2403",
+      "customer": { "name": "Mostafa R.", "initials": "MR" },
+      "vehicle": "Chevrolet Optra",
+      "service": "Suspension",
+      "amount": 2400,
+      "status": "accepted",
+      "sentAt": "Jul 10, 2026"
+    },
+    {
+      "id": "Q-2404",
+      "customer": { "name": "Laila S.", "initials": "LS" },
+      "vehicle": "Toyota Yaris",
+      "service": "Battery",
+      "amount": 1100,
+      "status": "rejected",
+      "sentAt": "Jul 09, 2026"
+    }
+  ]
+}

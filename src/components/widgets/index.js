@@ -7,3 +7,4 @@ export { ErrorState } from './ErrorState';
 export { SkeletonCard, SkeletonStatCard, SkeletonRow } from './SkeletonCard';
 export { MiniTrend } from './MiniTrend';
 export { default as ProPlanCard } from './ProPlanCard';
+export { ResponsiveAccordion } from './ResponsiveAccordion';
