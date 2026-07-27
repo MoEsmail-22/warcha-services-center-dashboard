@@ -1,9 +1,9 @@
-import { Check, X, Clock } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
 import Drawer from '../ui/Drawer';
 import StatusBadge from './StatusBadge';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 
-export default function BookingDetailsDrawer({ open, onClose, booking, onAccept, onDecline }) {
+export default function BookingDetailsDrawer({ open, onClose, booking }) {
   const { t } = useAppTranslation('bookings');
 
   if (!booking) return null;
@@ -28,9 +28,6 @@ export default function BookingDetailsDrawer({ open, onClose, booking, onAccept,
   // Use the booking's own timeline (real data from context)
   const timeline = booking.timeline ?? [];
 
-  // Hide Accept/Decline buttons if booking is already confirmed/cancelled
-  const canAct = booking.status === 'pending';
-
   return (
     <Drawer
       open={open}
@@ -39,32 +36,12 @@ export default function BookingDetailsDrawer({ open, onClose, booking, onAccept,
       subtitle=""
       width="max-w-md"
       footer={
-        canAct ? (
-          <div className="space-y-2.5">
-            <button
-              onClick={() => onAccept?.(booking)}
-              className="flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
-              style={{ backgroundColor: '#0E5C5B' }}
-            >
-              <Check className="h-4 w-4" />
-              {t('acceptBooking', { defaultValue: 'Accept Booking' })}
-            </button>
-            <button
-              onClick={() => onDecline?.(booking)}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
-            >
-              <X className="h-4 w-4" />
-              {t('declineRequest', { defaultValue: 'Decline Request' })}
-            </button>
-          </div>
-        ) : (
-          <div className="rounded-lg bg-gray-50 px-4 py-3 text-center text-xs text-gray-500">
-            {booking.status === 'confirmed' && '✓ This booking has been accepted.'}
-            {booking.status === 'cancelled' && '✗ This booking has been declined.'}
-            {booking.status === 'in_progress' && '↻ Work is in progress on this booking.'}
-            {booking.status === 'completed' && '✓ This booking is completed.'}
-          </div>
-        )
+        <div className="rounded-lg bg-gray-50 px-4 py-3 text-center text-xs text-gray-500">
+          {booking.status === 'confirmed' && '✓ This booking has been accepted.'}
+          {booking.status === 'cancelled' && '✗ This booking has been declined.'}
+          {booking.status === 'in_progress' && '↻ Work is in progress on this booking.'}
+          {booking.status === 'completed' && '✓ This booking is completed.'}
+        </div>
       }
     >
       {/* ---- Custom header ---- */}

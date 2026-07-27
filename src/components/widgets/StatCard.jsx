@@ -19,11 +19,14 @@ export function StatCard({
   icon,
   value,
   label,
+  change,
   subtext,
   trend = 'neutral',
   iconBg = 'bg-primary-50',
   onClick,
 }) {
+  const detail = change ?? subtext;
+
   return (
     <div onClick={onClick} className={cn('card p-6', onClick && 'card-hover cursor-pointer')}>
       {icon && (
@@ -41,11 +44,11 @@ export function StatCard({
       <p className="text-3xl font-bold text-gray-900">{value}</p>
       <p className="mt-1 text-sm text-gray-600">{label}</p>
 
-      {subtext && (
+      {detail && (
         <p className={cn('mt-2 flex items-center gap-1 text-xs font-medium', TREND_CLASSES[trend])}>
           {trend === 'up' && <ArrowUp size={12} />}
           {trend === 'down' && <ArrowDown size={12} />}
-          {subtext}
+          {detail}
         </p>
       )}
     </div>

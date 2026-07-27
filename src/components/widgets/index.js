@@ -3,6 +3,7 @@ export { StatusBadge } from './StatusBadge';
 export { RatingStars } from './RatingStars';
 export { DataTable, CustomerCell } from './DataTable';
 export { EmptyState } from './EmptyState';
+export { Pagination } from './Pagination';
 export { ErrorState } from './ErrorState';
 export { SkeletonCard, SkeletonStatCard, SkeletonRow } from './SkeletonCard';
 export { MiniTrend } from './MiniTrend';

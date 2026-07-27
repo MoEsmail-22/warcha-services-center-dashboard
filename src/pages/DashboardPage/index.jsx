@@ -6,58 +6,14 @@ import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useAuth } from '../../contexts/AuthContext';
 import StatCard from '../../components/widgets/StatCard';
 import RevenueBarChart from '../../components/charts/RevenueBarChart';
-import dashboardMock from '../../mocks/dashboard.json';
-
-// Status badge colors
-const statusStyles = {
-  pending: 'bg-amber-100 text-amber-700',
-  confirmed: 'bg-blue-100 text-blue-700',
-  in_progress: 'bg-indigo-100 text-indigo-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-};
-
-function getGreeting(hour, t) {
-  if (hour < 12) return t('greeting.morning', { defaultValue: 'Good morning' });
-  if (hour < 17) return t('greeting.afternoon', { defaultValue: 'Good afternoon' });
-  if (hour < 21) return t('greeting.evening', { defaultValue: 'Good evening' });
-  return t('greeting.night', { defaultValue: 'Good night' });
-}
-
-// Safe customer accessors
-function getCustomerInitials(customer) {
-  if (typeof customer === 'string') {
-    return customer
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
-  if (customer && typeof customer === 'object') {
-    return (
-      customer.initials ??
-      customer.name
-        ?.split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2) ??
-      '?'
-    );
-  }
-  return '?';
-}
-
-function getCustomerName(customer) {
-  if (typeof customer === 'string') return customer;
-  return customer?.name ?? 'Unknown';
-}
-
-function getCustomerColor(customer) {
-  if (customer && typeof customer === 'object') return customer.avatarColor ?? '#3B82F6';
-  return '#3B82F6';
-}
+import { statusStyles } from '../../constants/statusStyles';
+import {
+  getCustomerInitials,
+  getGreeting,
+  getCustomerName,
+  getCustomerColor,
+} from '@/utils/dashboardHelpers';
+import { KPI_CARD_DEFINITIONS } from '@/mocks/dashboardKpis';
 
 export default function DashboardPage() {
   const { t } = useAppTranslation('dashboard');
@@ -83,6 +39,39 @@ export default function DashboardPage() {
   const currentHour = new Date().getHours();
   const greeting = getGreeting(currentHour, t);
   const userName = user?.name || 'Ahmed';
+  const kpiIcons = {
+    calendar: <CalendarCheck className="h-5 w-5 text-[#0E5C5B]" />,
+    car: <Car className="h-5 w-5 text-[#0E5C5B]" />,
+    wallet: <Wallet className="h-5 w-5 text-[#0E5C5B]" />,
+    star: <Star className="h-5 w-5 fill-amber-400 text-amber-400" />,
+  };
+  const kpiCardValues = {
+    'todays-bookings': {
+      value: String(todaysCount),
+      change: `+${difference} ${t('vsYesterday', { defaultValue: 'vs yesterday' })}`,
+      trend: 'up',
+    },
+    'cars-in-service': {
+      value: String(carsInServiceCount),
+      subtext: `${awaitingApprovalCount} ${t('awaitingApproval', { defaultValue: 'awaiting approval' })}`,
+    },
+    'revenue-today': {
+      value: `${todayRevenue.toLocaleString()} ${currency}`,
+      change: `${revenueChange > 0 ? '+' : ''}${revenueChange}%`,
+      trend: revenueChange >= 0 ? 'up' : 'down',
+    },
+    'average-rating': {
+      value: String(avgRating),
+      subtext: `${totalReviews} ${t('reviews', { defaultValue: 'reviews' })}`,
+    },
+  };
+  const kpiCards = KPI_CARD_DEFINITIONS.map(({ key, labelKey, defaultLabel, icon, iconBg }) => ({
+    key,
+    label: t(labelKey, { defaultValue: defaultLabel }),
+    icon: kpiIcons[icon],
+    iconBg,
+    ...kpiCardValues[key],
+  }));
 
   return (
     <div className="space-y-6" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -136,39 +125,9 @@ export default function DashboardPage() {
 
       {/* ============ KPI CARDS ============ */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label={t('kpi.todaysBookings', { defaultValue: "Today's bookings" })}
-          value={String(todaysCount)}
-          change={`+${difference} ${t('vsYesterday', { defaultValue: 'vs yesterday' })}`}
-          trend="up"
-          icon={<CalendarCheck className="h-5 w-5 text-[#0E5C5B]" />}
-          iconBg="bg-teal-50"
-        />
-
-        <StatCard
-          label={t('kpi.carsInService', { defaultValue: 'Cars in service' })}
-          value={String(carsInServiceCount)}
-          subtext={`${awaitingApprovalCount} ${t('awaitingApproval', { defaultValue: 'awaiting approval' })}`}
-          icon={<Car className="h-5 w-5 text-[#0E5C5B]" />}
-          iconBg="bg-teal-50"
-        />
-
-        <StatCard
-          label={t('kpi.revenueToday', { defaultValue: 'Revenue today' })}
-          value={`${todayRevenue.toLocaleString()} ${currency}`}
-          change={`${revenueChange > 0 ? '+' : ''}${revenueChange}%`}
-          trend={revenueChange >= 0 ? 'up' : 'down'}
-          icon={<Wallet className="h-5 w-5 text-[#0E5C5B]" />}
-          iconBg="bg-teal-50"
-        />
-
-        <StatCard
-          label={t('kpi.avgRating', { defaultValue: 'Average rating' })}
-          value={String(avgRating)}
-          subtext={`${totalReviews} ${t('reviews', { defaultValue: 'reviews' })}`}
-          icon={<Star className="h-5 w-5 fill-amber-400 text-amber-400" />}
-          iconBg="bg-amber-50"
-        />
+        {kpiCards.map(({ key, ...cardProps }) => (
+          <StatCard key={key} {...cardProps} />
+        ))}
       </div>
 
       {/* ============ TWO-COLUMN ============ */}
