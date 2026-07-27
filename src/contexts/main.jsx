@@ -3,7 +3,7 @@
  *
  * Wraps the app in this order (outer → inner):
  *   1. AuthProvider       → provides login state
- *   2. ALL 12 entity providers → provides mock data
+ *   2. Active entity providers → provides mock data
  *   3. RouterProvider     → provides routing
  *
  * Order matters: the entity providers must be INSIDE AuthProvider (so they
@@ -22,47 +22,29 @@ import { AuthProvider } from './contexts/AuthContext';
 import { router } from './routes';
 import {
   BookingsProvider,
-  VehiclesProvider,
   JobsProvider,
-  RepairJobsProvider,
-  CustomersProvider,
   QuotesProvider,
   ServicesProvider,
-  TechniciansProvider,
   ReviewsProvider,
-  NotificationsProvider,
-  RevenueProvider,
   SettingsProvider,
 } from './contexts';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      {/* All 12 entity providers nested here so any page can use the hooks */}
+      {/* Only active feature providers are mounted globally. */}
       <BookingsProvider>
-        <VehiclesProvider>
-          <JobsProvider>
-            <RepairJobsProvider>
-              <CustomersProvider>
-                <QuotesProvider>
-                  <ServicesProvider>
-                    <TechniciansProvider>
-                      <ReviewsProvider>
-                        <NotificationsProvider>
-                          <RevenueProvider>
-                            <SettingsProvider>
-                              <RouterProvider router={router} />
-                            </SettingsProvider>
-                          </RevenueProvider>
-                        </NotificationsProvider>
-                      </ReviewsProvider>
-                    </TechniciansProvider>
-                  </ServicesProvider>
-                </QuotesProvider>
-              </CustomersProvider>
-            </RepairJobsProvider>
-          </JobsProvider>
-        </VehiclesProvider>
+        <JobsProvider>
+          <QuotesProvider>
+            <ServicesProvider>
+              <ReviewsProvider>
+                <SettingsProvider>
+                  <RouterProvider router={router} />
+                </SettingsProvider>
+              </ReviewsProvider>
+            </ServicesProvider>
+          </QuotesProvider>
+        </JobsProvider>
       </BookingsProvider>
     </AuthProvider>
   </StrictMode>

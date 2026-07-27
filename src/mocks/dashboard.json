@@ -1,12 +1,9 @@
 {
   "stats": {
-    "totalCustomers": 8,
-    "activeJobs": 6,
-    "todayBookings": 8,
-    "pendingQuotes": 2,
-    "completedToday": 4,
+    "carsInService": 3,
+    "awaitingApproval": 2,
     "revenueToday": 12450,
-    "averageRating": 4.3
+    "revenueChange": 18
   },
   "revenueChart": [
     { "day": "Mon", "current": 5400, "previous": 4900 },
@@ -14,89 +11,7 @@
     { "day": "Wed", "current": 7800, "previous": 6100 },
     { "day": "Thu", "current": 5200, "previous": 9300 },
     { "day": "Fri", "current": 12450, "previous": 2800 },
-    { "day": "Sat": "—",
-      "current": 0,
-      "previous": 0
-    },
+    { "day": "Sat", "current": 0, "previous": 0 },
     { "day": "Sun", "current": 0, "previous": 0 }
-  ],
-  "bookingsChart": [
-    { "day": "Mon", "count": 8 },
-    { "day": "Tue", "count": 12 },
-    { "day": "Wed", "count": 9 },
-    { "day": "Thu", "count": 7 },
-    { "day": "Fri", "count": 8 },
-    { "day": "Sat", "count": 0 },
-    { "day": "Sun", "count": 0 }
-  ],
-  "recentJobs": [
-    {
-      "repairJobId": "RJ-001",
-      "customerName": "Hazem Mahmoud",
-      "vehicle": "Toyota Corolla — ABC-1234",
-      "service": "Oil change",
-      "technicianName": "Mohamed Salah",
-      "time": "10:30",
-      "status": "in_progress"
-    },
-    {
-      "repairJobId": "RJ-002",
-      "customerName": "Sara Khaled",
-      "vehicle": "Honda Civic — XYZ-5678",
-      "service": "Brake inspection",
-      "technicianName": "Khaled Ahmed",
-      "time": "11:45",
-      "status": "new"
-    },
-    {
-      "repairJobId": "RJ-003",
-      "customerName": "Omar Tarek",
-      "vehicle": "Hyundai Elantra — DEF-9012",
-      "service": "Tire rotation",
-      "technicianName": "Hassan Bassel",
-      "time": "13:00",
-      "status": "diagnosing"
-    },
-    {
-      "repairJobId": "RJ-005",
-      "customerName": "Layla Adel",
-      "vehicle": "Mercedes C-Class — MNO-1234",
-      "service": "Battery replacement",
-      "technicianName": "Hassan Bassel",
-      "time": "17:00",
-      "status": "ready"
-    },
-    {
-      "repairJobId": "RJ-007",
-      "customerName": "Nadia Farouk",
-      "vehicle": "Kia Sportage — GHI-3456",
-      "service": "Engine diagnostic",
-      "technicianName": "Mohamed Salah",
-      "time": "15:15",
-      "status": "completed"
-    }
-  ],
-  "recentNotifications": [
-    {
-      "id": "N-001",
-      "type": "booking",
-      "title": { "en": "New booking received", "ar": "تم استلام حجز جديد" },
-      "isRead": false,
-      "createdAt": "2026-07-11T09:15:00Z"
-    },
-    {
-      "id": "N-002",
-      "type": "job",
-      "title": { "en": "Vehicle ready for pickup", "ar": "السيارة جاهزة للاستلام" },
-      "isRead": false,
-      "createdAt": "2026-07-11T10:45:00Z"
-    },
-    {
-      "id": "N-007",
-      "type": "job",
-      "title": { "en": "Job delayed", "ar": "تأخر مهمة" },
-      "isRead": false,
-      "createdAt": "2026-07-11T13:00:00Z"
-    }
   ]
 }

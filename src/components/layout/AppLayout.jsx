@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { LanguageProvider } from '../../contexts/LanguageContext';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import Footer from './Footer';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function AppLayout() {
@@ -31,9 +32,12 @@ function AppLayoutInner() {
         {/* Topbar — gets a hamburger button for mobile */}
         <Topbar onMenuClick={() => setMobileOpen(true)} user={user} />
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <Outlet />
-        </main>
+        <div className="flex flex-1 flex-col overflow-y-auto">
+          <main className="flex-1 p-4 sm:p-6">
+            <Outlet />
+          </main>
+          <Footer />
+        </div>
       </div>
     </div>
   );

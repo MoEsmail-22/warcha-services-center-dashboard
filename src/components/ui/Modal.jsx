@@ -12,7 +12,24 @@ const SIZES = {
   lg: 'max-w-2xl',
 };
 
-export function Modal({ open, onClose, title, children, size = 'md', footer }) {
+/**
+ * Flexible dialog primitive. Title, body (children), footer, close behavior,
+ * and styling are all optional; the original centered dialog remains the default.
+ */
+export function Modal({
+  open,
+  onClose,
+  title = 'Dialog',
+  children,
+  size = 'md',
+  footer,
+  className,
+  contentClassName,
+  footerClassName,
+  closeLabel = 'Close',
+  dismissOnBackdrop = true,
+  showCloseButton = true,
+}) {
   useEffect(() => {
     if (!open) return;
     const handleEsc = (e) => {
@@ -27,25 +44,39 @@ export function Modal({ open, onClose, title, children, size = 'md', footer }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
+      onClick={dismissOnBackdrop ? onClose : undefined}
     >
       <div
-        className={cn('w-full rounded-2xl bg-white shadow-xl', SIZES[size])}
+        className={cn('w-full rounded-2xl bg-white shadow-xl', SIZES[size], className)}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
       >
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Close"
-          >
-            <X size={20} />
-          </button>
+          {showCloseButton && (
+            <button
+              onClick={onClose}
+              className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              aria-label={closeLabel}
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
-        <div className="max-h-[70vh] overflow-y-auto px-6 py-4">{children}</div>
+        <div className={cn('max-h-[70vh] overflow-y-auto px-6 py-4', contentClassName)}>
+          {children}
+        </div>
         {footer && (
-          <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">{footer}</div>
+          <div
+            className={cn(
+              'flex justify-end gap-3 border-t border-gray-100 px-6 py-4',
+              footerClassName
+            )}
+          >
+            {footer}
+          </div>
         )}
       </div>
     </div>
