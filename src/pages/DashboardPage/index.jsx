@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom';
 import { CalendarCheck, Car, Wallet, Star, Plus, ChevronRight } from 'lucide-react';
 import { useBookings } from '../../contexts/BookingsContext';
-import { useVehicles } from '../../contexts/VehiclesContext';
 import { useReviews } from '../../contexts/ReviewsContext';
-import { useRevenue } from '../../contexts/RevenueContext';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useAuth } from '../../contexts/AuthContext';
 import StatCard from '../../components/widgets/StatCard';
@@ -21,22 +19,20 @@ export default function DashboardPage() {
   const { t } = useAppTranslation('dashboard');
   const { user } = useAuth();
 
-  // Bookings + Vehicles + Reviews — same as before, with safe fallbacks
+  // Live page data still comes from its active feature contexts.
   const { todaysBookings = [], todaysCount = 0, difference = 0 } = useBookings() ?? {};
-  const { carsInServiceCount = 0, awaitingApprovalCount = 0 } = useVehicles() ?? {};
   const { avgRating = 0, totalReviews = 0 } = useReviews() ?? {};
 
-  // Revenue — REAL shape: { data, loading, error }
-  // data = { summary, comparison, weeklyChart, quickSummary }
-  const { data: revenueData, loading: revenueLoading } = useRevenue() ?? {};
-
-  // Pull fields out of the real nested shape, with safe fallbacks
-  const todayRevenue = revenueData?.summary?.today ?? 0;
-  const revenueChange = revenueData?.comparison?.todayChange ?? 0;
-  const currency = 'EGP'; // not exposed by context, hardcode
-
-  // Pass weeklyChart AS-IS — RevenueBarChart expects { day, current, previous }
-  const weeklyRevenue = Array.isArray(revenueData?.weeklyChart) ? revenueData.weeklyChart : [];
+  // These values belong to the dashboard itself, so they remain available after
+  // removing the standalone Vehicles and Revenue feature areas.
+  const {
+    carsInService: carsInServiceCount = 0,
+    awaitingApproval: awaitingApprovalCount = 0,
+    revenueToday: todayRevenue = 0,
+    revenueChange = 0,
+  } = dashboardMock.stats;
+  const currency = 'EGP';
+  const weeklyRevenue = dashboardMock.revenueChart;
 
   const weeklyTotal = weeklyRevenue.reduce((sum, d) => sum + (d.current || 0), 0);
 
@@ -237,36 +233,19 @@ export default function DashboardPage() {
           </div>
 
           <div className="mb-4">
-            {revenueLoading ? (
-              <p
-                className="text-2xl font-bold text-gray-300"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
-                ...
-              </p>
-            ) : (
-              <>
-                <p
-                  className="text-2xl font-bold text-[#15201F]"
-                  style={{ fontFamily: "'Sora', sans-serif" }}
-                >
-                  {weeklyTotal.toLocaleString()}{' '}
-                  <span className="text-sm font-medium text-[#5A6968]">{currency}</span>
-                </p>
-                <p className="mt-0.5 text-xs text-green-600">
-                  {t('revenue.totalLabel', { defaultValue: 'Total this week' })}
-                </p>
-              </>
-            )}
+            <p
+              className="text-2xl font-bold text-[#15201F]"
+              style={{ fontFamily: "'Sora', sans-serif" }}
+            >
+              {weeklyTotal.toLocaleString()}{' '}
+              <span className="text-sm font-medium text-[#5A6968]">{currency}</span>
+            </p>
+            <p className="mt-0.5 text-xs text-green-600">
+              {t('revenue.totalLabel', { defaultValue: 'Total this week' })}
+            </p>
           </div>
 
-          {revenueLoading ? (
-            <div className="flex h-[260px] items-center justify-center text-sm text-gray-400">
-              Loading chart...
-            </div>
-          ) : (
-            <RevenueBarChart data={weeklyRevenue} />
-          )}
+          <RevenueBarChart data={weeklyRevenue} />
         </div>
       </div>
     </div>

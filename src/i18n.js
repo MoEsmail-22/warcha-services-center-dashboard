@@ -9,22 +9,7 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
-    ns: [
-      'common',
-      'nav',
-      'dashboard',
-      'bookings',
-      'quotes',
-      'customers',
-      'services',
-      'vehicles',
-      'technicians',
-      'revenue',
-      'notifications',
-      'repairJobs',
-      'reviews',
-      'settings',
-    ],
+    ns: ['common', 'nav', 'dashboard', 'bookings', 'quotes', 'services', 'reviews', 'settings'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,

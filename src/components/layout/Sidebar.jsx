@@ -3,6 +3,7 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import navItems from '../../utils/navItems';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useSettings } from '../../contexts/SettingsContext';
 import ProPlanCard from '../widgets/ProPlanCard';
 import logo from '@/assets/warsha_logo.png';
 
@@ -26,6 +27,7 @@ export default function Sidebar({
 }) {
   const { t } = useAppTranslation('nav');
   const { isRTL } = useLanguage();
+  const { data: settings } = useSettings();
   const { lang = 'en' } = useParams();
 
   return (
@@ -72,7 +74,8 @@ export default function Sidebar({
                   {t('brand.name', { defaultValue: 'Warsha' })}
                 </p>
                 <p className="truncate text-xs text-gray-300">
-                  {t('brand.subtitle', { defaultValue: 'Ahmed Auto Service' })}
+                  {settings?.workshop?.name ||
+                    t('brand.subtitle', { defaultValue: 'Ahmed Auto Service' })}
                 </p>
               </div>
             )}

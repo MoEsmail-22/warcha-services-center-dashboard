@@ -1,33 +1,23 @@
 {
   "workshop": {
     "name": "Ahmed Auto Service",
-    "phone": "+20 2 1234 5678",
-    "email": "info@ahmedauto.com",
-    "address": "123 Main Street, Nasr City, Cairo, Egypt",
-    "logo": null
-  },
-  "localization": {
-    "language": "ar",
-    "currency": "EGP",
-    "timezone": "Africa/Cairo"
-  },
-  "businessHours": {
-    "sunday": { "open": "10:00", "close": "16:00", "isOpen": true },
-    "monday": { "open": "09:00", "close": "18:00", "isOpen": true },
-    "tuesday": { "open": "09:00", "close": "18:00", "isOpen": true },
-    "wednesday": { "open": "09:00", "close": "18:00", "isOpen": true },
-    "thursday": { "open": "09:00", "close": "18:00", "isOpen": true },
-    "friday": { "open": "13:00", "close": "20:00", "isOpen": true },
-    "saturday": { "open": "10:00", "close": "16:00", "isOpen": true }
+    "address": "12 Gameat El Dewal St, Mohandessin",
+    "phone": "+20 100 123 4567",
+    "secondaryPhone": "+20 122 123 4567",
+    "workingHours": {
+      "saturday": { "enabled": true, "open": "09:00", "close": "22:00" },
+      "sunday": { "enabled": true, "open": "", "close": "" },
+      "monday": { "enabled": true, "open": "", "close": "" },
+      "tuesday": { "enabled": true, "open": "", "close": "" },
+      "wednesday": { "enabled": true, "open": "", "close": "" },
+      "thursday": { "enabled": true, "open": "", "close": "" },
+      "friday": { "enabled": false, "open": "", "close": "" }
+    }
   },
   "preferences": {
-    "acceptBookings": false,
+    "acceptOnlineBookings": false,
     "showPrices": true,
-    "allowReviews": true
-  },
-  "notifications": {
-    "email": true,
-    "sms": false,
-    "push": true
+    "autoSendServiceUpdates": true,
+    "emailDailySummary": true
   }
 }
