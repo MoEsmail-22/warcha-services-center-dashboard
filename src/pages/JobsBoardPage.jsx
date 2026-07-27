@@ -5,13 +5,6 @@ import KanbanColumn from '../components/kanban/KanbanColumn';
 import { useJobs, JOB_STAGES } from '../contexts/JobsContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 
-const STAGE_LABELS = {
-  new: 'New',
-  diagnosing: 'Diagnosing',
-  in_progress: 'In progress',
-  ready: 'Ready',
-};
-
 export default function JobsBoardPage() {
   const { t } = useAppTranslation('dashboard');
   const { jobs, moveJob, reorderJobs } = useJobs();

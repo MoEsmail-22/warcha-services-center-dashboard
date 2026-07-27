@@ -5,19 +5,7 @@
  * Living documentation for the design system.
  */
 import { useState } from 'react';
-import {
-  Calendar,
-  Car,
-  DollarSign,
-  Star,
-  Globe,
-  Bell,
-  Search,
-  AlertTriangle,
-  RefreshCw,
-  Inbox,
-} from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Calendar, Car, DollarSign, Star, Globe, Inbox } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // UI primitives
@@ -47,7 +35,6 @@ import {
   CustomerCell,
   EmptyState,
   ErrorState,
-  SkeletonCard,
   SkeletonStatCard,
   ProPlanCard,
   MiniTrend,
@@ -63,7 +50,6 @@ function DevPage() {
   const [toggleOff, setToggleOff] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
-  const { t } = useTranslation();
   const { lang, toggleLanguage } = useLanguage();
 
   // Sample data for the chart
