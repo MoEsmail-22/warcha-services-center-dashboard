@@ -1,9 +1,35 @@
-{
+﻿{
   "title": "التقييمات",
-  "subtitle": "تابع آراء العملاء واستجب لها لبناء الثقة.",
+  "summary": "{{rating}} متوسط التقييم · {{count}} تقييمات · رد لبناء الثقة",
   "recentReviews": "أحدث التقييمات",
-  "ratingBreakdown": "توزيع التقييمات",
+  "ratingBreakdown": "تفصيل التقييمات",
+  "loading": "جارٍ تحميل التقييمات...",
   "reply": "رد",
   "editReply": "تعديل الرد",
-  "noResults": "لا توجد تقييمات."
+  "yourReply": "ردك",
+  "unknownCustomer": "عميل",
+  "showing": "عرض",
+  "of": "من",
+  "previousPage": "الصفحة السابقة",
+  "nextPage": "الصفحة التالية",
+  "time": {
+    "today": "اليوم",
+    "oneDayAgo": "منذ يوم واحد",
+    "daysAgo": "منذ {{count}} أيام"
+  },
+  "empty": {
+    "title": "لا توجد تقييمات بعد",
+    "description": "ستظهر تقييمات العملاء هنا."
+  },
+  "modal": {
+    "title": "الرد على التقييم",
+    "editTitle": "تعديل الرد",
+    "replyLabel": "ردك",
+    "placeholder": "اكتب ردًا احترافيًا على هذا التقييم..."
+  },
+  "actions": {
+    "cancel": "إلغاء",
+    "send": "إرسال الرد",
+    "update": "تحديث الرد"
+  }
 }

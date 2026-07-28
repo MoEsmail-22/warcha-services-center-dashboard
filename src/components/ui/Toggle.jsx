@@ -20,19 +20,13 @@ export function Toggle({ checked, onChange, label, description, id, disabled }) 
       )}
 
       <div className="relative inline-flex items-center">
-        {/* Wrapping the input and visual elements makes the whole switch clickable. */}
-        <label
-          className={cn(
-            'relative inline-flex items-center',
-            disabled ? 'cursor-not-allowed' : 'cursor-pointer'
-          )}
-        >
+        <label className="relative inline-flex cursor-pointer items-center">
           <input
             id={id}
             type="checkbox"
             checked={checked}
             disabled={disabled}
-            onChange={(event) => onChange?.(event.target.checked)}
+            onChange={(e) => onChange?.(e.target.checked)}
             className="peer sr-only"
           />
 
@@ -40,9 +34,8 @@ export function Toggle({ checked, onChange, label, description, id, disabled }) 
           <span
             className={cn(
               'block h-6 w-11 rounded-full transition-colors duration-200',
-              'peer-focus-visible:ring-primary peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2',
               checked ? 'bg-primary' : 'bg-gray-300',
-              disabled && 'opacity-50'
+              disabled && 'cursor-not-allowed opacity-50'
             )}
           />
 

@@ -1,12 +1,40 @@
-{
+﻿{
   "title": "الخدمات والأسعار",
-  "subtitle": "تحكّم بالخدمات التي تقدمها والأسعار الظاهرة للعملاء.",
+  "subtitle": "تحكم في الخدمات التي تقدمها وما يراه العملاء.",
   "addService": "إضافة خدمة",
-  "service": "الخدمة",
-  "priceRange": "نطاق السعر (جنيه)",
-  "duration": "المدة التقديرية",
-  "visible": "ظاهر للعملاء",
-  "active": "نشطة",
-  "inactive": "غير نشطة",
-  "noResults": "لا توجد خدمات."
+  "loading": "جارٍ تحميل الخدمات...",
+  "table": {
+    "serviceName": "اسم الخدمة",
+    "category": "الفئة",
+    "duration": "المدة",
+    "price": "السعر",
+    "status": "الحالة"
+  },
+  "status": {
+    "active": "نشطة",
+    "inactive": "غير نشطة"
+  },
+  "categories": {
+    "maintenance": "صيانة",
+    "repair": "إصلاح",
+    "diagnostics": "تشخيص",
+    "bodywork": "أعمال الهيكل"
+  },
+  "modal": {
+    "title": "إضافة خدمة"
+  },
+  "fields": {
+    "nameEn": "اسم الخدمة بالإنجليزية",
+    "nameAr": "اسم الخدمة بالعربية",
+    "category": "الفئة",
+    "selectCategory": "اختر الفئة",
+    "price": "السعر (جنيه مصري)",
+    "duration": "المدة (بالدقائق)",
+    "descriptionEn": "الوصف بالإنجليزية",
+    "descriptionAr": "الوصف بالعربية"
+  },
+  "actions": {
+    "cancel": "إلغاء",
+    "save": "إضافة الخدمة"
+  }
 }
