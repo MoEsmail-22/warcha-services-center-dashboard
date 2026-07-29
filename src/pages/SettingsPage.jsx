@@ -102,7 +102,8 @@ export default function SettingsPage() {
                   label={t(field.translationKey)}
                   value={workshopForm[field.key] ?? ''}
                   placeholder={
-                    data.workshop[field.key] || (field.placeholderKey ? t(field.placeholderKey) : '')
+                    data.workshop[field.key] ||
+                    (field.placeholderKey ? t(field.placeholderKey) : '')
                   }
                   onChange={(event) => handleFieldChange(field.key, event.target.value)}
                 />
