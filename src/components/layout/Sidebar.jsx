@@ -45,7 +45,7 @@ export default function Sidebar({
       <aside
         className={[
           // base styles
-          'flex h-full flex-col bg-[#0A4746] text-white transition-all duration-300 ease-in-out',
+          'flex h-full flex-col bg-[#1C1712] text-white transition-all duration-300 ease-in-out',
           // width: collapsed vs expanded
           collapsed ? 'w-20' : 'w-[220px]',
           // mobile: fixed drawer
@@ -60,7 +60,7 @@ export default function Sidebar({
         {/* ===== Header ===== */}
         <div
           className={[
-            'flex h-20 items-center border-b border-white/10 bg-[#0A4746]',
+            'flex h-20 items-center border-b border-[#322A20] bg-[#1C1712]',
             collapsed ? 'justify-center px-2' : 'px-5',
           ].join(' ')}
         >
@@ -73,7 +73,7 @@ export default function Sidebar({
                 <p className="truncate text-lg leading-tight font-semibold text-white">
                   {t('brand.name', { defaultValue: 'Warsha' })}
                 </p>
-                <p className="truncate text-xs text-gray-300">
+                <p className="truncate text-xs text-[#7D7166]">
                   {settings?.workshop?.name ||
                     t('brand.subtitle', { defaultValue: 'Ahmed Auto Service' })}
                 </p>
@@ -105,11 +105,11 @@ export default function Sidebar({
                     title={collapsed ? t(item.labelKey) : undefined}
                     className={({ isActive }) =>
                       [
-                        'group relative flex items-center rounded-lg text-sm font-medium transition-colors',
+                        'group relative flex items-center rounded-lg border-s-[3px] border-transparent text-sm font-medium transition-colors',
                         collapsed ? 'justify-center px-2 py-3' : 'px-3 py-2.5',
                         isActive
-                          ? 'border border-[#FF7905] text-[#FF7905] shadow-sm'
-                          : 'text-[#FF7905] hover:bg-white/10',
+                          ? 'border-[#E08B2F] bg-[#2A2119] text-[#FBEEE0] shadow-sm'
+                          : 'text-[#A89A8A] hover:bg-[#251E17] hover:text-[#F0E9DF]',
                       ].join(' ')
                     }
                   >
@@ -119,7 +119,7 @@ export default function Sidebar({
                         {isActive && (
                           <span
                             className={[
-                              'absolute top-1/2 h-7 w-1 -translate-y-1/2 rounded-full bg-amber-500',
+                              'absolute top-1/2 h-7 w-1 -translate-y-1/2 rounded-full bg-[#E08B2F]',
                               isRTL ? 'right-0' : 'left-0',
                             ].join(' ')}
                             aria-hidden="true"

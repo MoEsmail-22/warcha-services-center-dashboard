@@ -8,7 +8,7 @@ import RatingStars from '@/components/widgets/RatingStars';
 import EmptyState from '@/components/widgets/EmptyState';
 import Pagination from '@/components/widgets/Pagination';
 
-const AVATAR_COLORS = ['#0E5C5B', '#2F80ED', '#9B51E0', '#EB5757', '#F2994A', '#27AE60'];
+const AVATAR_COLORS = ['#C8730A', '#E08B2F', '#B45F14', '#8A8074', '#A89A8A', '#7D7166'];
 const REVIEWS_PAGE_SIZE = 3;
 
 function getInitials(name = '') {

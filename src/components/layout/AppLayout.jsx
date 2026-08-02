@@ -20,7 +20,7 @@ function AppLayoutInner() {
   const { user } = useAuth();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-surface-page">
       <Sidebar
         collapsed={collapsed}
         onCollapse={() => setCollapsed((c) => !c)}

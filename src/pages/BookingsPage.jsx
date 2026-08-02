@@ -82,8 +82,8 @@ export default function BookingsPage() {
               }}
               className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
                 activeTab === tab.key
-                  ? 'border-[#0E5C5B] bg-[#0E5C5B] text-white'
-                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'border-[#1C1712] bg-[#1C1712] text-white'
+                  : 'border-[#E8E2D8] bg-white text-[#5A5045] hover:bg-[#F2EDE4]'
               }`}
             >
               {t(`tabs.${tab.key}`, { defaultValue: tab.label })}
@@ -94,14 +94,14 @@ export default function BookingsPage() {
             onClick={() => setFilterOpen(true)}
             className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
               hasActiveFilters
-                ? 'border-[#0E5C5B] bg-teal-50 text-[#0E5C5B]'
-                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                ? 'border-[#E08B2F] bg-[#FDF1DE] text-[#C8730A]'
+                : 'border-[#E8E2D8] bg-white text-[#5A5045] hover:bg-[#F2EDE4]'
             }`}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             {t('filters', { defaultValue: 'Filters' })}
             {hasActiveFilters && (
-              <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0E5C5B] px-1 text-[10px] font-bold text-white">
+              <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#E08B2F] px-1 text-[10px] font-bold text-white">
                 ●
               </span>
             )}

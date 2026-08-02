@@ -49,7 +49,9 @@ export function Pagination({
             aria-current={safePage === page ? 'page' : undefined}
             className={cn(
               'flex h-7 w-7 items-center justify-center rounded-md text-xs font-semibold transition-colors',
-              safePage === page ? 'bg-[#0E5C5B] text-white' : 'text-gray-600 hover:bg-gray-100'
+              safePage === page
+                ? 'bg-[#1C1712] text-white'
+                : 'text-[#5A5045] hover:bg-[#F2EDE4]'
             )}
           >
             {page}

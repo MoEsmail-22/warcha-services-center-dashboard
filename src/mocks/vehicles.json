@@ -1,0 +1,10 @@
+[
+  { "id": "V-001", "brand": "Toyota", "model": "Corolla", "year": 2021 },
+  { "id": "V-002", "brand": "Honda", "model": "Civic", "year": 2020 },
+  { "id": "V-003", "brand": "Hyundai", "model": "Elantra", "year": 2022 },
+  { "id": "V-004", "brand": "Kia", "model": "Sportage", "year": 2019 },
+  { "id": "V-005", "brand": "BMW", "model": "X5", "year": 2023 },
+  { "id": "V-006", "brand": "Mercedes", "model": "C-Class", "year": 2021 },
+  { "id": "V-007", "brand": "Nissan", "model": "Altima", "year": 2020 },
+  { "id": "V-008", "brand": "Ford", "model": "Focus", "year": 2018 }
+]

@@ -68,5 +68,9 @@
     "awaitingApproval": "بانتظار الموافقة",
     "capacity": "السعة",
     "vsLastWeek": "عن الأسبوع الماضي"
+  },
+  "footer": {
+    "copyright": "© {{year}} ورشة. جميع الحقوق محفوظة.",
+    "tagline": "إدارة الورشة أصبحت أسهل."
   }
 }

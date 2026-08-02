@@ -13,12 +13,15 @@ import {
   ServicesPricingPage,
   ReviewsPage,
   SettingsPage,
+  GoogleMapsLinkSettingsDemoPage,
   LoginPage,
   RegisterPage,
 } from './lazyPages';
 import DevPage from '../pages/DevPage'; // Direct import (not lazy) — it's a dev tool
 
 const withSuspense = (node) => <Suspense fallback={<RouteFallback />}>{node}</Suspense>;
+const googleMapsLinkDemoEnabled =
+  import.meta.env.VITE_ENABLE_GOOGLE_MAPS_LINK_DEMO === 'true';
 
 export const router = createBrowserRouter([
   // ---------- Root redirect ----------
@@ -62,6 +65,14 @@ export const router = createBrowserRouter([
           { path: 'services', element: withSuspense(<ServicesPricingPage />) },
           { path: 'reviews', element: withSuspense(<ReviewsPage />) },
           { path: 'settings', element: withSuspense(<SettingsPage />) },
+          ...(googleMapsLinkDemoEnabled
+            ? [
+                {
+                  path: 'settings-google-link-demo',
+                  element: withSuspense(<GoogleMapsLinkSettingsDemoPage />),
+                },
+              ]
+            : []),
         ],
       },
     ],

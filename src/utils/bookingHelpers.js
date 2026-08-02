@@ -66,14 +66,14 @@ export function createBookingViewModels({ bookings, customers, vehicles, service
       customer: {
         name: customerName,
         initials: getInitials(customerName),
-        avatarColor: '#3B82F6',
+        avatarColor: '#C8730A',
       },
       vehicle: vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year}` : 'Unknown vehicle',
       service: serviceName,
       technician: {
         name: technicianName,
         initials: getInitials(technicianName),
-        avatarColor: '#9CA3AF',
+        avatarColor: '#8A8074',
       },
       date: booking.bookingDate,
       time: booking.bookingTime,

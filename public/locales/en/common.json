@@ -60,5 +60,9 @@
     "awaitingApproval": "awaiting approval",
     "capacity": "capacity",
     "vsLastWeek": "vs last week"
+  },
+  "footer": {
+    "copyright": "© {{year}} Warsha. All rights reserved.",
+    "tagline": "Workshop management made simpler."
   }
 }

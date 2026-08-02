@@ -4,8 +4,8 @@
  * every booking, quote, or newly created record.
  */
 export const MOCK_AVATAR_COLORS = {
-  customer: '#3B82F6',
-  technician: '#9CA3AF',
+  customer: '#C8730A',
+  technician: '#8A8074',
 };
 
 /** Shared fallback values used when creating mock bookings. */
