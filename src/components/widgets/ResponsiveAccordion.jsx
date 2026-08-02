@@ -22,7 +22,7 @@ export function ResponsiveAccordion({ title, children, defaultOpen = false, clas
           <ChevronDown
             aria-hidden="true"
             className={cn(
-              'h-5 w-5 shrink-0 text-primary transition-transform duration-200 md:hidden',
+              'text-primary h-5 w-5 shrink-0 transition-transform duration-200 md:hidden',
               isOpen && 'rotate-180'
             )}
           />

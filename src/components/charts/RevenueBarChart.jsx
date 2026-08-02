@@ -114,7 +114,7 @@ export function RevenueBarChart({ data = [], title, currentDay, onSelect }) {
   return (
     <div className="card p-6">
       {/* Header row */}
-      {/* <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex items-start justify-between">
         <div>
           <h3 className="text-base font-semibold text-gray-900">{chartTitle}</h3>
           <p className="mt-0.5 text-xs text-gray-500">{hint}</p>
@@ -127,7 +127,7 @@ export function RevenueBarChart({ data = [], title, currentDay, onSelect }) {
             </p>
           </div>
         )}
-      </div> */}
+      </div>
 
       <ResponsiveContainer width="100%" height={240}>
         {/* ✅ VERTICAL chart — removed `layout="vertical"` */}

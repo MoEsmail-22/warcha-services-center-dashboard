@@ -14,6 +14,7 @@ import {
   getCustomerColor,
 } from '@/utils/dashboardHelpers';
 import { KPI_CARD_DEFINITIONS } from '@/mocks/dashboardKpis';
+import dashboardMock from '@/mocks/dashboard.json';
 
 export default function DashboardPage() {
   const { t } = useAppTranslation('dashboard');

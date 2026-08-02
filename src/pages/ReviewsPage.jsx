@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { MessageSquareText } from 'lucide-react';
-import { useCustomers, useReviews } from '@/contexts';
+import { useReviews } from '@/contexts';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { Button, Card, Modal } from '@/components/ui';
 import Avatar from '@/components/ui/Avatar';
@@ -36,16 +36,10 @@ function getRelativeTime(date, t) {
 export default function ReviewsPage() {
   const { t } = useAppTranslation('reviews');
   const { data: reviews, loading, replyReview } = useReviews();
-  const { data: customers } = useCustomers();
 
   const [selectedReview, setSelectedReview] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-
-  const customerById = useMemo(
-    () => new Map(customers.map((customer) => [customer.id, customer])),
-    [customers]
-  );
 
   const averageRating = useMemo(() => {
     if (!reviews.length) return 0;
@@ -124,8 +118,9 @@ export default function ReviewsPage() {
           ) : (
             <div className="divide-y divide-gray-100">
               {paginatedReviews.map((review, index) => {
-                const customer = customerById.get(review.customerId);
-                const customerName = customer?.fullName || t('unknownCustomer');
+                const customerName = review.customerId
+                  ? `Customer ${review.customerId.replace('C-', '#')}`
+                  : t('unknownCustomer');
                 const initials = getInitials(customerName);
 
                 return (
