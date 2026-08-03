@@ -8,7 +8,8 @@
     "category": "Category",
     "duration": "Duration",
     "price": "Price",
-    "status": "Status"
+    "status": "Status",
+    "actions": "Actions"
   },
   "status": {
     "active": "Active",
@@ -21,20 +22,33 @@
     "bodywork": "Bodywork"
   },
   "modal": {
-    "title": "Add Service"
+    "title": "Add Service",
+    "editTitle": "Edit Service"
   },
   "fields": {
+    "serviceId": "Service ID",
     "nameEn": "Service Name (English)",
     "nameAr": "Service Name (Arabic)",
     "category": "Category",
     "selectCategory": "Select category",
-    "price": "Price (EGP)",
+    "minPricing": "Minimum price (EGP)",
+    "maxPricing": "Maximum price (EGP)",
     "duration": "Duration (minutes)",
     "descriptionEn": "Description (English)",
     "descriptionAr": "Description (Arabic)"
   },
   "actions": {
     "cancel": "Cancel",
-    "save": "Add Service"
+    "save": "Add Service",
+    "saveChanges": "Save Changes",
+    "openMenu": "Open actions for {{name}}",
+    "edit": "Edit service",
+    "delete": "Delete service"
+  },
+  "delete": {
+    "finalTitle": "Final confirmation",
+    "finalWarning": "This action cannot be undone.",
+    "serviceDetails": "You are about to permanently delete {{name}} ({{id}}).",
+    "confirm": "Delete permanently"
   }
 }

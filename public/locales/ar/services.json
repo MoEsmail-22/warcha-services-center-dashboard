@@ -8,7 +8,8 @@
     "category": "الفئة",
     "duration": "المدة",
     "price": "السعر",
-    "status": "الحالة"
+    "status": "الحالة",
+    "actions": "الإجراءات"
   },
   "status": {
     "active": "نشطة",
@@ -21,20 +22,33 @@
     "bodywork": "أعمال الهيكل"
   },
   "modal": {
-    "title": "إضافة خدمة"
+    "title": "إضافة خدمة",
+    "editTitle": "تعديل الخدمة"
   },
   "fields": {
+    "serviceId": "معرّف الخدمة",
     "nameEn": "اسم الخدمة بالإنجليزية",
     "nameAr": "اسم الخدمة بالعربية",
     "category": "الفئة",
     "selectCategory": "اختر الفئة",
-    "price": "السعر (جنيه مصري)",
+    "minPricing": "الحد الأدنى للسعر (جنيه مصري)",
+    "maxPricing": "الحد الأقصى للسعر (جنيه مصري)",
     "duration": "المدة (بالدقائق)",
     "descriptionEn": "الوصف بالإنجليزية",
     "descriptionAr": "الوصف بالعربية"
   },
   "actions": {
     "cancel": "إلغاء",
-    "save": "إضافة الخدمة"
+    "save": "إضافة الخدمة",
+    "saveChanges": "حفظ التغييرات",
+    "openMenu": "فتح إجراءات {{name}}",
+    "edit": "تعديل الخدمة",
+    "delete": "حذف الخدمة"
+  },
+  "delete": {
+    "finalTitle": "التأكيد النهائي",
+    "finalWarning": "لا يمكن التراجع عن هذا الإجراء.",
+    "serviceDetails": "أنت على وشك حذف {{name}} ({{id}}) نهائيًا.",
+    "confirm": "حذف نهائي"
   }
 }
