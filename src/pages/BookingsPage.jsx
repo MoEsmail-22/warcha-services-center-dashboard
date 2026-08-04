@@ -9,10 +9,11 @@ import BookingDetailsDrawer from '../components/widgets/BookingDetailsDrawer';
 import Pagination from '../components/widgets/Pagination';
 import { BOOKING_FILTER_TABS, BOOKINGS_PAGE_SIZE } from '../constants/bookingFilters';
 import { filterBookings, formatBookingDate } from '../utils/bookingHelpers';
+import CancelBookingModal from '../components/bookings/CancelBookingModal';
 
 export default function BookingsPage() {
   const { t } = useAppTranslation('bookings');
-  const { bookings } = useBookings();
+  const { bookings, cancelBooking } = useBookings();
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,6 +22,7 @@ export default function BookingsPage() {
   // ---- Drawer state ----
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
 
   const filtered = useMemo(
     () => filterBookings(bookings, { tab: activeTab, search, advanced: advancedFilters }),
@@ -216,13 +218,24 @@ export default function BookingsPage() {
                       <StatusBadge status={booking.status} />
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <button
-                        onClick={() => setSelectedBooking(booking)}
-                        className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-                        aria-label="View details"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {booking.status === 'pending' && (
+                          <button
+                            type="button"
+                            onClick={() => setCancelTarget(booking)}
+                            className="rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+                          >
+                            {t('cancellation.button')}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setSelectedBooking(booking)}
+                          className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                          aria-label="View details"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -298,6 +311,15 @@ export default function BookingsPage() {
         open={!!selectedBooking}
         onClose={() => setSelectedBooking(null)}
         booking={selectedBooking}
+      />
+      <CancelBookingModal
+        open={Boolean(cancelTarget)}
+        itemName={cancelTarget ? `#${cancelTarget.id}` : ''}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={() => {
+          cancelBooking(cancelTarget.id);
+          setCancelTarget(null);
+        }}
       />
     </div>
   );

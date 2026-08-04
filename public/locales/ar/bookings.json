@@ -23,12 +23,28 @@
   "showing": "عرض",
   "of": "من",
   "noResults": "لا توجد حجوزات.",
+  "cancellation": {
+    "button": "إلغاء",
+    "title": "إلغاء الحجز؟",
+    "message": "هل أنت متأكد من إلغاء {{name}}؟",
+    "feeWarning": "قد يتم احتساب رسوم إلغاء بقيمة 50 جنيهًا مصريًا لهذا الإلغاء.",
+    "keep": "الاحتفاظ بالحجز",
+    "confirm": "إلغاء الحجز"
+  },
+  "workflow": {
+    "complete": "إكمال",
+    "createQuote": "إنشاء عرض سعر"
+  },
   "status": {
     "pending": "قيد الانتظار",
     "confirmed": "مؤكد",
     "in_service": "قيد الصيانة",
     "in_progress": "قيد التنفيذ",
     "completed": "مكتمل",
-    "cancelled": "ملغي"
+    "cancelled": "ملغي",
+    "quote_pending": "عرض السعر قيد الانتظار",
+    "billing": "الفوترة",
+    "billing_in_progress": "الفوترة قيد التنفيذ",
+    "ready": "جاهز"
   }
 }

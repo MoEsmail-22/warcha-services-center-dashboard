@@ -4,22 +4,38 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 import KanbanColumn from '../components/kanban/KanbanColumn';
 import { useJobs, JOB_STAGES } from '../contexts/JobsContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import CancelBookingModal from '../components/bookings/CancelBookingModal';
 
 export default function JobsBoardPage() {
   const { t } = useAppTranslation('dashboard');
-  const { jobs, moveJob, reorderJobs } = useJobs();
+  const {
+    jobs,
+    workflowQuotes,
+    moveJob,
+    reorderJobs,
+    canMoveJob,
+    createWorkflowQuote,
+    cancelJob,
+  } = useJobs();
   const [search, setSearch] = useState('');
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [workflowMessage, setWorkflowMessage] = useState('');
 
   // Filter jobs by search query (vehicle, customer, service)
-  const filteredJobs = jobs.filter((j) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
-      j.vehicle.toLowerCase().includes(q) ||
-      j.customer.toLowerCase().includes(q) ||
-      j.service.toLowerCase().includes(q)
-    );
-  });
+  const filteredJobs = jobs
+    .filter((j) => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        j.vehicle.toLowerCase().includes(q) ||
+        j.customer.toLowerCase().includes(q) ||
+        j.service.toLowerCase().includes(q)
+      );
+    })
+    .map((job) => ({
+      ...job,
+      quoteStatus: workflowQuotes.find((quote) => quote.jobId === job.id)?.status,
+    }));
 
   // Group filtered jobs by stage
   const jobsByStage = JOB_STAGES.reduce((acc, stage) => {
@@ -28,7 +44,7 @@ export default function JobsBoardPage() {
   }, {});
 
   // Count pending quotes (mock — set to 2 as in the mockup)
-  const pendingQuotes = 2;
+  const pendingQuotes = workflowQuotes.filter((quote) => quote.status === 'draft').length;
 
   const handleDragEnd = (result) => {
     const { source, destination } = result;
@@ -41,6 +57,12 @@ export default function JobsBoardPage() {
     } else {
       // Different column → move + reorder
       const jobId = jobsByStage[source.droppableId][source.index].id;
+      const permission = canMoveJob(jobId, destination.droppableId);
+      if (!permission.allowed) {
+        setWorkflowMessage(t(`jobs.workflow.${permission.reason}`));
+        return;
+      }
+      setWorkflowMessage('');
       moveJob(jobId, destination.droppableId);
       // Note: reorder within destination is handled by React state re-render
     }
@@ -101,16 +123,45 @@ export default function JobsBoardPage() {
         </div>
       </div>
 
+      {workflowMessage && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+          {workflowMessage}
+        </div>
+      )}
+
       {/* ============ KANBAN BOARD ============ */}
       <div className="flex-1 overflow-x-auto pb-4">
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="flex min-w-max gap-4">
             {JOB_STAGES.map((stage) => (
-              <KanbanColumn key={stage} stage={stage} jobs={jobsByStage[stage] ?? []} />
+              <KanbanColumn
+                key={stage}
+                stage={stage}
+                jobs={jobsByStage[stage] ?? []}
+                onCancel={setCancelTarget}
+                onCreateQuote={(job) => {
+                  const result = createWorkflowQuote(job.id);
+                  setWorkflowMessage(
+                    result.created
+                      ? t('jobs.workflow.quoteCreated')
+                      : t(`jobs.workflow.${result.reason}`)
+                  );
+                }}
+              />
             ))}
           </div>
         </DragDropContext>
       </div>
+
+      <CancelBookingModal
+        open={Boolean(cancelTarget)}
+        itemName={cancelTarget?.vehicle}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={() => {
+          cancelJob(cancelTarget.id);
+          setCancelTarget(null);
+        }}
+      />
     </div>
   );
 }

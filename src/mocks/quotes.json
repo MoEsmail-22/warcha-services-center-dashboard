@@ -19,6 +19,7 @@
   "recentQuotes": [
     {
       "id": "Q-2401",
+      "bookingId": "B-003",
       "customer": { "name": "Omar T.", "initials": "OT" },
       "vehicle": "Kia Sportage",
       "service": "A/C repair",
@@ -28,6 +29,7 @@
     },
     {
       "id": "Q-2402",
+      "bookingId": "B-006",
       "customer": { "name": "Youssef H.", "initials": "YH" },
       "vehicle": "Honda Civic",
       "service": "Oil + filter",
@@ -37,6 +39,7 @@
     },
     {
       "id": "Q-2403",
+      "bookingId": "B-004",
       "customer": { "name": "Mostafa R.", "initials": "MR" },
       "vehicle": "Chevrolet Optra",
       "service": "Suspension",
@@ -46,6 +49,7 @@
     },
     {
       "id": "Q-2404",
+      "bookingId": "B-012",
       "customer": { "name": "Laila S.", "initials": "LS" },
       "vehicle": "Toyota Yaris",
       "service": "Battery",

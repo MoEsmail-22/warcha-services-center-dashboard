@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Send, Search } from 'lucide-react';
+import { Plus, Send, Search, FilePenLine } from 'lucide-react';
 import { useQuotes } from '../contexts/QuotesContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import Avatar from '../components/ui/Avatar';
@@ -9,8 +9,17 @@ import { filterQuotes, formatQuoteCurrency } from '../utils/quotes';
 
 export default function QuotesPage() {
   const { t, i18n } = useAppTranslation('quotes');
-  const { recentQuotes, lineItems, total, addLineItem, updateLineItem, removeLineItem, sendQuote } =
-    useQuotes();
+  const {
+    recentQuotes,
+    lineItems,
+    total,
+    addLineItem,
+    updateLineItem,
+    removeLineItem,
+    sendQuote,
+    editWorkflowQuote,
+    activeWorkflowQuoteId,
+  } = useQuotes();
 
   // Quote header info (customer + vehicle being quoted)
   const [customerName, setCustomerName] = useState('Hazem M.');
@@ -22,11 +31,21 @@ export default function QuotesPage() {
     sendQuote({ customer: customerName, vehicle });
   };
 
+  const handleEditDraft = (quote) => {
+    const selected = editWorkflowQuote(quote.id);
+    if (!selected) return;
+    setCustomerName(selected.customer.name);
+    setVehicle(selected.vehicle);
+  };
+
   // Filter recent quotes by search
   const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
   const currency = i18n.language?.startsWith('ar') ? 'ج.م' : 'EGP';
   //utitlys
   const filteredQuotes = filterQuotes(recentQuotes, search);
+  const activeWorkflowQuote = recentQuotes.find(
+    (quote) => quote.id === activeWorkflowQuoteId
+  );
 
   return (
     <div className="flex h-full flex-col">
@@ -62,6 +81,18 @@ export default function QuotesPage() {
                 {t('buildQuote', { defaultValue: 'Build a quote' })}
                 {customerName && <span className="text-[#5A6968]"> — {customerName}</span>}
               </h2>
+              {activeWorkflowQuoteId && (
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <p className="text-xs font-semibold text-amber-700">
+                    {t('editingDiagnosticDraft')}
+                  </p>
+                  {activeWorkflowQuote?.bookingId && (
+                    <span className="rounded-full bg-[#F2EDE4] px-2 py-0.5 text-xs font-semibold text-[#5A5045]">
+                      {t('bookingId')}: #{activeWorkflowQuote.bookingId}
+                    </span>
+                  )}
+                </div>
+              )}
               <p className="mt-0.5 text-xs text-[#5A6968]">
                 {t('buildQuoteSubtitle', { defaultValue: 'Add line items and send for approval' })}
               </p>
@@ -167,7 +198,7 @@ export default function QuotesPage() {
 
         {/* ---- RIGHT: Recent quotes ---- */}
         <div
-          className="flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-2"
+          className="flex h-[30rem] max-h-[70vh] min-h-0 flex-col self-start overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:h-[34rem] lg:col-span-2"
           style={{ borderRadius: '16px' }}
         >
           <div className="mb-4 flex items-center justify-between">
@@ -195,7 +226,7 @@ export default function QuotesPage() {
           </div>
 
           {/* Quotes list */}
-          <div className="flex-1 space-y-2 overflow-y-auto">
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pe-1">
             {filteredQuotes.length === 0 ? (
               <div className="rounded-lg border-2 border-dashed border-gray-200 py-8 text-center text-sm text-gray-400">
                 {t('noQuotes', { defaultValue: 'No quotes found.' })}
@@ -221,6 +252,11 @@ export default function QuotesPage() {
                         <p className="truncate text-xs text-[#5A6968]">
                           {quote.vehicle} — {quote.service}
                         </p>
+                        {quote.bookingId && (
+                          <p className="mt-1 text-[11px] font-semibold text-[#8A8074]">
+                            {t('bookingId')}: #{quote.bookingId}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">
@@ -234,7 +270,19 @@ export default function QuotesPage() {
                     </div>
                   </div>
                   <div className="mt-2.5">
-                    <StatusBadge status={quote.status} />
+                    <div className="flex items-center justify-between gap-2">
+                      <StatusBadge status={quote.status} />
+                      {quote.status === 'draft' && quote.jobId && (
+                        <button
+                          type="button"
+                          onClick={() => handleEditDraft(quote)}
+                          className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100"
+                        >
+                          <FilePenLine className="h-3.5 w-3.5" />
+                          {t('editDraft')}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))

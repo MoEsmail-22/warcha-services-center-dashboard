@@ -13,6 +13,9 @@ const STATUS_STYLES = {
   confirmed: 'bg-status-confirmed/10 text-status-confirmed',
   cancelled: 'bg-status-cancelled/10 text-status-cancelled',
   completed: 'bg-status-completed/10 text-status-completed',
+  quote_pending: 'bg-status-pending/10 text-status-pending',
+  billing: 'bg-accent/10 text-accent-dark',
+  billing_in_progress: 'bg-accent/10 text-accent-dark',
 
   // Job statuses
   new: 'bg-accent/10 text-accent-dark',
@@ -44,6 +47,9 @@ const DEFAULT_LABELS = {
   confirmed: 'Confirmed',
   cancelled: 'Cancelled',
   completed: 'Completed',
+  quote_pending: 'Quote Pending',
+  billing: 'Billing',
+  billing_in_progress: 'Billing in Progress',
   new: 'New',
   in_progress: 'In Progress',
   inProgress: 'In Progress',

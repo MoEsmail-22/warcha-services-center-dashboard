@@ -9,7 +9,7 @@ export function filterQuotes(quotes, searchTerm) {
   if (!query) return quotes;
 
   return quotes.filter((quote) =>
-    [quote.customer?.name, quote.vehicle, quote.service].some((value) =>
+    [quote.id, quote.bookingId, quote.customer?.name, quote.vehicle, quote.service].some((value) =>
       value?.toLocaleLowerCase().includes(query)
     )
   );
