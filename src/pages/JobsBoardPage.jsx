@@ -124,7 +124,10 @@ export default function JobsBoardPage() {
       </div>
 
       {workflowMessage && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+        >
           {workflowMessage}
         </div>
       )}
