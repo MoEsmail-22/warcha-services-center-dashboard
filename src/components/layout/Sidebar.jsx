@@ -119,7 +119,7 @@ export default function Sidebar({
                         {isActive && (
                           <span
                             className={[
-                              'absolute top-1/2 h-7 w-1 -translate-y-1/2 rounded-full bg-[#E08B2F]',
+                              'absolute top-1/2 h-7 w-1 -translate-y-1/2 rounded-full bg-amber-600',
                               isRTL ? 'right-0' : 'left-0',
                             ].join(' ')}
                             aria-hidden="true"
@@ -153,14 +153,14 @@ export default function Sidebar({
             >
               {isRTL ? (
                 collapsed ? (
-                  <ChevronRight className="h-5 w-5" />
-                ) : (
                   <ChevronLeft className="h-5 w-5" />
+                ) : (
+                  <ChevronRight className="h-5 w-5" />
                 )
               ) : collapsed ? (
-                <ChevronLeft className="h-5 w-5" />
-              ) : (
                 <ChevronRight className="h-5 w-5" />
+              ) : (
+                <ChevronLeft className="h-5 w-5" />
               )}
             </button>
           )}

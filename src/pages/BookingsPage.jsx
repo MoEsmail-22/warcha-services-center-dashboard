@@ -242,20 +242,20 @@ export default function BookingsPage() {
               )}
             </tbody>
           </table>
-        </div>
 
-        <Pagination
-          currentPage={currentPageSafe}
-          totalItems={filtered.length}
-          pageSize={BOOKINGS_PAGE_SIZE}
-          onPageChange={setCurrentPage}
-          labels={{
-            showing: t('showing', { defaultValue: 'Showing' }),
-            of: t('of', { defaultValue: 'of' }),
-            previous: t('previousPage', { defaultValue: 'Previous page' }),
-            next: t('nextPage', { defaultValue: 'Next page' }),
-          }}
-        />
+          <Pagination
+            currentPage={currentPageSafe}
+            totalItems={filtered.length}
+            pageSize={BOOKINGS_PAGE_SIZE}
+            onPageChange={setCurrentPage}
+            labels={{
+              showing: t('showing', { defaultValue: 'Showing' }),
+              of: t('of', { defaultValue: 'of' }),
+              previous: t('previousPage', { defaultValue: 'Previous page' }),
+              next: t('nextPage', { defaultValue: 'Next page' }),
+            }}
+          />
+        </div>
 
         {false && (
           <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
