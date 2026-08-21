@@ -147,7 +147,7 @@ function UserMenu({ user }) {
         aria-expanded={open}
       >
         {/* Avatar — rounded SQUARE, teal background, white initials */}
-        <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold text-white shadow-sm">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#E08B2F] to-[#C8730A] text-sm font-semibold text-white shadow-sm">
           {initials}
         </div>
 

@@ -36,6 +36,6 @@ export function getCustomerName(customer) {
 }
 
 export function getCustomerColor(customer) {
-  if (customer && typeof customer === 'object') return customer.avatarColor ?? '#3B82F6';
-  return '#3B82F6';
+  if (customer && typeof customer === 'object') return customer.avatarColor ?? '#C8730A';
+  return '#C8730A';
 }

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import { MOCK_AVATAR_COLORS, MOCK_QUOTE_DEFAULTS } from '@/mocks/constants';
 import quoteMockData from '@/mocks/quotes.json';
+import { useJobs } from './JobsContext';
 
 const QuotesContext = createContext(null);
 
@@ -15,9 +16,11 @@ const createRecentQuotes = () =>
   }));
 
 export function QuotesProvider({ children }) {
+  const { workflowQuotes, sendWorkflowQuote } = useJobs();
   // quotes.json is the single source of truth for the initial quote data.
   const [recentQuotes, setRecentQuotes] = useState(createRecentQuotes);
   const [lineItems, setLineItems] = useState(createDefaultLineItems);
+  const [activeWorkflowQuoteId, setActiveWorkflowQuoteId] = useState(null);
 
   const addLineItem = () => {
     setLineItems((previous) => [...previous, { id: Date.now(), label: '', amount: 0 }]);
@@ -39,6 +42,17 @@ export function QuotesProvider({ children }) {
 
   const sendQuote = ({ customer, vehicle }) => {
     const total = lineItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+
+    // Sending an auto-created diagnostic draft advances its linked workflow.
+    if (activeWorkflowQuoteId) {
+      const sentQuote = sendWorkflowQuote(activeWorkflowQuoteId, lineItems);
+      if (sentQuote) {
+        setActiveWorkflowQuoteId(null);
+        setLineItems(createDefaultLineItems());
+      }
+      return sentQuote;
+    }
+
     const newQuote = {
       id: `Q-${2400 + recentQuotes.length + 1}`,
       customer: {
@@ -71,15 +85,25 @@ export function QuotesProvider({ children }) {
     return newQuote;
   };
 
+  const editWorkflowQuote = (quoteId) => {
+    const quote = workflowQuotes.find((item) => item.id === quoteId && item.status === 'draft');
+    if (!quote) return null;
+    setActiveWorkflowQuoteId(quote.id);
+    setLineItems(quote.lineItems.map((item) => ({ ...item })));
+    return quote;
+  };
+
   const total = lineItems.reduce((sum, item) => sum + (item.amount || 0), 0);
   const value = {
-    recentQuotes,
+    recentQuotes: [...workflowQuotes, ...recentQuotes],
     lineItems,
     total,
     addLineItem,
     updateLineItem,
     removeLineItem,
     sendQuote,
+    editWorkflowQuote,
+    activeWorkflowQuoteId,
   };
 
   return <QuotesContext.Provider value={value}>{children}</QuotesContext.Provider>;

@@ -2,6 +2,7 @@ export const mockJobs = [
   // ---- New (2 cards) ----
   {
     id: 'job-1',
+    bookingId: 'B-002',
     stage: 'new',
     vehicle: 'Hyundai Elantra',
     service: 'Brake check',
@@ -11,6 +12,7 @@ export const mockJobs = [
   },
   {
     id: 'job-2',
+    bookingId: 'B-005',
     stage: 'new',
     vehicle: 'Nissan Sunny',
     service: 'General check',
@@ -21,6 +23,7 @@ export const mockJobs = [
   // ---- Diagnosing (1 card) ----
   {
     id: 'job-3',
+    bookingId: 'B-003',
     stage: 'diagnosing',
     vehicle: 'Kia Sportage',
     service: 'A/C not cooling',
@@ -31,6 +34,7 @@ export const mockJobs = [
   // ---- In Progress (2 cards) ----
   {
     id: 'job-4',
+    bookingId: 'B-001',
     stage: 'in_progress',
     vehicle: 'Toyota Corolla',
     service: 'Oil change',
@@ -40,6 +44,7 @@ export const mockJobs = [
   },
   {
     id: 'job-5',
+    bookingId: 'B-004',
     stage: 'in_progress',
     vehicle: 'Chevrolet Optra',
     service: 'Suspension',
@@ -50,6 +55,9 @@ export const mockJobs = [
   // ---- Ready (1 card) ----
   {
     id: 'job-6',
+    bookingId: 'B-006',
+    // This existing Ready example is valid because its billing quote was sent.
+    quoteStatus: 'sent',
     stage: 'ready',
     vehicle: 'Honda Civic',
     service: 'Oil + filter',

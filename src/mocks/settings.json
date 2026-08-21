@@ -4,6 +4,7 @@
     "address": "12 Gameat El Dewal St, Mohandessin",
     "phone": "+20 100 123 4567",
     "secondaryPhone": "+20 122 123 4567",
+    "location": null,
     "workingHours": {
       "saturday": { "enabled": true, "open": "09:00", "close": "22:00" },
       "sunday": { "enabled": true, "open": "", "close": "" },

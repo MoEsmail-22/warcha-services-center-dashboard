@@ -1,31 +1,10 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useServices } from '@/contexts';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
-import {
-  Button,
-  Input,
-  Modal,
-  Select,
-  Table,
-  TBody,
-  TD,
-  TH,
-  THead,
-  Toggle,
-  TR,
-} from '@/components/ui';
-
-const INITIAL_FORM = {
-  nameEn: '',
-  nameAr: '',
-  category: '',
-  price: '',
-  durationMinutes: '',
-  descriptionEn: '',
-  descriptionAr: '',
-};
+import { Button, Modal, Table, TBody, TD, TH, THead, Toggle, TR } from '@/components/ui';
+import ServiceFormModal from '@/components/services/ServiceFormModal';
 
 function formatDuration(minutes, language) {
   const value = Number(minutes);
@@ -53,25 +32,71 @@ function formatPrice(price, language) {
 export default function ServicesPricingPage() {
   const { t } = useAppTranslation('services');
   const { lang } = useLanguage();
-  const { data: services, loading, addService, toggleStatus } = useServices();
+  const {
+    data: services,
+    loading,
+    addService,
+    updateService,
+    toggleStatus,
+    deleteService,
+  } = useServices();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState(INITIAL_FORM);
+  const [formModal, setFormModal] = useState({ open: false, service: null });
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteStep, setDeleteStep] = useState(0);
 
-  const updateField = (field, value) => {
-    setForm((current) => ({ ...current, [field]: value }));
+  useEffect(() => {
+    if (!activeMenuId) return undefined;
+
+    const closeMenu = (event) => {
+      if (!event.target.closest('[data-service-actions]')) setActiveMenuId(null);
+    };
+
+    document.addEventListener('mousedown', closeMenu);
+    return () => document.removeEventListener('mousedown', closeMenu);
+  }, [activeMenuId]);
+
+  const closeFormModal = () => setFormModal({ open: false, service: null });
+
+  const saveService = (form) => {
+    if (!formModal.service) {
+      addService(form);
+      closeFormModal();
+      return;
+    }
+
+    updateService(formModal.service.id, {
+      name: { en: form.nameEn.trim(), ar: form.nameAr.trim() },
+      description: {
+        en: form.descriptionEn.trim(),
+        ar: form.descriptionAr.trim(),
+      },
+      category: form.category,
+      durationMinutes: Number(form.durationMinutes),
+      price: {
+        from: Number(form.minPricing),
+        to: Number(form.maxPricing),
+      },
+      updatedAt: new Date().toISOString(),
+    });
+    closeFormModal();
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setForm(INITIAL_FORM);
+  const requestDelete = (service) => {
+    setActiveMenuId(null);
+    setDeleteTarget(service);
+    setDeleteStep(2);
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const closeDeleteModal = () => {
+    setDeleteTarget(null);
+    setDeleteStep(0);
+  };
 
-    addService(form);
-    closeModal();
+  const confirmDelete = () => {
+    deleteService(deleteTarget.id);
+    closeDeleteModal();
   };
 
   return (
@@ -87,7 +112,10 @@ export default function ServicesPricingPage() {
           <p className="mt-1 text-sm text-[#5A6968]">{t('subtitle')}</p>
         </div>
 
-        <Button onClick={() => setIsModalOpen(true)} className="gap-2 self-start sm:self-auto">
+        <Button
+          onClick={() => setFormModal({ open: true, service: null })}
+          className="gap-2 self-start sm:self-auto"
+        >
           <Plus size={18} />
           {t('addService')}
         </Button>
@@ -103,18 +131,19 @@ export default function ServicesPricingPage() {
                 <TH>{t('table.duration')}</TH>
                 <TH>{t('table.price')}</TH>
                 <TH>{t('table.status')}</TH>
+                <TH className="text-end">{t('table.actions')}</TH>
               </TR>
             </THead>
 
             <TBody>
               {loading ? (
                 <TR>
-                  <TD colSpan={5} className="py-10 text-center text-gray-500">
+                  <TD colSpan={6} className="py-10 text-center text-gray-500">
                     {t('loading')}
                   </TD>
                 </TR>
               ) : (
-                services.map((service) => {
+                services.map((service, index) => {
                   const isActive = service.status === 'active';
 
                   return (
@@ -147,6 +176,51 @@ export default function ServicesPricingPage() {
                           </span>
                         </div>
                       </TD>
+                      <TD className="text-end">
+                        <div className="relative inline-block" data-service-actions>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setActiveMenuId((current) =>
+                                current === service.id ? null : service.id
+                              )
+                            }
+                            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-[#F2EDE4] hover:text-[#1C1712]"
+                            aria-label={t('actions.openMenu', { name: service.name[lang] })}
+                            aria-expanded={activeMenuId === service.id}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+
+                          {activeMenuId === service.id && (
+                            <div
+                              className={`absolute end-0 z-20 w-44 overflow-hidden rounded-xl border border-[#E8E2D8] bg-white py-1 text-start shadow-lg ${
+                                index >= services.length - 2 ? 'bottom-full mb-1' : 'top-full mt-1'
+                              }`}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveMenuId(null);
+                                  setFormModal({ open: true, service });
+                                }}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-[#1C1712] hover:bg-[#F6F3EE]"
+                              >
+                                <Pencil className="h-4 w-4 text-[#8A8074]" />
+                                {t('actions.edit')}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => requestDelete(service)}
+                                className="flex w-full items-center gap-2 border-t border-[#F2EDE4] px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                {t('actions.delete')}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </TD>
                     </TR>
                   );
                 })
@@ -156,108 +230,39 @@ export default function ServicesPricingPage() {
         </div>
       </div>
 
+      <ServiceFormModal
+        open={formModal.open}
+        service={formModal.service}
+        onClose={closeFormModal}
+        onSave={saveService}
+      />
+
       <Modal
-        open={isModalOpen}
-        onClose={closeModal}
-        title={t('modal.title')}
-        size="lg"
+        open={deleteStep === 2}
+        onClose={closeDeleteModal}
+        title={t('delete.finalTitle')}
+        size="sm"
+        dismissOnBackdrop={false}
         footer={
           <>
-            <Button type="button" variant="outline" onClick={closeModal}>
+            <Button type="button" variant="outline" onClick={closeDeleteModal}>
               {t('actions.cancel')}
             </Button>
-            <Button type="submit" form="add-service-form">
-              {t('actions.save')}
+            <Button type="button" variant="danger" onClick={confirmDelete}>
+              {t('delete.confirm')}
             </Button>
           </>
         }
       >
-        <form id="add-service-form" onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input
-              id="service-name-en"
-              label={t('fields.nameEn')}
-              value={form.nameEn}
-              onChange={(event) => updateField('nameEn', event.target.value)}
-              required
-            />
-
-            <Input
-              id="service-name-ar"
-              label={t('fields.nameAr')}
-              value={form.nameAr}
-              onChange={(event) => updateField('nameAr', event.target.value)}
-              dir="rtl"
-              required
-            />
-
-            <Select
-              id="service-category"
-              label={t('fields.category')}
-              value={form.category}
-              onChange={(event) => updateField('category', event.target.value)}
-              required
-            >
-              <option value="" disabled>
-                {t('fields.selectCategory')}
-              </option>
-              <option value="maintenance">{t('categories.maintenance')}</option>
-              <option value="repair">{t('categories.repair')}</option>
-              <option value="diagnostics">{t('categories.diagnostics')}</option>
-              <option value="bodywork">{t('categories.bodywork')}</option>
-            </Select>
-
-            <Input
-              id="service-price"
-              type="number"
-              min="0"
-              step="0.01"
-              label={t('fields.price')}
-              value={form.price}
-              onChange={(event) => updateField('price', event.target.value)}
-              required
-            />
-
-            <Input
-              id="service-duration"
-              type="number"
-              min="1"
-              label={t('fields.duration')}
-              value={form.durationMinutes}
-              onChange={(event) => updateField('durationMinutes', event.target.value)}
-              required
-            />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label htmlFor="service-description-en" className="label">
-                {t('fields.descriptionEn')}
-              </label>
-              <textarea
-                id="service-description-en"
-                className="input min-h-24 resize-y"
-                value={form.descriptionEn}
-                onChange={(event) => updateField('descriptionEn', event.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="service-description-ar" className="label">
-                {t('fields.descriptionAr')}
-              </label>
-              <textarea
-                id="service-description-ar"
-                dir="rtl"
-                className="input min-h-24 resize-y"
-                value={form.descriptionAr}
-                onChange={(event) => updateField('descriptionAr', event.target.value)}
-                required
-              />
-            </div>
-          </div>
-        </form>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <p className="text-sm font-semibold text-red-800">{t('delete.finalWarning')}</p>
+          <p className="mt-2 text-sm text-red-700">
+            {t('delete.serviceDetails', {
+              id: deleteTarget?.id,
+              name: deleteTarget?.name?.[lang] || deleteTarget?.name?.en,
+            })}
+          </p>
+        </div>
       </Modal>
     </div>
   );

@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 import mockBookings from '../mocks/bookings.json';
 import mockServices from '../mocks/services.json';
 import { createBookingViewModels } from '../utils/bookingHelpers';
@@ -28,7 +28,7 @@ const bookingTechnicians = getReferenceRecords('technicianId', (id) => ({
   fullName: `Technician ${id.replace('T-', '#')}`,
 }));
 
-const bookings = createBookingViewModels({
+const initialBookings = createBookingViewModels({
   bookings: mockBookings,
   customers: bookingCustomers,
   vehicles: bookingVehicles,
@@ -40,18 +40,44 @@ const today = new Date().toISOString().slice(0, 10);
 const yesterdayDate = new Date();
 yesterdayDate.setDate(yesterdayDate.getDate() - 1);
 const yesterday = yesterdayDate.toISOString().slice(0, 10);
-const todaysBookings = bookings.filter((booking) => booking.date === today);
-const yesterdaysCount = bookings.filter((booking) => booking.date === yesterday).length;
-
-const contextValue = {
-  bookings,
-  todaysBookings,
-  todaysCount: todaysBookings.length,
-  yesterdaysCount,
-  difference: todaysBookings.length - yesterdaysCount,
-};
-
 export function BookingsProvider({ children }) {
+  const [bookings, setBookings] = useState(initialBookings);
+
+  // The mock uses "pending" for a newly received booking request.
+  const cancelBooking = (bookingId) => {
+    setBookings((current) =>
+      current.map((booking) =>
+        booking.id === bookingId && booking.status === 'pending'
+          ? { ...booking, status: 'cancelled', cancellationFee: 50 }
+          : booking
+      )
+    );
+  };
+
+  // Workflow contexts use this single action so Booking status stays in sync.
+  const updateBookingStatus = (bookingId, status, extra = {}) => {
+    setBookings((current) =>
+      current.map((booking) =>
+        booking.id === bookingId ? { ...booking, ...extra, status } : booking
+      )
+    );
+  };
+
+  const contextValue = useMemo(() => {
+    const todaysBookings = bookings.filter((booking) => booking.date === today);
+    const yesterdaysCount = bookings.filter((booking) => booking.date === yesterday).length;
+
+    return {
+      bookings,
+      todaysBookings,
+      todaysCount: todaysBookings.length,
+      yesterdaysCount,
+      difference: todaysBookings.length - yesterdaysCount,
+      cancelBooking,
+      updateBookingStatus,
+    };
+  }, [bookings]);
+
   return <BookingsContext.Provider value={contextValue}>{children}</BookingsContext.Provider>;
 }
 

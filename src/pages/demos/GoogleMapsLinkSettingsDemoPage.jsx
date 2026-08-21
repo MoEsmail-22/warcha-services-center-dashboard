@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Input, Toggle } from '@/components/ui';
 import { ErrorState, ResponsiveAccordion, SkeletonCard } from '@/components/widgets';
+import GoogleMapsUrlPreview from '@/components/settings/legacy/GoogleMapsUrlPreview';
+import WorkingHoursEditor from '@/components/settings/WorkingHoursEditor';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
-import GoogleMapsPreview from '@/components/settings/GoogleMapsPreview';
-import LocationPicker from '@/components/settings/LocationPicker';
-import WorkingHoursEditor from '@/components/settings/WorkingHoursEditor';
 
 const PROFILE_FIELDS = [
   { key: 'name', type: 'text', translationKey: 'workshopName' },
   { key: 'address', type: 'text', translationKey: 'address' },
+  {
+    key: 'googleMapsUrl',
+    type: 'url',
+    translationKey: 'googleMapsUrl',
+    placeholderKey: 'googleMapsUrlPlaceholder',
+  },
   { key: 'phone', type: 'tel', translationKey: 'phone' },
   {
     key: 'secondaryPhone',
@@ -31,76 +36,55 @@ function isGoogleMapsUrl(value) {
     const hostname = new URL(value).hostname.toLowerCase();
     return (
       hostname === 'maps.app.goo.gl' ||
-      hostname === 'goo.gl' ||
-      hostname.endsWith('.google.com') ||
-      hostname === 'google.com'
+      hostname === 'google.com' ||
+      hostname.endsWith('.google.com')
     );
   } catch {
     return false;
   }
 }
 
-function hasCoordinates(location) {
-  return (
-    Number.isFinite(Number(location?.latitude)) && Number.isFinite(Number(location?.longitude))
-  );
-}
-
-export default function SettingsPage() {
+/**
+ * Disabled legacy demo of the original Google Maps URL settings experience.
+ * Enable VITE_ENABLE_GOOGLE_MAPS_LINK_DEMO to register its protected route.
+ */
+export default function GoogleMapsLinkSettingsDemoPage() {
   const { t } = useAppTranslation('settings');
   const { data, loading, error, updateWorkshop, togglePreference } = useSettings();
   const [workshopForm, setWorkshopForm] = useState(null);
+  const [formError, setFormError] = useState('');
   const [saved, setSaved] = useState(false);
-  const [locationError, setLocationError] = useState('');
 
-  // Inputs start empty and use saved settings as placeholders. This keeps the
-  // design clean while still showing the current value for every field.
   useEffect(() => {
     if (data?.workshop) setWorkshopForm({});
   }, [data?.workshop]);
 
   const handleFieldChange = (key, value) => {
     setSaved(false);
-    if (key === 'googleMapsUrl') setLocationError('');
+    setFormError('');
     setWorkshopForm((current) => ({ ...current, [key]: value }));
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const enteredMapsUrl = workshopForm.googleMapsUrl?.trim() || '';
-    const currentLocation = data.workshop.location;
-    const savedMapsUrl = currentLocation?.googleMapsUrl || '';
-
-    // A workshop needs either a map pin or a Google Maps link. A previously
-    // saved value still counts when the user edits another profile field.
-    if (!hasCoordinates(currentLocation) && !enteredMapsUrl && !savedMapsUrl) {
-      setLocationError(
-        t('locationRequired', { defaultValue: 'Choose a map location or add a Google Maps link.' })
-      );
-      return;
-    }
-
-    if (enteredMapsUrl && !isGoogleMapsUrl(enteredMapsUrl)) {
-      setLocationError(
+    const enteredMapUrl = workshopForm.googleMapsUrl?.trim();
+    if (enteredMapUrl && !isGoogleMapsUrl(enteredMapUrl)) {
+      setFormError(
         t('invalidGoogleMapsUrl', { defaultValue: 'Enter a valid Google Maps link.' })
       );
       return;
     }
 
-    // Empty fields keep their existing placeholder value; only typed fields change.
     const nextWorkshop = Object.fromEntries(
-      PROFILE_FIELDS.map(({ key }) => [key, workshopForm[key]?.trim() || data.workshop[key] || ''])
+      PROFILE_FIELDS.map(({ key }) => [
+        key,
+        workshopForm[key]?.trim() || data.workshop[key] || '',
+      ])
     );
 
-    updateWorkshop({
-      ...nextWorkshop,
-      location: enteredMapsUrl
-        ? { ...currentLocation, googleMapsUrl: enteredMapsUrl }
-        : currentLocation,
-    });
+    updateWorkshop(nextWorkshop);
     setWorkshopForm({});
-    setLocationError('');
     setSaved(true);
   };
 
@@ -122,6 +106,11 @@ export default function SettingsPage() {
     );
   }
 
+  const locationUrl =
+    workshopForm.googleMapsUrl === undefined
+      ? data.workshop.googleMapsUrl
+      : workshopForm.googleMapsUrl.trim();
+
   return (
     <div className="flex h-full flex-col">
       <header className="mb-5">
@@ -132,7 +121,9 @@ export default function SettingsPage() {
           {t('title', { defaultValue: 'Settings' })}
         </h1>
         <p className="mt-1 text-sm text-[#5A6968]">
-          {t('subtitle', { defaultValue: 'Manage your workshop profile and account.' })}
+          {t('googleMapsLinkDemoSubtitle', {
+            defaultValue: 'Legacy demo: add a Google Maps link and preview it in an iframe.',
+          })}
         </p>
       </header>
 
@@ -143,39 +134,30 @@ export default function SettingsPage() {
             defaultOpen
           >
             <form onSubmit={handleSubmit} className="space-y-4 p-5">
-              {/* Fields come from one definition so adding a profile field stays simple. */}
               {PROFILE_FIELDS.map((field) => (
                 <Input
                   key={field.key}
-                  id={`workshop-${field.key}`}
+                  id={`legacy-workshop-${field.key}`}
                   type={field.type}
-                  label={t(field.translationKey)}
+                  label={t(field.translationKey, {
+                    defaultValue:
+                      field.key === 'googleMapsUrl' ? 'Google Maps link' : undefined,
+                  })}
                   value={workshopForm[field.key] ?? ''}
                   placeholder={
                     data.workshop[field.key] ||
-                    (field.placeholderKey ? t(field.placeholderKey) : '')
+                    (field.placeholderKey
+                      ? t(field.placeholderKey, {
+                          defaultValue:
+                            field.key === 'googleMapsUrl'
+                              ? 'Paste your Google Maps share link'
+                              : '',
+                        })
+                      : '')
                   }
                   onChange={(event) => handleFieldChange(field.key, event.target.value)}
                 />
               ))}
-
-              <Input
-                id="workshop-google-maps-url"
-                type="url"
-                label={t('googleMapsUrl')}
-                value={workshopForm.googleMapsUrl ?? ''}
-                placeholder={data.workshop.location?.googleMapsUrl || t('googleMapsUrlPlaceholder')}
-                onChange={(event) => handleFieldChange('googleMapsUrl', event.target.value)}
-                error={locationError}
-              />
-              <LocationPicker
-                value={data.workshop.location}
-                onChange={(location) => {
-                  updateWorkshop({ location });
-                  setLocationError('');
-                  setSaved(false);
-                }}
-              />
 
               <WorkingHoursEditor
                 value={data.workshop.workingHours}
@@ -189,6 +171,7 @@ export default function SettingsPage() {
                 <Button type="submit" className="min-h-10 px-5">
                   {t('saveChanges', { defaultValue: 'Save changes' })}
                 </Button>
+                {formError && <p className="text-sm font-medium text-red-600">{formError}</p>}
                 {saved && (
                   <p role="status" className="text-sm font-medium text-emerald-700">
                     {t('changesSaved', { defaultValue: 'Changes saved' })}
@@ -206,14 +189,13 @@ export default function SettingsPage() {
               defaultOpen={false}
             >
               <div>
-                {/* Preferences update immediately, matching the switch behavior in the design. */}
                 {PREFERENCE_FIELDS.map((preference) => (
                   <div
                     key={preference.key}
                     className="border-b border-gray-200 px-5 py-4 last:border-b-0"
                   >
                     <Toggle
-                      id={`preference-${preference.key}`}
+                      id={`legacy-preference-${preference.key}`}
                       label={t(preference.translationKey)}
                       checked={Boolean(data.preferences[preference.key])}
                       onChange={() => togglePreference(preference.key)}
@@ -224,7 +206,9 @@ export default function SettingsPage() {
             </ResponsiveAccordion>
           </Card>
 
-          <GoogleMapsPreview location={data.workshop.location} />
+          {isGoogleMapsUrl(locationUrl) && (
+            <GoogleMapsUrlPreview googleMapsUrl={locationUrl} />
+          )}
         </div>
       </div>
     </div>

@@ -106,22 +106,6 @@ export default function DashboardPage() {
             })}
           </p>
         </div>
-
-        <button
-          className="inline-flex items-center justify-center gap-2 px-4 text-white shadow-sm transition-colors hover:opacity-90"
-          style={{
-            backgroundColor: '#0E5C5B',
-            borderRadius: '10px',
-            height: '42px',
-            minWidth: '126px',
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: '14px',
-            fontWeight: 600,
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          {t('newBooking', { defaultValue: 'New booking' })}
-        </button>
       </div>
 
       {/* ============ KPI CARDS ============ */}

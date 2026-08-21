@@ -99,7 +99,8 @@ export function ServicesProvider({ children }) {
     descriptionEn,
     descriptionAr,
     category,
-    price,
+    minPricing,
+    maxPricing,
     durationMinutes,
   }) => {
     const now = new Date().toISOString();
@@ -116,8 +117,8 @@ export function ServicesProvider({ children }) {
         category,
         durationMinutes: Number(durationMinutes),
         price: {
-          from: Number(price),
-          to: Number(price),
+          from: Number(minPricing),
+          to: Number(maxPricing),
         },
         image: null,
         visible: true,

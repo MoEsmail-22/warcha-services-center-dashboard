@@ -17,6 +17,16 @@
     "in_progress": "In Progress",
     "cancelled": "Cancelled",
     "completed": "Completed",
+    "quote_pending": "Quote pending",
+    "billing": "Billing",
+    "billing_in_progress": "Billing in progress",
+    "new": "New",
+    "ready": "Ready",
+    "draft": "Draft",
+    "sent": "Sent - awaiting",
+    "accepted": "Approved",
+    "rejected": "Rejected",
+    "expired": "Expired",
     "delayed": "Delayed",
     "urgent": "Urgent"
   },
@@ -60,5 +70,9 @@
     "awaitingApproval": "awaiting approval",
     "capacity": "capacity",
     "vsLastWeek": "vs last week"
+  },
+  "footer": {
+    "copyright": "© {{year}} Warsha. All rights reserved.",
+    "tagline": "Workshop management made simpler."
   }
 }

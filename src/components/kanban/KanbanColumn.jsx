@@ -18,7 +18,7 @@ const STAGE_META = {
   ready: { label: 'Ready', icon: '✅', iconBg: 'bg-green-100', iconColor: 'text-green-600' },
 };
 
-export default function KanbanColumn({ stage, jobs }) {
+export default function KanbanColumn({ stage, jobs, onCancel, onCreateQuote }) {
   const meta = STAGE_META[stage] ?? STAGE_META.new;
 
   return (
@@ -50,7 +50,13 @@ export default function KanbanColumn({ stage, jobs }) {
             style={{ minHeight: '200px' }}
           >
             {jobs.map((job, index) => (
-              <KanbanCard key={job.id} job={job} index={index} />
+              <KanbanCard
+                key={job.id}
+                job={job}
+                index={index}
+                onCancel={onCancel}
+                onCreateQuote={onCreateQuote}
+              />
             ))}
             {provided.placeholder}
 

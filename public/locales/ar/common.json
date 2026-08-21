@@ -17,6 +17,11 @@
     "in_progress": "قيد التنفيذ",
     "cancelled": "ملغي",
     "completed": "مكتمل",
+    "quote_pending": "عرض السعر قيد الانتظار",
+    "billing": "الفوترة",
+    "billing_in_progress": "الفوترة قيد التنفيذ",
+    "sent": "أُرسل - بانتظار الرد",
+    "accepted": "تمت الموافقة",
     "in_service": "قيد الصيانة",
     "new": "جديد",
     "ready": "جاهز",
@@ -68,5 +73,9 @@
     "awaitingApproval": "بانتظار الموافقة",
     "capacity": "السعة",
     "vsLastWeek": "عن الأسبوع الماضي"
+  },
+  "footer": {
+    "copyright": "© {{year}} ورشة. جميع الحقوق محفوظة.",
+    "tagline": "إدارة الورشة أصبحت أسهل."
   }
 }

@@ -23,11 +23,27 @@
   "showing": "Showing",
   "of": "of",
   "noResults": "No bookings found.",
+  "cancellation": {
+    "button": "Cancel",
+    "title": "Cancel booking?",
+    "message": "Are you sure you want to cancel {{name}}?",
+    "feeWarning": "A cancellation fee of EGP 50 may be charged for this cancellation.",
+    "keep": "Keep booking",
+    "confirm": "Cancel booking"
+  },
+  "workflow": {
+    "complete": "Complete",
+    "createQuote": "Create quote"
+  },
   "status": {
     "pending": "Pending",
     "confirmed": "Confirmed",
     "in_progress": "In Progress",
     "completed": "Completed",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "quote_pending": "Quote pending",
+    "billing": "Billing",
+    "billing_in_progress": "Billing in progress",
+    "ready": "Ready"
   }
 }
