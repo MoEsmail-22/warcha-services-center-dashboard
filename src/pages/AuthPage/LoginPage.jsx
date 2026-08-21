@@ -19,7 +19,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { lang = 'en' } = useParams();
 
-  const from = location.state?.from?.pathname || `/${lang}/dev`;
+  const from = location.state?.from?.pathname || `/${lang}/`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,7 +37,7 @@ export default function LoginPage() {
 
   return (
     <div dir={dir} className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-10">
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-lg">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-gray-900">
             {t('login.title', { defaultValue: 'Welcome back' })}

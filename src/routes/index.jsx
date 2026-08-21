@@ -24,7 +24,7 @@ export const router = createBrowserRouter([
   // ---------- Root redirect ----------
   {
     path: '/',
-    loader: () => redirect('/en/dev'),
+    loader: () => redirect('/en/'),
   },
 
   // ---------- Language-prefixed routes ----------

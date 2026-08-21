@@ -37,8 +37,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register({ name, email, password });
-      const { lang = 'en' } = useParams();
-      navigate(`/${lang}/dev`, { replace: true });
+      navigate(`/${lang}/`, { replace: true });
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {
