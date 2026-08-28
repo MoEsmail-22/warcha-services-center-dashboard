@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-
+import { createWorkshop } from '../API/Auth/Creat';
+import { loginUser } from '../API/Auth/Login';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -18,26 +19,59 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = async ({ email, password: _password }) => {
-    // TODO: replace with real API call
-    await Promise.resolve(); // simulates network delay
-    const fakeUser = { id: 1, email, name: email.split('@')[0] };
-    localStorage.setItem('auth_user', JSON.stringify(fakeUser));
-    setUser(fakeUser);
-    return fakeUser;
+  const saveUserSession = (userData) => {
+    const safeUser = {
+      id: userData.id || userData.userId,
+      userId: userData.userId || userData.id,
+      name: userData.name,
+      email: userData.email,
+      phone: userData.phone,
+      address: userData.address,
+    };
+
+    localStorage.setItem('auth_user', JSON.stringify(safeUser));
+    setUser(safeUser);
+
+    return safeUser;
   };
 
-  const register = async ({ name, email, password: _password }) => {
-    // TODO: replace with real API call
-    await Promise.resolve(); // simulates network delay
-    const fakeUser = { id: Date.now(), email, name };
-    localStorage.setItem('auth_user', JSON.stringify(fakeUser));
-    setUser(fakeUser);
-    return fakeUser;
+  const login = async ({ email, password }) => {
+    const response = await loginUser({
+      email,
+      password,
+    });
+
+    console.log(response);
+
+    const loggedInUser = saveUserSession({
+      ...response.data,
+      userId: response.data?.userId,
+      email,
+    });
+
+    return {
+      ...response,
+      user: loggedInUser,
+    };
+  };
+
+  const register = async (workshopData) => {
+    const result = await createWorkshop(workshopData);
+    const registeredUser = result?.user ||
+      result?.data || {
+        name: workshopData.name,
+        email: workshopData.email,
+      };
+
+    if (result?.token) localStorage.setItem('auth_token', result.token);
+    localStorage.setItem('auth_user', JSON.stringify(registeredUser));
+    setUser(registeredUser);
+    return result;
   };
 
   const logout = () => {
     localStorage.removeItem('auth_user');
+    localStorage.removeItem('auth_token');
     setUser(null);
   };
 

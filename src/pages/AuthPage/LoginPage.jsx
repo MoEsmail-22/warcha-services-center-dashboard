@@ -1,9 +1,13 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useParams } from 'react-router-dom';
+import FormHookInput from '../../components/ui/FormHookInput';
+import { forgotPassword } from '../../API/Auth/ForgotPassword';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -12,26 +16,79 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
   const { lang = 'en' } = useParams();
+
+  const {
+    register: registerField,
+    handleSubmit,
+    getValues,
+    setError: setFieldError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
   const from = location.state?.from?.pathname || `/${lang}/`;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleForgotPassword = async () => {
+    const currentEmail = getValues('email').trim();
     setError('');
-    setLoading(true);
+
+    if (!currentEmail) {
+      setFieldError('email', { type: 'manual', message: 'Email is required' });
+      return;
+    }
+
+    setForgotLoading(true);
     try {
-      await login({ email, password });
+      await forgotPassword(currentEmail);
+      navigate(`/${lang}/reset-password`, {
+        state: { email: currentEmail },
+      });
+    } catch (err) {
+      setFieldError('email', {
+        type: 'server',
+        message: err.message || 'Unable to send reset code',
+      });
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const onSubmit = async (formData) => {
+    setError('');
+    clearErrors(['email', 'password']);
+    try {
+      await login(formData);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.message || 'Login failed');
-    } finally {
-      setLoading(false);
+      const message = err.message || 'Login failed';
+      const normalizedMessage = message.toLowerCase();
+      const isInvalidCredentials =
+        normalizedMessage.includes('invalid email or password') ||
+        (normalizedMessage.includes('email') && normalizedMessage.includes('password'));
+      const field = normalizedMessage.includes('email')
+        ? 'email'
+        : normalizedMessage.includes('password')
+          ? 'password'
+          : null;
+
+      if (isInvalidCredentials) {
+        setFieldError('email', { type: 'server', message });
+        setFieldError('password', { type: 'server', message });
+      } else if (field) {
+        setFieldError(field, { type: 'server', message });
+      } else {
+        setError(message);
+      }
     }
   };
 
@@ -51,53 +108,51 @@ export default function LoginPage() {
           <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t('login.email', { defaultValue: 'Email address' })}
-            </label>
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
-              placeholder="you@example.com"
-            />
-          </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <FormHookInput
+            id="login-email"
+            type="email"
+            label={t('login.email', { defaultValue: 'Email address' })}
+            autoComplete="email"
+            placeholder="you@example.com"
+            error={errors.email?.message}
+            register={registerField}
+            name="email"
+            rules={{ required: 'Email is required' }}
+          />
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t('login.password', { defaultValue: 'Password' })}
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pe-10 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
-                placeholder="••••••••"
-              />
+          <div className="relative">
+            <FormHookInput
+              id="login-password"
+              type={showPassword ? 'text' : 'password'}
+              label={t('login.password', { defaultValue: 'Password' })}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              error={errors.password?.message}
+              className="pe-16"
+              register={registerField}
+              name="password"
+              rules={{ required: 'Password is required' }}
+            />
+            <div className="absolute end-2 top-8">
               <button
                 type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute end-2 top-1/2 -translate-y-1/2 px-1 text-xs text-gray-500 hover:text-gray-700"
-                tabIndex={-1}
+                onClick={() => setShowPassword((current) => !current)}
+                className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? 'Hide' : 'Show'}
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading
+            {isSubmitting
               ? t('login.loading', { defaultValue: 'Signing in…' })
               : t('login.submit', { defaultValue: 'Sign in' })}
           </button>
@@ -108,6 +163,15 @@ export default function LoginPage() {
           <Link to={`/${lang}/register`} className="font-semibold text-blue-600 hover:underline">
             {t('login.registerLink', { defaultValue: 'Create one' })}
           </Link>
+          <span className="mx-2 text-gray-300">|</span>
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            disabled={forgotLoading}
+            className="font-semibold text-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {forgotLoading ? 'Sending code...' : 'Forgot password?'}
+          </button>
         </p>
       </div>
     </div>

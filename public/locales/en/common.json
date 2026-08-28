@@ -41,10 +41,10 @@
     "subtitle": "Sign in to your dashboard",
     "email": "Email address",
     "password": "Password",
-    "submit": "Sign in",
+    "submit": "log in",
     "loading": "Signing in…",
     "noAccount": "Don't have an account?",
-    "registerLink": "Create one"
+    "registerLink": "Sign in"
   },
   "register": {
     "title": "Create your account",

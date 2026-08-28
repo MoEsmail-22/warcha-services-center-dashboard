@@ -7,8 +7,7 @@ export const QuotesPage = lazy(() => import('../pages/QuotesPage'));
 export const ServicesPricingPage = lazy(() => import('../pages/ServicesPricingPage'));
 export const ReviewsPage = lazy(() => import('../pages/ReviewsPage'));
 export const SettingsPage = lazy(() => import('../pages/SettingsPage'));
-export const GoogleMapsLinkSettingsDemoPage = lazy(
-  () => import('../pages/demos/GoogleMapsLinkSettingsDemoPage')
-);
+
 export const LoginPage = lazy(() => import('../pages/AuthPage/LoginPage'));
 export const RegisterPage = lazy(() => import('../pages/AuthPage/RegisterPage'));
+export const ResetPasswordPage = lazy(() => import('../pages/AuthPage/ResetPasswordPage'));
