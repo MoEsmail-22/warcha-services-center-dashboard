@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Warsha Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sidebar-bg:#1c1712;
+    --sidebar-bg-2:#211a14;
+    --sidebar-text:#a89a8a;
+    --sidebar-text-dim:#7d7166;
+    --sidebar-active:#2a2119;
+    --accent:#e08b2f;
+    --accent-2:#d97706;
+    --bg:#f6f3ee;
+    --card:#ffffff;
+    --border:#e8e2d8;
+    --ink:#1c1712;
+    --ink-dim:#8a8074;
+    --green:#1f9d55;
+    --green-bg:#e7f7ee;
+    --red:#d64545;
+    --red-bg:#fbe9e9;
+    --amber:#c8790a;
+    --amber-bg:#fdf1de;
+    --blue:#2f6fed;
+    --blue-bg:#eaf1fe;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    display:flex;
+    min-height:100vh;
+    font-size:14px;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+
+  /* SIDEBAR */
+  .sidebar{
+    width:240px;
+    min-width:240px;
+    background:var(--sidebar-bg);
+    color:var(--sidebar-text);
+    display:flex;
+    flex-direction:column;
+    padding:20px 14px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:6px 8px 22px 8px;
+    border-bottom:1px solid #322a20;
+    margin-bottom:16px;
+  }
+  .brand-badge{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--accent),#b45f14);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:800;font-size:15px;
+    box-shadow:0 2px 8px rgba(224,139,47,.35);
+  }
+  .brand-name{font-weight:700;color:#f2ede4;font-size:15px;line-height:1.1;}
+  .brand-role{font-size:10.5px;letter-spacing:.06em;color:var(--sidebar-text-dim);font-weight:600;}
+
+  .nav-section-label{
+    font-size:10px;letter-spacing:.09em;font-weight:700;color:#6b5f52;
+    padding:14px 10px 6px 10px;text-transform:uppercase;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 10px;margin:1px 0;border-radius:8px;
+    color:var(--sidebar-text);
+    cursor:pointer;font-size:13.5px;font-weight:500;
+    border-left:3px solid transparent;
+    transition:.12s;
+  }
+  .nav-item:hover{background:#251e17;color:#f0e9df;}
+  .nav-item.active{
+    background:var(--sidebar-active);
+    color:#fbeee0;
+    border-left:3px solid var(--accent);
+    font-weight:600;
+  }
+  .nav-item .ic{
+    width:17px;height:17px;flex-shrink:0;opacity:.85;
+  }
+  .nav-item.active .ic{opacity:1;color:var(--accent);}
+  .badge-pill{
+    margin-left:auto;background:#3a2f22;color:#e0b184;
+    font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;
+  }
+  .sidebar-footer{
+    margin-top:auto;padding:12px 10px 4px 10px;
+    font-size:10.5px;color:#5c5145;border-top:1px solid #322a20;
+  }
+
+  /* MAIN */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 32px;background:var(--bg);
+    border-bottom:1px solid var(--border);
+  }
+  .page-title{font-size:20px;font-weight:800;letter-spacing:-.01em;}
+  .page-sub{font-size:12.5px;color:var(--ink-dim);margin-top:2px;}
+  .topbar-right{display:flex;align-items:center;gap:14px;}
+  .search-box{
+    display:flex;align-items:center;gap:8px;
+    background:#fff;border:1px solid var(--border);border-radius:10px;
+    padding:8px 14px;font-size:12.5px;color:var(--ink-dim);width:220px;
+  }
+  .icon-btn{
+    width:36px;height:36px;border-radius:10px;background:#fff;
+    border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;position:relative;
+  }
+  .icon-btn .dot{position:absolute;top:7px;right:8px;width:6px;height:6px;background:var(--red);border-radius:50%;}
+  .avatar-block{display:flex;align-items:center;gap:9px;}
+  .avatar{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#e08b2f,#c8730a);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;}
+  .avatar-name{font-size:12.5px;font-weight:700;line-height:1.2;}
+  .avatar-role{font-size:10.5px;color:var(--ink-dim);}
+
+  .content{padding:24px 32px 48px 32px;}
+  .page{display:none;}
+  .page.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  /* GRID + CARDS */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;}
+  .stat-card .ic-wrap{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+  .stat-label{font-size:10.5px;letter-spacing:.06em;color:var(--ink-dim);font-weight:700;text-transform:uppercase;margin-bottom:6px;}
+  .stat-value{font-size:22px;font-weight:800;letter-spacing:-.01em;}
+  .stat-value .unit{font-size:12px;font-weight:600;color:var(--ink-dim);margin-left:3px;}
+  .stat-delta{font-size:11.5px;font-weight:600;margin-top:6px;}
+  .stat-delta.up{color:var(--green);}
+  .stat-delta.warn{color:var(--amber);}
+  .stat-delta.neutral{color:var(--ink-dim);}
+
+  .row-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px;}
+  .row-2b{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .panel-title{font-size:14.5px;font-weight:700;margin:0;}
+  .panel-head{display:flex;align-items:center;justify-content:between;justify-content:space-between;margin-bottom:14px;}
+  .link-sm{font-size:12px;color:var(--accent-2);font-weight:600;text-decoration:none;}
+
+  table{width:100%;border-collapse:collapse;}
+  th{font-size:10px;letter-spacing:.06em;color:var(--ink-dim);text-transform:uppercase;text-align:left;padding:0 10px 10px 10px;font-weight:700;}
+  td{padding:11px 10px;font-size:12.8px;border-top:1px solid var(--border);}
+  tr:first-child td{border-top:none;}
+  .cell-user{display:flex;align-items:center;gap:8px;}
+  .mini-avatar{width:26px;height:26px;border-radius:7px;background:#f0e7d8;color:#b0632b;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;}
+
+  .status-pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
+  .st-done{background:var(--green-bg);color:var(--green);}
+  .st-pending{background:var(--amber-bg);color:var(--amber);}
+  .st-working{background:var(--blue-bg);color:var(--blue);}
+  .st-active{background:var(--green-bg);color:var(--green);}
+  .st-suspended{background:var(--red-bg);color:var(--red);}
+  .st-new{background:#f0edea;color:var(--ink-dim);}
+  .st-expiring{background:var(--amber-bg);color:var(--amber);}
+  .st-cancelled{background:var(--red-bg);color:var(--red);}
+  .st-upcoming{background:var(--amber-bg);color:var(--amber);}
+  .st-live{background:var(--amber-bg);color:var(--amber);}
+  .st-expired{background:#f0edea;color:var(--ink-dim);}
+  .st-reported{background:var(--red-bg);color:var(--red);}
+
+  .btn{
+    font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:8px;
+    border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--ink);
+  }
+  .btn.dark{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .btn.danger{color:var(--red);border-color:#f2d4d4;background:#fff;}
+  .btn.approve{background:var(--green);color:#fff;border-color:var(--green);}
+  .btn.reject{background:#fff;color:var(--red);border-color:#f2d4d4;}
+
+  .placeholder-chart{
+    height:150px;border-radius:10px;
+    background:repeating-linear-gradient(90deg, transparent, transparent 30px, #f2ede4 30px, #f2ede4 31px);
+    display:flex;align-items:flex-end;gap:6px;padding:10px 6px 0 6px;
+  }
+  .bar{flex:1;border-radius:4px 4px 0 0;}
+  .bar.orange{background:linear-gradient(180deg,#f0ac53,#e08b2f);}
+  .bar.blue{background:linear-gradient(180deg,#7ba6f7,#2f6fed);}
+  .chart-axis{display:flex;justify-content:space-between;padding:6px 6px 0 6px;font-size:9.5px;color:var(--ink-dim);}
+
+  .pending-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 0;border-top:1px solid var(--border);
+  }
+  .pending-item:first-child{border-top:none;padding-top:0;}
+  .pending-name{font-size:12.8px;font-weight:700;}
+  .pending-sub{font-size:11px;color:var(--ink-dim);margin-top:2px;}
+
+  .top-center-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);}
+  .top-center-row:first-child{border-top:none;padding-top:0;}
+  .rank{width:20px;height:20px;border-radius:6px;background:var(--accent);color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+
+  /* filter tabs */
+  .filter-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .ftab{
+    padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:700;
+    background:#fff;border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+  }
+  .ftab.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .ftab .count{background:rgba(0,0,0,.06);padding:1px 6px;border-radius:20px;font-size:10.5px;}
+  .ftab.on .count{background:rgba(255,255,255,.18);}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+
+  /* two-col detail rows (settings) */
+  .detail-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--border);}
+  .detail-row:first-child{border-top:none;padding-top:0;}
+  .detail-label{font-size:13px;font-weight:700;}
+  .detail-sub{font-size:11.3px;color:var(--ink-dim);margin-top:2px;}
+  .detail-value{font-size:13.5px;font-weight:700;}
+  .manage-link{font-size:12px;font-weight:700;color:var(--accent-2);text-decoration:none;}
+
+  .toggle{width:38px;height:22px;border-radius:20px;background:#e3ddd2;position:relative;cursor:pointer;flex-shrink:0;}
+  .toggle.on{background:var(--green);}
+  .toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.2);}
+  .toggle.on::after{left:18px;}
+
+  /* banners */
+  .banner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+  .banner-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;}
+  .banner-img{height:100px;background:linear-gradient(135deg,#2a2119,#1c1712);display:flex;align-items:center;justify-content:center;color:#6b5f52;font-size:11px;position:relative;}
+  .live-tag{position:absolute;top:8px;right:8px;background:var(--accent);color:#fff;font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:20px;}
+  .banner-info{padding:11px 13px;}
+  .banner-title{font-size:12.8px;font-weight:700;}
+  .banner-sub{font-size:11px;color:var(--ink-dim);margin-top:2px;}
+
+  .center-toggle-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);}
+  .center-toggle-row:first-child{border-top:none;padding-top:0;}
+  .center-badge{width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+
+  /* service center cards */
+  .sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .sc-card{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff;}
+  .sc-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;}
+  .sc-badge{width:38px;height:38px;border-radius:9px;background:var(--accent);color:#fff;font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .sc-name{font-weight:700;font-size:13.5px;}
+  .sc-sub{font-size:11px;color:var(--ink-dim);margin-top:2px;}
+  .sc-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;}
+  .sc-stat-label{font-size:9.5px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .sc-stat-value{font-size:13px;font-weight:700;margin-top:2px;}
+  .sc-actions{display:flex;gap:8px;}
+  .sc-actions .btn{flex:1;text-align:center;}
+
+  /* emergency */
+  .live-map{
+    height:280px;border-radius:12px;background:#eef0ea;position:relative;overflow:hidden;
+    background-image:linear-gradient(#e3e6dc 1px,transparent 1px),linear-gradient(90deg,#e3e6dc 1px,transparent 1px);
+    background-size:26px 26px;
+  }
+  .map-pin{position:absolute;width:14px;height:14px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+  .map-legend{position:absolute;bottom:10px;left:10px;background:#fff;border-radius:8px;padding:8px 12px;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+  .legend-row{display:flex;align-items:center;gap:6px;margin:3px 0;}
+  .legend-dot{width:8px;height:8px;border-radius:50%;}
+
+  .req-star{color:#e08b2f;}
+  select.mini-select{font-size:11.5px;border:1px solid var(--border);border-radius:6px;padding:4px 6px;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">W</div>
+    <div>
+      <div class="brand-name">Warsha</div>
+      <div class="brand-role">ADMIN</div>
+    </div>
+  </div>
+
+  <div class="nav-section-label">Operations</div>
+  <div class="nav-item active" data-page="dashboard"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Dashboard</div>
+  <div class="nav-item" data-page="customers"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 9a3 3 0 100-6M17 14c2.6.3 4.5 2.2 4.5 6"/></svg>Customers</div>
+  <div class="nav-item" data-page="servicecenters"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V9l9-6 9 6v12M9 21v-6h6v6"/></svg>Service Centers</div>
+  <div class="nav-item" data-page="bookings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Bookings</div>
+  <div class="nav-item" data-page="payments"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Payments</div>
+  <div class="nav-item" data-page="reviews"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.6 5.8 6.3.6-4.7 4.3 1.3 6.2L12 16.9 6.5 19.9l1.3-6.2L3.1 9.4l6.3-.6z"/></svg>Reviews</div>
+  <div class="nav-item" data-page="marketing"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10v4h4l5 5V5l-5 5H3zM17 8a5 5 0 010 8"/></svg>Marketing</div>
+  <div class="nav-item" data-page="emergency"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 5-2 6-2 8h18c0-2-2-3-2-8a7 7 0 00-7-7zM9.5 20a2.5 2.5 0 005 0"/></svg>Emergency</div>
+  <div class="nav-item" data-page="settings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.9 2.9l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.9-2.9l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.9-2.9l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.9 2.9l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>Settings</div>
+
+  <div class="nav-section-label">System</div>
+  <div class="nav-item" data-page="reports"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5M9 13h6M9 17h6M9 9h2"/></svg>Reports</div>
+  <div class="nav-item" data-page="notifications"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg>Notifications</div>
+  <div class="nav-item" data-page="adminusers"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>Admin Users</div>
+
+  <div class="sidebar-footer">Warsha v1.0 · Admin</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Business Health</div>
+      <div class="page-sub" id="pageSub">Warsha operations at a glance · Tuesday, 14 May 2026</div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        Search anything...
+      </div>
+      <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot"></span></div>
+      <div class="avatar-block">
+        <div class="avatar">SF</div>
+        <div>
+          <div class="avatar-name">Seif Fawzy</div>
+          <div class="avatar-role">Super Admin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ============ DASHBOARD ============ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stat-grid">
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--amber-bg);color:var(--amber);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          </div>
+          <div class="stat-label">Monthly Revenue</div>
+          <div class="stat-value">186,400<span class="unit">EGP</span></div>
+          <div class="stat-delta up">▲ +18% vs April</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--blue-bg);color:var(--blue);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V9l9-6 9 6v12M9 21v-6h6v6"/></svg>
+          </div>
+          <div class="stat-label">Cars Serviced Today</div>
+          <div class="stat-value">42</div>
+          <div class="stat-delta up">▲ +6 vs yesterday</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--red-bg);color:var(--red);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4M7 23l-4-4 4-4M3 5h13M21 19H8"/></svg>
+          </div>
+          <div class="stat-label">Outstanding Commission</div>
+          <div class="stat-value">23,100<span class="unit">EGP</span></div>
+          <div class="stat-delta neutral">12 centers owe</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--amber-bg);color:var(--amber);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+          </div>
+          <div class="stat-label">Expired Subscriptions</div>
+          <div class="stat-value">4<span class="unit">centers</span></div>
+          <div class="stat-delta warn">Needs action</div>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--amber-bg);color:var(--amber);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.6 5.8 6.3.6-4.7 4.3 1.3 6.2L12 16.9 6.5 19.9l1.3-6.2L3.1 9.4l6.3-.6z"/></svg>
+          </div>
+          <div class="stat-label">Avg. Customer Rating</div>
+          <div class="stat-value">4.7<span class="unit">/5</span></div>
+          <div class="stat-delta up">▲ +0.1 this month</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--red-bg);color:var(--red);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 5-2 6-2 8h18c0-2-2-3-2-8a7 7 0 00-7-7zM9.5 20a2.5 2.5 0 005 0"/></svg>
+          </div>
+          <div class="stat-label">Open Emergency Requests</div>
+          <div class="stat-value">2<span class="unit">now</span></div>
+          <div class="stat-delta warn">1 waiting 8+ min</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--green-bg);color:var(--green);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/></svg>
+          </div>
+          <div class="stat-label">New Customers</div>
+          <div class="stat-value">312<span class="unit">this month</span></div>
+          <div class="stat-delta up">▲ +24% vs April</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--green-bg);color:var(--green);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V9l9-6 9 6v12M9 21v-6h6v6"/></svg>
+          </div>
+          <div class="stat-label">New Service Centers</div>
+          <div class="stat-value">7<span class="unit">this month</span></div>
+          <div class="stat-delta neutral">3 pending approval</div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="card">
+          <div class="panel-head"><h3 class="panel-title">Revenue — Last 12 Months</h3><span style="font-size:10.5px;color:var(--ink-dim);">EGP</span></div>
+          <div class="placeholder-chart" id="revChart"></div>
+          <div class="chart-axis"><span>J</span><span>F</span><span>M</span><span>A</span><span>M</span><span>J</span><span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span></div>
+        </div>
+        <div class="card">
+          <div class="panel-head"><h3 class="panel-title">Daily Bookings — This Week</h3></div>
+          <div class="placeholder-chart" id="bookChart"></div>
+          <div class="chart-axis"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="card">
+          <div class="panel-head"><h3 class="panel-title">Recent Bookings</h3><a class="link-sm" href="#">View all →</a></div>
+          <table>
+            <tr><th>Customer</th><th>Center</th><th>Service</th><th>Amount</th><th>Status</th></tr>
+            <tr><td class="cell-user"><span class="mini-avatar">AM</span>Ahmed Mahmoud</td><td>BMW Station</td><td>Oil Change</td><td>450 EGP</td><td><span class="status-pill st-done">✓ Done</span></td></tr>
+            <tr><td class="cell-user"><span class="mini-avatar">MA</span>Mariam Ali</td><td>Bimmer's Egypt</td><td>Brake Insp.</td><td>850 EGP</td><td><span class="status-pill st-pending">✓ Pending</span></td></tr>
+            <tr><td class="cell-user"><span class="mini-avatar">KH</span>Karim Hassan</td><td>Crank BMW</td><td>Full Service</td><td>1,200 EGP</td><td><span class="status-pill st-working">◐ Working</span></td></tr>
+            <tr><td class="cell-user"><span class="mini-avatar">SM</span>Sara Mohamed</td><td>BMW Station</td><td>Battery</td><td>200 EGP</td><td><span class="status-pill st-done">✓ Done</span></td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <div class="panel-head"><h3 class="panel-title">Pending Approvals</h3><span class="badge-pill" style="background:var(--red);color:#fff;">3</span></div>
+          <div class="pending-item">
+            <div><div class="pending-name">Elite Car Care — new center</div><div class="pending-sub">Review submission</div></div>
+            <button class="btn dark">Review</button>
+          </div>
+          <div class="pending-item">
+            <div><div class="pending-name">German Auto Service — docs</div><div class="pending-sub">Review submission</div></div>
+            <button class="btn dark">Review</button>
+          </div>
+          <div class="pending-item">
+            <div><div class="pending-name">Mansour Center — subscription</div><div class="pending-sub">Review submission</div></div>
+            <button class="btn dark">Review</button>
+          </div>
+
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+            <h3 class="panel-title" style="margin-bottom:10px;">Top Service Centers</h3>
+            <div class="top-center-row"><div class="rank">1</div><div style="flex:1;font-weight:700;font-size:12.8px;">BMW Station</div><div style="font-weight:700;font-size:12.8px;">42,800 EGP</div></div>
+            <div class="top-center-row"><div class="rank">2</div><div style="flex:1;font-weight:700;font-size:12.8px;">Elite Car Care</div><div style="font-weight:700;font-size:12.8px;">31,200 EGP</div></div>
+            <div class="top-center-row"><div class="rank">3</div><div style="flex:1;font-weight:700;font-size:12.8px;">Bimmer's Egypt</div><div style="font-weight:700;font-size:12.8px;">27,600 EGP</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ CUSTOMERS ============ -->
+    <div class="page" id="page-customers">
+      <div class="filter-tabs">
+        <div class="ftab on">All <span class="count">312</span></div>
+        <div class="ftab">Active <span class="count">289</span></div>
+        <div class="ftab">Suspended <span class="count">6</span></div>
+        <div class="ftab">New this month <span class="count">24</span></div>
+        <div style="margin-left:auto;" class="search-box">Search by name or phone…</div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <tr><th style="padding-left:18px;">Customer</th><th>Phone</th><th>Cars</th><th>Bookings</th><th>Total Spending</th><th>Rating Given</th><th>Status</th><th></th></tr>
+          <tr><td style="padding-left:18px;" class="cell-user"><span class="mini-avatar">SF</span>Seif Fawzy</td><td class="mono">+20 111 519 944</td><td>1</td><td>32</td><td>12,450 EGP</td><td>★ 4.8</td><td><span class="status-pill st-active">Active</span></td><td><button class="btn">View</button> <button class="btn danger">Suspend</button></td></tr>
+          <tr><td style="padding-left:18px;" class="cell-user"><span class="mini-avatar">NE</span>Nour El-Din</td><td class="mono">+20 100 234 5567</td><td>2</td><td>18</td><td>8,200 EGP</td><td>★ 4.5</td><td><span class="status-pill st-active">Active</span></td><td><button class="btn">View</button> <button class="btn danger">Suspend</button></td></tr>
+          <tr><td style="padding-left:18px;" class="cell-user"><span class="mini-avatar">YA</span>Yasmine Adel</td><td class="mono">+20 122 998 1122</td><td>1</td><td>7</td><td>3,100 EGP</td><td>★ 4.9</td><td><span class="status-pill st-active">Active</span></td><td><button class="btn">View</button> <button class="btn danger">Suspend</button></td></tr>
+          <tr><td style="padding-left:18px;" class="cell-user"><span class="mini-avatar">OF</span>Omar Fathy</td><td class="mono">+20 155 667 2231</td><td>1</td><td>2</td><td>900 EGP</td><td>★ 3.2</td><td><span class="status-pill st-suspended">Suspended</span></td><td><button class="btn">View</button> <button class="btn danger">Suspend</button></td></tr>
+          <tr><td style="padding-left:18px;" class="cell-user"><span class="mini-avatar">LK</span>Laila Kamal</td><td class="mono">+20 106 445 8890</td><td>3</td><td>41</td><td>19,600 EGP</td><td>★ 4.7</td><td><span class="status-pill st-active">Active</span></td><td><button class="btn">View</button> <button class="btn danger">Suspend</button></td></tr>
+          <tr><td style="padding-left:18px;" class="cell-user"><span class="mini-avatar">HS</span>Hossam Sabry</td><td class="mono">+20 111 776 3345</td><td>1</td><td>0</td><td>0 EGP</td><td>—</td><td><span class="status-pill st-new">New</span></td><td><button class="btn">View</button> <button class="btn danger">Suspend</button></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ SERVICE CENTERS ============ -->
+    <div class="page" id="page-servicecenters">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="panel-head"><h3 class="panel-title">Pending approval</h3><span class="badge-pill" style="background:var(--amber);color:#fff;">3</span></div>
+        <table>
+          <tr><th>Center</th><th>Brand</th><th>Owner</th><th>Location</th><th>Submitted</th><th></th></tr>
+          <tr><td class="cell-user"><span class="mini-avatar">EC</span>Elite Car Care</td><td>BMW &amp; Mini</td><td>Tamer Nabil</td><td>Nasr City</td><td>2 days ago</td><td><button class="btn approve">Approve</button> <button class="btn reject">Reject</button></td></tr>
+          <tr><td class="cell-user"><span class="mini-avatar">GA</span>German Auto Service</td><td>BMW &amp; Audi</td><td>Sherif Adel</td><td>Heliopolis</td><td>4 days ago</td><td><button class="btn approve">Approve</button> <button class="btn reject">Reject</button></td></tr>
+        </table>
+      </div>
+
+      <div class="sc-grid">
+        <div class="sc-card">
+          <div class="sc-head"><div class="sc-badge">BS</div><div><div class="sc-name">BMW Station</div><div class="sc-sub">BMW &amp; Mini · ★ 4.8 · Maadi, Cairo</div></div></div>
+          <div class="sc-stats">
+            <div><div class="sc-stat-label">Bookings</div><div class="sc-stat-value">120</div></div>
+            <div><div class="sc-stat-label">Revenue</div><div class="sc-stat-value">42,800</div></div>
+            <div><div class="sc-stat-label">Owes</div><div class="sc-stat-value" style="color:var(--green);">Active</div></div>
+          </div>
+          <div style="margin-bottom:12px;"><span class="status-pill st-active">Active</span></div>
+          <div class="sc-actions"><button class="btn dark">View</button><button class="btn">Edit</button></div>
+        </div>
+        <div class="sc-card">
+          <div class="sc-head"><div class="sc-badge">BE</div><div><div class="sc-name">Bimmer's Egypt</div><div class="sc-sub">BMW · ★ 4.6 · New Cairo</div></div></div>
+          <div class="sc-stats">
+            <div><div class="sc-stat-label">Bookings</div><div class="sc-stat-value">85</div></div>
+            <div><div class="sc-stat-label">Revenue</div><div class="sc-stat-value">27,600</div></div>
+            <div><div class="sc-stat-label">Owes</div><div class="sc-stat-value" style="color:var(--green);">Active</div></div>
+          </div>
+          <div style="margin-bottom:12px;"><span class="status-pill st-active">Active</span></div>
+          <div class="sc-actions"><button class="btn dark">View</button><button class="btn">Edit</button></div>
+        </div>
+        <div class="sc-card">
+          <div class="sc-head"><div class="sc-badge">CB&amp;</div><div><div class="sc-name">Crank BMW &amp; Mini</div><div class="sc-sub">BMW &amp; Mini · ★ 4.5 · New Cairo</div></div></div>
+          <div class="sc-stats">
+            <div><div class="sc-stat-label">Bookings</div><div class="sc-stat-value">64</div></div>
+            <div><div class="sc-stat-label">Revenue</div><div class="sc-stat-value">18,300</div></div>
+            <div><div class="sc-stat-label">Owes</div><div class="sc-stat-value" style="color:var(--amber);">Expiring</div></div>
+          </div>
+          <div style="margin-bottom:12px;"><span class="status-pill st-expiring">Expiring</span></div>
+          <div class="sc-actions"><button class="btn dark">View</button><button class="btn">Edit</button></div>
+        </div>
+        <div class="sc-card">
+          <div class="sc-head"><div class="sc-badge">BC</div><div><div class="sc-name">BMW Club</div><div class="sc-sub">BMW · ★ 4.5 · 6th October</div></div></div>
+          <div class="sc-stats">
+            <div><div class="sc-stat-label">Bookings</div><div class="sc-stat-value">52</div></div>
+            <div><div class="sc-stat-label">Revenue</div><div class="sc-stat-value">14,900</div></div>
+            <div><div class="sc-stat-label">Owes</div><div class="sc-stat-value" style="color:var(--green);">Active</div></div>
+          </div>
+          <div style="margin-bottom:12px;"><span class="status-pill st-active">Active</span></div>
+          <div class="sc-actions"><button class="btn dark">View</button><button class="btn">Edit</button></div>
+        </div>
+        <div class="sc-card">
+          <div class="sc-head"><div class="sc-badge">MC</div><div><div class="sc-name">Mansour Center</div><div class="sc-sub">Multi-brand · ★ 4.3 · Zamalek</div></div></div>
+          <div class="sc-stats">
+            <div><div class="sc-stat-label">Bookings</div><div class="sc-stat-value">29</div></div>
+            <div><div class="sc-stat-label">Revenue</div><div class="sc-stat-value">9,100</div></div>
+            <div><div class="sc-stat-label">Owes</div><div class="sc-stat-value" style="color:var(--red);">Suspended</div></div>
+          </div>
+          <div style="margin-bottom:12px;"><span class="status-pill st-suspended">Suspended</span></div>
+          <div class="sc-actions"><button class="btn dark">View</button><button class="btn">Edit</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ BOOKINGS ============ -->
+    <div class="page" id="page-bookings">
+      <div class="toolbar">
+        <div class="filter-tabs" style="margin-bottom:0;">
+          <div class="ftab on">All <span class="count">1,204</span></div>
+          <div class="ftab">Pending <span class="count">18</span></div>
+          <div class="ftab">Active <span class="count">9</span></div>
+          <div class="ftab">Completed <span class="count">1,151</span></div>
+          <div class="ftab">Cancelled <span class="count">26</span></div>
+        </div>
+        <button class="btn dark">⭳ Export</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <tr><th style="padding-left:18px;">Booking ID</th><th>Customer</th><th>Center</th><th>Car</th><th>Service</th><th>Price</th><th>Fee</th><th>Commission</th><th>Payment</th><th>Status</th><th></th></tr>
+          <tr><td style="padding-left:18px;" class="mono">WRSH-2640</td><td class="cell-user"><span class="mini-avatar">SM</span>Sara Mohamed</td><td>BMW Station</td><td>BMW X1</td><td>Battery</td><td>200 EGP</td><td>15 EGP</td><td>16 EGP</td><td>Fawry</td><td><span class="status-pill st-upcoming">Upcoming</span></td><td><button class="btn">Invoice</button></td></tr>
+          <tr><td style="padding-left:18px;" class="mono">WRSH-2639</td><td class="cell-user"><span class="mini-avatar">KH</span>Karim Hassan</td><td>BMW Station</td><td>BMW 520i</td><td>AC Service</td><td>750 EGP</td><td>15 EGP</td><td>60 EGP</td><td>InstaPay</td><td><span class="status-pill st-upcoming">Upcoming</span></td><td><button class="btn">Invoice</button></td></tr>
+          <tr><td style="padding-left:18px;" class="mono">WRSH-2638</td><td class="cell-user"><span class="mini-avatar">MI</span>Mostafa Ibrahim</td><td>BMW Station</td><td>BMW M3</td><td>Full Service</td><td>1200 EGP</td><td>15 EGP</td><td>96 EGP</td><td>Card</td><td><span class="status-pill st-working">◐ Working</span></td><td><button class="btn">Invoice</button></td></tr>
+          <tr><td style="padding-left:18px;" class="mono">WRSH-2637</td><td class="cell-user"><span class="mini-avatar">NS</span>Nadia Saleh</td><td>Crank BMW</td><td>BMW i3</td><td>Diagnostic</td><td>350 EGP</td><td>15 EGP</td><td>28 EGP</td><td>Cash</td><td><span class="status-pill st-done">✓ Done</span></td><td><button class="btn">Invoice</button></td></tr>
+          <tr><td style="padding-left:18px;" class="mono">WRSH-2636</td><td class="cell-user"><span class="mini-avatar">OR</span>Omar Reda</td><td>Bimmer's Egypt</td><td>BMW 530i</td><td>Brake Pads</td><td>1400 EGP</td><td>15 EGP</td><td>112 EGP</td><td>Fawry</td><td><span class="status-pill st-done">✓ Done</span></td><td><button class="btn">Invoice</button></td></tr>
+          <tr><td style="padding-left:18px;" class="mono">WRSH-2632</td><td class="cell-user"><span class="mini-avatar">AK</span>Amr Khaled</td><td>BMW Club</td><td>BMW 730i</td><td>Engine Check</td><td>680 EGP</td><td>15 EGP</td><td>0 EGP</td><td>Card</td><td><span class="status-pill st-cancelled">✕ Cancelled</span></td><td><button class="btn">Invoice</button></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ PAYMENTS ============ -->
+    <div class="page" id="page-payments">
+      <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--amber-bg);color:var(--amber);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+          <div class="stat-label">Today's Income</div>
+          <div class="stat-value">8,400<span class="unit">EGP</span></div>
+          <div class="stat-delta up">▲ +12% vs yesterday</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--green-bg);color:var(--green);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+          <div class="stat-label">Monthly Income</div>
+          <div class="stat-value">186,400<span class="unit">EGP</span></div>
+          <div class="stat-delta up">▲ +18% vs April</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--amber-bg);color:var(--amber);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+          <div class="stat-label">Pending Payments</div>
+          <div class="stat-value">14,200<span class="unit">EGP</span></div>
+          <div class="stat-delta neutral">9 invoices</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--blue-bg);color:var(--blue);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="stat-label">Paid Commission</div>
+          <div class="stat-value">162,300<span class="unit">EGP</span></div>
+          <div class="stat-delta neutral">This month</div>
+        </div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:1fr;margin-bottom:16px;">
+        <div class="card stat-card" style="max-width:280px;">
+          <div class="ic-wrap" style="background:var(--red-bg);color:var(--red);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></div>
+          <div class="stat-label">Outstanding Commission</div>
+          <div class="stat-value">23,100<span class="unit">EGP</span></div>
+          <div class="stat-delta warn">12 centers</div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px 0 18px;">
+          <div class="filter-tabs" style="margin-bottom:16px;">
+            <div class="ftab on" style="font-size:12px;padding:7px 12px;">Booking Fees</div>
+            <div class="ftab" style="font-size:12px;padding:7px 12px;">Subscriptions</div>
+            <div class="ftab" style="font-size:12px;padding:7px 12px;">Marketing</div>
+            <div class="ftab" style="font-size:12px;padding:7px 12px;">Commission</div>
+            <div class="ftab" style="font-size:12px;padding:7px 12px;">Refunds</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <button class="btn">⭳ Excel</button>
+            <button class="btn">⭳ PDF</button>
+          </div>
+        </div>
+        <table>
+          <tr><th style="padding-left:18px;">Date</th><th>Center</th><th>Customer</th><th>Booking Fee</th><th>Payment Method</th><th>Status</th></tr>
+          <tr><td style="padding-left:18px;">14 May</td><td>BMW Station</td><td>Sara Mohamed</td><td>15 EGP</td><td>Fawry</td><td><span class="status-pill st-done">Paid</span></td></tr>
+          <tr><td style="padding-left:18px;">14 May</td><td>BMW Station</td><td>Karim Hassan</td><td>15 EGP</td><td>InstaPay</td><td><span class="status-pill st-done">Paid</span></td></tr>
+          <tr><td style="padding-left:18px;">14 May</td><td>Bimmer's Egypt</td><td>Omar Reda</td><td>15 EGP</td><td>Fawry</td><td><span class="status-pill st-done">Paid</span></td></tr>
+          <tr><td style="padding-left:18px;">13 May</td><td>Crank BMW</td><td>Yara Aboul</td><td>15 EGP</td><td>Cash</td><td><span class="status-pill st-pending">Pending</span></td></tr>
+          <tr><td style="padding-left:18px;">13 May</td><td>BMW Club</td><td>Amr Khaled</td><td>15 EGP</td><td>Card</td><td><span class="status-pill st-cancelled">Refunded</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ REVIEWS ============ -->
+    <div class="page" id="page-reviews">
+      <div class="filter-tabs">
+        <div class="ftab on">All <span class="count">2,140</span></div>
+        <div class="ftab">5★ <span class="count">1,480</span></div>
+        <div class="ftab">4★ <span class="count">460</span></div>
+        <div class="ftab">3★ <span class="count">120</span></div>
+        <div class="ftab">2★ <span class="count">50</span></div>
+        <div class="ftab">1★ <span class="count">30</span></div>
+        <div class="ftab" style="color:var(--red);">Reported <span class="count">4</span></div>
+      </div>
+      <div class="card">
+        <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;"><div style="font-weight:700;font-size:13px;">Yasmine Adel → BMW Station</div></div>
+          <div class="req-star" style="margin:4px 0;">★★★★★</div>
+          <div style="font-size:12.5px;color:var(--ink-dim);">Super fast and honest pricing. They showed me the old part before replacing it.</div>
+          <div style="font-size:11px;color:var(--ink-dim);margin-top:6px;">2 hours ago · <a class="link-sm" href="#">Reply</a> · <a class="link-sm" href="#" style="color:var(--red);">Delete</a></div>
+        </div>
+        <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+          <div style="font-weight:700;font-size:13px;">Omar Fathy → Crank BMW</div>
+          <div class="req-star" style="margin:4px 0;">★★☆☆☆</div>
+          <div style="font-size:12.5px;color:var(--ink-dim);">Waited longer than the estimated time and price went up without a clear reason.</div>
+          <div style="font-size:11px;color:var(--ink-dim);margin-top:6px;">1 day ago · <a class="link-sm" href="#">Reply</a> · <a class="link-sm" href="#" style="color:var(--red);">Delete</a></div>
+        </div>
+        <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;"><div style="font-weight:700;font-size:13px;">Hossam Sabry → Bimmer's Egypt</div><span class="status-pill st-reported">Reported</span></div>
+          <div class="req-star" style="margin:4px 0;">★☆☆☆☆</div>
+          <div style="font-size:12.5px;color:var(--ink-dim);">This review looks suspicious — same wording posted on 3 other centers.</div>
+          <div style="font-size:11px;color:var(--ink-dim);margin-top:6px;">2 days ago · <a class="link-sm" href="#">Reply</a> · <a class="link-sm" href="#" style="color:var(--red);">Delete</a></div>
+        </div>
+        <div style="padding:14px 0;">
+          <div style="font-weight:700;font-size:13px;">Laila Kamal → BMW Station</div>
+          <div class="req-star" style="margin:4px 0;">★★★★★</div>
+          <div style="font-size:12.5px;color:var(--ink-dim);">Been coming here for 2 years, never disappointed.</div>
+          <div style="font-size:11px;color:var(--ink-dim);margin-top:6px;">3 days ago · <a class="link-sm" href="#">Reply</a> · <a class="link-sm" href="#" style="color:var(--red);">Delete</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MARKETING ============ -->
+    <div class="page" id="page-marketing">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="panel-head"><h3 class="panel-title">Active banners</h3><button class="btn dark">+ New banner</button></div>
+        <div class="banner-grid">
+          <div class="banner-card">
+            <div class="banner-img">banner image<span class="live-tag">Live</span></div>
+            <div class="banner-info"><div class="banner-title">Summer Service Offer</div><div class="banner-sub">10% off · Home banner · Live</div></div>
+          </div>
+          <div class="banner-card">
+            <div class="banner-img">banner image<span class="live-tag">Live</span></div>
+            <div class="banner-info"><div class="banner-title">BMW Station Feature</div><div class="banner-sub">Sponsored placement · Live</div></div>
+          </div>
+          <div class="banner-card">
+            <div class="banner-img">banner image<span class="live-tag">Live</span></div>
+            <div class="banner-info"><div class="banner-title">New User Promo</div><div class="banner-sub">First booking -50 EGP · Live</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row-2b">
+        <div class="card">
+          <div class="panel-head"><h3 class="panel-title">Promo codes</h3><button class="btn dark">+ New code</button></div>
+          <table>
+            <tr><th>Code</th><th>Discount</th><th>Uses</th><th>Status</th></tr>
+            <tr><td class="mono" style="font-weight:700;">WARSHA50</td><td>50 EGP off</td><td>212 / 500</td><td><span class="status-pill st-active">Active</span></td></tr>
+            <tr><td class="mono" style="font-weight:700;">BMWFIRST</td><td>15%</td><td>48 / 100</td><td><span class="status-pill st-active">Active</span></td></tr>
+            <tr><td class="mono" style="font-weight:700;">RAMADAN25</td><td>25%</td><td>500 / 500</td><td><span class="status-pill st-expired">Expired</span></td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3 class="panel-title" style="margin-bottom:8px;">Featured service centers</h3>
+          <div class="center-toggle-row"><div class="center-badge">B</div><div style="flex:1;font-weight:700;font-size:12.8px;">BMW Station</div><div class="toggle on"></div></div>
+          <div class="center-toggle-row"><div class="center-badge">B</div><div style="flex:1;font-weight:700;font-size:12.8px;">Bimmer's Egypt</div><div class="toggle on"></div></div>
+          <div class="center-toggle-row"><div class="center-badge">C</div><div style="flex:1;font-weight:700;font-size:12.8px;">Crank BMW &amp; Mini</div><div class="toggle"></div></div>
+          <div class="center-toggle-row"><div class="center-badge">B</div><div style="flex:1;font-weight:700;font-size:12.8px;">BMW Club</div><div class="toggle"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ EMERGENCY ============ -->
+    <div class="page" id="page-emergency">
+      <div class="stat-grid">
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--red-bg);color:var(--red);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+          <div class="stat-label">Waiting</div>
+          <div class="stat-value">2<span class="unit">now</span></div>
+          <div class="stat-delta warn">1 waiting 8+ min</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--blue-bg);color:var(--blue);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="stat-label">Accepted</div>
+          <div class="stat-value">1<span class="unit">now</span></div>
+          <div class="stat-delta neutral">Assigned</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--green-bg);color:var(--green);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="stat-label">Completed Today</div>
+          <div class="stat-value">9</div>
+          <div class="stat-delta up">green</div>
+        </div>
+        <div class="card stat-card">
+          <div class="ic-wrap" style="background:var(--red-bg);color:var(--red);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+          <div class="stat-label">Rejected</div>
+          <div class="stat-value">1<span class="unit">today</span></div>
+          <div class="stat-delta warn">No coverage</div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="card">
+          <h3 class="panel-title" style="margin-bottom:12px;">Requests</h3>
+          <table>
+            <tr><th>Customer</th><th>Issue</th><th>Location</th><th>Assigned</th><th>Waiting</th><th>Status</th><th></th></tr>
+            <tr><td class="cell-user"><span class="mini-avatar">SM</span>Sara Mohamed</td><td>Flat tire</td><td>Ring Road, Maadi</td><td>—</td><td style="color:var(--red);font-weight:700;">8 min</td><td><span class="status-pill st-pending">⚠ Waiting</span></td><td><button class="btn dark">Assign</button></td></tr>
+            <tr><td class="cell-user"><span class="mini-avatar">KH</span>Karim Hassan</td><td>Battery dead</td><td>Nasr City</td><td>BMW Station</td><td>2 min</td><td><span class="status-pill st-working">Accepted</span></td><td><button class="btn">Track</button></td></tr>
+            <tr><td class="cell-user"><span class="mini-avatar">OF</span>Omar Fathy</td><td>Won't start</td><td>Heliopolis</td><td>Crank BMW</td><td>Done</td><td><span class="status-pill st-done">✓ Completed</span></td><td><button class="btn">View</button></td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3 class="panel-title" style="margin-bottom:12px;">Live map</h3>
+          <div class="live-map">
+            <div class="map-pin" style="background:var(--red);top:60px;left:110px;"></div>
+            <div class="map-pin" style="background:var(--amber);top:135px;left:190px;"></div>
+            <div class="map-pin" style="background:var(--green);top:200px;left:120px;"></div>
+            <div class="map-legend">
+              <div class="legend-row"><span class="legend-dot" style="background:var(--red);"></span>Customer</div>
+              <div class="legend-row"><span class="legend-dot" style="background:var(--amber);"></span>Driver / Tow</div>
+              <div class="legend-row"><span class="legend-dot" style="background:var(--green);"></span>Assigned center</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SETTINGS ============ -->
+    <div class="page" id="page-settings">
+      <div class="row-2b">
+        <div class="card">
+          <h3 class="panel-title" style="margin-bottom:4px;">Pricing &amp; Commission</h3>
+          <div class="detail-row"><div><div class="detail-label">Booking fee</div><div class="detail-sub">Charged to customer per booking</div></div><div class="detail-value">15 EGP</div></div>
+          <div class="detail-row"><div><div class="detail-label">Commission %</div><div class="detail-sub">Of completed invoice value</div></div><div class="detail-value">10%</div></div>
+          <div class="detail-row"><div><div class="detail-label">Monthly subscription</div><div class="detail-sub">After 3-month free period</div></div><div class="detail-value">3,000 EGP</div></div>
+          <div class="detail-row"><div><div class="detail-label">Marketing package</div><div class="detail-sub">Optional add-on</div></div><div class="detail-value">3,000 EGP</div></div>
+          <div class="detail-row"><div><div class="detail-label">Free trial length</div><div class="detail-sub">First 5 centers per brand</div></div><div class="detail-value">3 months</div></div>
+        </div>
+        <div class="card">
+          <h3 class="panel-title" style="margin-bottom:4px;">Catalog</h3>
+          <div class="detail-row"><div><div class="detail-label">Service categories</div><div class="detail-sub">Oil change, brakes, AC, etc.</div></div><a class="manage-link" href="#">Manage (12) →</a></div>
+          <div class="detail-row"><div><div class="detail-label">Car brands</div><div class="detail-sub">BMW, Hyundai, Toyota…</div></div><a class="manage-link" href="#">Manage (24) →</a></div>
+          <div class="detail-row"><div><div class="detail-label">Car models</div><div class="detail-sub">Per-brand model list</div></div><a class="manage-link" href="#">Manage (310) →</a></div>
+          <div class="detail-row"><div><div class="detail-label">Oil brands</div><div class="detail-sub">Mobil 1, Castrol, Shell…</div></div><a class="manage-link" href="#">Manage (9) →</a></div>
+          <div class="detail-row"><div><div class="detail-label">Service base prices</div><div class="detail-sub">Fair Price Guide ranges</div></div><a class="manage-link" href="#">Manage →</a></div>
+        </div>
+        <div class="card">
+          <h3 class="panel-title" style="margin-bottom:4px;">Platform</h3>
+          <div class="detail-row"><div><div class="detail-label">App version</div><div class="detail-sub">Current live version</div></div><div class="detail-value">1.4.2</div></div>
+          <div class="detail-row"><div><div class="detail-label">Maintenance mode</div><div class="detail-sub">Temporarily disable bookings</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+          <div class="detail-row"><div><div class="detail-label">Arabic / RTL</div><div class="detail-sub">Default app language</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="detail-row"><div><div class="detail-label">Emergency SOS</div><div class="detail-sub">Enable roadside requests</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="card">
+          <h3 class="panel-title" style="margin-bottom:4px;">Admin roles &amp; permissions</h3>
+          <div class="detail-row"><div><div class="detail-label">Super Admin</div><div class="detail-sub">Full access to everything</div></div><div class="detail-value">1 user</div></div>
+          <div class="detail-row"><div><div class="detail-label">Finance</div><div class="detail-sub">Payments, commission, reports</div></div><div class="detail-value">2 users</div></div>
+          <div class="detail-row"><div><div class="detail-label">Marketing</div><div class="detail-sub">Banners, promos, campaigns</div></div><div class="detail-value">1 user</div></div>
+          <div class="detail-row"><div><div class="detail-label">Customer Support</div><div class="detail-sub">Customers, reviews, bookings</div></div><div class="detail-value">3 users</div></div>
+          <div class="detail-row"><div><div class="detail-label">Operations</div><div class="detail-sub">Service centers, emergency</div></div><div class="detail-value">2 users</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ REPORTS / NOTIFICATIONS / ADMIN USERS (simple placeholders) ============ -->
+    <div class="page" id="page-reports">
+      <div class="card" style="text-align:center;padding:60px 20px;color:var(--ink-dim);">
+        <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px;">Reports</div>
+        Detailed exportable reports live here — revenue, commissions, and operations summaries.
+      </div>
+    </div>
+    <div class="page" id="page-notifications">
+      <div class="card" style="text-align:center;padding:60px 20px;color:var(--ink-dim);">
+        <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px;">Notifications</div>
+        System and admin notifications appear here.
+      </div>
+    </div>
+    <div class="page" id="page-adminusers">
+      <div class="card" style="text-align:center;padding:60px 20px;color:var(--ink-dim);">
+        <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px;">Admin Users</div>
+        Manage admin accounts and role assignments here.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const titles = {
+    dashboard:["Business Health","Warsha operations at a glance · Tuesday, 14 May 2026"],
+    customers:["Customers","312 registered customers"],
+    servicecenters:["Service Centers","Manage partner centers and approvals"],
+    bookings:["Bookings","All bookings across service centers"],
+    payments:["Payments","Income, commission and payout tracking"],
+    reviews:["Reviews","2,140 customer reviews across all centers"],
+    marketing:["Marketing","Banners, promo codes and featured centers"],
+    emergency:["Emergency","Live roadside assistance requests"],
+    settings:["Settings","Platform configuration and admin roles"],
+    reports:["Reports","Exportable business reports"],
+    notifications:["Notifications","System notifications"],
+    adminusers:["Admin Users","Manage admin accounts"],
+  };
+
+  document.querySelectorAll('.nav-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+      item.classList.add('active');
+      const page = item.dataset.page;
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.getElementById('page-'+page).classList.add('active');
+      document.getElementById('pageTitle').textContent = titles[page][0];
+      document.getElementById('pageSub').textContent = titles[page][1];
+      document.querySelector('.content').scrollTo(0,0);
+      window.scrollTo(0,0);
+    });
+  });
+
+  document.querySelectorAll('.filter-tabs').forEach(group=>{
+    group.querySelectorAll('.ftab').forEach(tab=>{
+      tab.addEventListener('click', ()=>{
+        group.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));
+        tab.classList.add('on');
+      });
+    });
+  });
+
+  // generate bar charts
+  function buildBars(id, n, cls){
+    const wrap = document.getElementById(id);
+    for(let i=0;i<n;i++){
+      const b = document.createElement('div');
+      b.className = 'bar '+cls;
+      const h = 30 + Math.random()*95;
+      b.style.height = h+'px';
+      wrap.appendChild(b);
+    }
+  }
+  buildBars('revChart',12,'orange');
+  buildBars('bookChart',7,'blue');
+</script>
+</body>
+</html>
