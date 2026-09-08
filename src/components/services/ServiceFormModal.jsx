@@ -29,7 +29,14 @@ function serviceToForm(service) {
 }
 
 /** One form is shared by both Add and Edit so their fields stay consistent. */
-export default function ServiceFormModal({ open, service, onClose, onSave }) {
+export default function ServiceFormModal({
+  open,
+  service,
+  onClose,
+  onSave,
+  saving = false,
+  error = '',
+}) {
   const { t } = useAppTranslation('services');
   const [form, setForm] = useState(EMPTY_FORM);
   const isEditing = Boolean(service);
@@ -60,13 +67,22 @@ export default function ServiceFormModal({ open, service, onClose, onSave }) {
           <Button type="button" variant="outline" onClick={onClose}>
             {t('actions.cancel')}
           </Button>
-          <Button type="submit" form={formId}>
+          <Button type="submit" form={formId} disabled={saving}>
             {isEditing ? t('actions.saveChanges') : t('actions.save')}
           </Button>
         </>
       }
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <div
+            role="alert"
+            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          >
+            {error}
+          </div>
+        )}
+
         {isEditing && (
           <div className="rounded-lg border border-[#E8E2D8] bg-[#F6F3EE] px-3 py-2 text-sm">
             <span className="font-medium text-[#5A5045]">{t('fields.serviceId')}: </span>

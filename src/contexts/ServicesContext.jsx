@@ -10,7 +10,7 @@
  *   { data, loading, error, addService, updateService, toggleStatus, deleteService, duplicateService }
  */
 import { createContext, useContext, useEffect, useReducer } from 'react';
-import mockServices from '@/mocks/services.json';
+import { createService, editService, getServices, removeService } from '@/API/Service';
 
 const ServicesContext = createContext(null);
 
@@ -82,18 +82,24 @@ export function ServicesProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        dispatch({ type: 'LOAD_SUCCESS', payload: mockServices });
-      } catch (error) {
-        dispatch({ type: 'LOAD_ERROR', payload: error.message });
-      }
-    }, 300);
+    let cancelled = false;
 
-    return () => clearTimeout(timer);
+    getServices()
+      .then((result) => {
+        if (cancelled) return;
+        const services = Array.isArray(result) ? result : result?.data || result?.services || [];
+        dispatch({ type: 'LOAD_SUCCESS', payload: services });
+      })
+      .catch((error) => {
+        if (!cancelled) dispatch({ type: 'LOAD_ERROR', payload: error.message });
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const addService = ({
+  const toApiService = ({
     nameEn,
     nameAr,
     descriptionEn,
@@ -102,39 +108,43 @@ export function ServicesProvider({ children }) {
     minPricing,
     maxPricing,
     durationMinutes,
-  }) => {
-    const now = new Date().toISOString();
+  }) => ({
+    name: { en: nameEn.trim(), ar: nameAr.trim() },
+    description: { en: descriptionEn.trim(), ar: descriptionAr.trim() },
+    category,
+    durationMinutes: Number(durationMinutes),
+    price: { from: Number(minPricing), to: Number(maxPricing) },
+  });
 
-    dispatch({
-      type: 'ADD_SERVICE',
-      payload: {
-        id: `S-${Date.now()}`,
-        name: { en: nameEn.trim(), ar: nameAr.trim() },
-        description: {
-          en: descriptionEn.trim(),
-          ar: descriptionAr.trim(),
-        },
-        category,
-        durationMinutes: Number(durationMinutes),
-        price: {
-          from: Number(minPricing),
-          to: Number(maxPricing),
-        },
-        image: null,
-        visible: true,
-        status: 'active',
-        createdAt: now,
-        updatedAt: now,
-      },
-    });
+  const addService = async (form) => {
+    const result = await createService(toApiService(form));
+    const created = result?.data || result?.service || result;
+    dispatch({ type: 'ADD_SERVICE', payload: created });
+    return created;
   };
 
-  const updateService = (id, updates) =>
-    dispatch({ type: 'UPDATE_SERVICE', payload: { id, ...updates } });
+  const updateService = async (id, updates) => {
+    const result = await editService(id, updates);
+    const updated = result?.data || result?.service || result;
+    dispatch({ type: 'UPDATE_SERVICE', payload: { id, ...updated } });
+    return updated;
+  };
 
-  const toggleStatus = (id) => dispatch({ type: 'TOGGLE_STATUS', payload: id });
+  const toggleStatus = async (id) => {
+    const service = state.data.find((item) => item.id === id);
+    if (!service) return;
 
-  const deleteService = (id) => dispatch({ type: 'DELETE_SERVICE', payload: id });
+    const status = service.status === 'active' ? 'inactive' : 'active';
+    const result = await editService(id, { status, visible: status === 'active' });
+    const updated = result?.data || result?.service || { status, visible: status === 'active' };
+    dispatch({ type: 'UPDATE_SERVICE', payload: { id, ...updated } });
+    return updated;
+  };
+
+  const deleteService = async (id) => {
+    await removeService(id);
+    dispatch({ type: 'DELETE_SERVICE', payload: id });
+  };
 
   const duplicateService = (id) => dispatch({ type: 'DUPLICATE_SERVICE', payload: id });
 

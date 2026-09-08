@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Button, Card, Input, Toggle } from '@/components/ui';
+import { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { Button, Card, Toggle } from '@/components/ui';
+import FormHookInput from '@/components/ui/FormHookInput';
 import { ErrorState, ResponsiveAccordion, SkeletonCard } from '@/components/widgets';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
@@ -46,29 +48,54 @@ function hasCoordinates(location) {
   );
 }
 
+function getFirstOpeningHours(workingHours) {
+  return Object.values(workingHours || {}).find(
+    (hours) => hours?.enabled && hours.open && hours.close
+  );
+}
+
 export default function SettingsPage() {
   const { t } = useAppTranslation('settings');
-  const { data, loading, error, updateWorkshop, togglePreference } = useSettings();
+  const { data, loading, error, updateWorkshop, saveWorkshopProfile, togglePreference } =
+    useSettings();
   const [workshopForm, setWorkshopForm] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [preferenceError, setPreferenceError] = useState('');
   const [locationError, setLocationError] = useState('');
+  const initializedForm = useRef(false);
+  const {
+    register,
+    handleSubmit: submitForm,
+    reset,
+  } = useForm({
+    defaultValues: {
+      name: '',
+      address: '',
+      phone: '',
+      secondaryPhone: '',
+      googleMapsUrl: '',
+    },
+  });
 
-  // Inputs start empty and use saved settings as placeholders. This keeps the
-  // design clean while still showing the current value for every field.
   useEffect(() => {
-    if (data?.workshop) setWorkshopForm({});
-  }, [data?.workshop]);
+    if (data?.workshop && !initializedForm.current) {
+      reset({
+        name: data.workshop.name || '',
+        address: data.workshop.address || '',
+        phone: data.workshop.phone || '',
+        secondaryPhone: data.workshop.secondaryPhone || '',
+        googleMapsUrl: data.workshop.location?.googleMapsUrl || '',
+      });
+      initializedForm.current = true;
+    }
+  }, [data?.workshop, reset]);
 
-  const handleFieldChange = (key, value) => {
-    setSaved(false);
-    if (key === 'googleMapsUrl') setLocationError('');
-    setWorkshopForm((current) => ({ ...current, [key]: value }));
-  };
+  const handleSubmit = async (formValues) => {
+    setSaveError('');
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    const enteredMapsUrl = workshopForm.googleMapsUrl?.trim() || '';
+    const enteredMapsUrl = formValues.googleMapsUrl?.trim() || '';
     const currentLocation = data.workshop.location;
     const savedMapsUrl = currentLocation?.googleMapsUrl || '';
 
@@ -90,18 +117,49 @@ export default function SettingsPage() {
 
     // Empty fields keep their existing placeholder value; only typed fields change.
     const nextWorkshop = Object.fromEntries(
-      PROFILE_FIELDS.map(({ key }) => [key, workshopForm[key]?.trim() || data.workshop[key] || ''])
+      PROFILE_FIELDS.map(({ key }) => [key, formValues[key]?.trim() || data.workshop[key] || ''])
     );
 
-    updateWorkshop({
+    const updates = {
       ...nextWorkshop,
       location: enteredMapsUrl
         ? { ...currentLocation, googleMapsUrl: enteredMapsUrl }
         : currentLocation,
-    });
-    setWorkshopForm({});
-    setLocationError('');
-    setSaved(true);
+    };
+    const storedUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
+    const openingHours = getFirstOpeningHours(data.workshop.workingHours);
+    const profileData = {
+      workshopId: storedUser?.userId || storedUser?.id || 0,
+      name: nextWorkshop.name,
+      phone: nextWorkshop.phone,
+      googleMapsLink: enteredMapsUrl || savedMapsUrl,
+      address: nextWorkshop.address,
+      lat: Number(currentLocation?.latitude) || 0,
+      lng: Number(currentLocation?.longitude) || 0,
+      openingTime: openingHours?.open || '',
+      closingTime: openingHours?.close || '',
+    };
+
+    setSaving(true);
+    try {
+      await saveWorkshopProfile(updates, profileData);
+      reset({ name: '', address: '', phone: '', secondaryPhone: '', googleMapsUrl: '' });
+      setLocationError('');
+      setSaved(true);
+    } catch (err) {
+      setSaveError(err.message || t('saveError', { defaultValue: 'Unable to save changes.' }));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePreferenceToggle = async (key) => {
+    setPreferenceError('');
+    try {
+      await togglePreference(key);
+    } catch (err) {
+      setPreferenceError(err.message || 'Unable to save preference.');
+    }
   };
 
   if (error) {
@@ -113,7 +171,7 @@ export default function SettingsPage() {
     );
   }
 
-  if (loading || !workshopForm) {
+  if (loading || !data?.workshop) {
     return (
       <div className="grid gap-4 lg:grid-cols-5">
         <SkeletonCard className="h-96 lg:col-span-3" rounded="xl" />
@@ -142,31 +200,38 @@ export default function SettingsPage() {
             title={t('workshopProfile', { defaultValue: 'Workshop profile' })}
             defaultOpen
           >
-            <form onSubmit={handleSubmit} className="space-y-4 p-5">
+            <form onSubmit={submitForm(handleSubmit)} className="space-y-4 p-5">
               {/* Fields come from one definition so adding a profile field stays simple. */}
               {PROFILE_FIELDS.map((field) => (
-                <Input
+                <FormHookInput
                   key={field.key}
                   id={`workshop-${field.key}`}
                   type={field.type}
                   label={t(field.translationKey)}
-                  value={workshopForm[field.key] ?? ''}
                   placeholder={
                     data.workshop[field.key] ||
                     (field.placeholderKey ? t(field.placeholderKey) : '')
                   }
-                  onChange={(event) => handleFieldChange(field.key, event.target.value)}
+                  register={register}
+                  name={field.key}
+                  rules={{ onChange: () => setSaved(false) }}
                 />
               ))}
 
-              <Input
+              <FormHookInput
                 id="workshop-google-maps-url"
                 type="url"
                 label={t('googleMapsUrl')}
-                value={workshopForm.googleMapsUrl ?? ''}
                 placeholder={data.workshop.location?.googleMapsUrl || t('googleMapsUrlPlaceholder')}
-                onChange={(event) => handleFieldChange('googleMapsUrl', event.target.value)}
                 error={locationError}
+                register={register}
+                name="googleMapsUrl"
+                rules={{
+                  onChange: () => {
+                    setSaved(false);
+                    setLocationError('');
+                  },
+                }}
               />
               <LocationPicker
                 value={data.workshop.location}
@@ -186,9 +251,10 @@ export default function SettingsPage() {
               />
 
               <div className="flex flex-wrap items-center gap-3 pt-0.5">
-                <Button type="submit" className="min-h-10 px-5">
+                <Button type="submit" className="min-h-10 px-5" disabled={saving}>
                   {t('saveChanges', { defaultValue: 'Save changes' })}
                 </Button>
+                {saveError && <p className="text-sm font-medium text-red-600">{saveError}</p>}
                 {saved && (
                   <p role="status" className="text-sm font-medium text-emerald-700">
                     {t('changesSaved', { defaultValue: 'Changes saved' })}
@@ -206,7 +272,11 @@ export default function SettingsPage() {
               defaultOpen={false}
             >
               <div>
-                {/* Preferences update immediately, matching the switch behavior in the design. */}
+                {preferenceError && (
+                  <p className="border-b border-red-100 bg-red-50 px-5 py-3 text-sm text-red-600">
+                    {preferenceError}
+                  </p>
+                )}
                 {PREFERENCE_FIELDS.map((preference) => (
                   <div
                     key={preference.key}
@@ -216,7 +286,7 @@ export default function SettingsPage() {
                       id={`preference-${preference.key}`}
                       label={t(preference.translationKey)}
                       checked={Boolean(data.preferences[preference.key])}
-                      onChange={() => togglePreference(preference.key)}
+                      onChange={() => handlePreferenceToggle(preference.key)}
                     />
                   </div>
                 ))}
