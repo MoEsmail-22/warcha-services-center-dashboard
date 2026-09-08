@@ -142,8 +142,6 @@ export default function Sidebar({
 
         {/* ===== Footer (ProPlanCard + collapse toggle) ===== */}
         <div className="border-t border-white/10 p-3">
-          {!collapsed && <ProPlanCard />}
-
           {/* Desktop collapse button */}
           {onCollapse && (
             <button
