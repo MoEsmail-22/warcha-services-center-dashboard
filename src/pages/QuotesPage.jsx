@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Send, Search, FilePenLine } from 'lucide-react';
+import { Plus, Send, Search, FilePenLine, Trash2 } from 'lucide-react';
 import { useQuotes } from '../contexts/QuotesContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import Avatar from '../components/ui/Avatar';
@@ -25,10 +25,39 @@ export default function QuotesPage() {
   const [customerName, setCustomerName] = useState('Hazem M.');
   const [vehicle, setVehicle] = useState('Toyota Corolla');
   const [search, setSearch] = useState('');
+  const [futureRepairs, setFutureRepairs] = useState([]);
 
-  const handleSend = () => {
+  const handleSend = (event) => {
+    event.preventDefault();
     if (lineItems.length === 0 || total === 0) return;
-    sendQuote({ customer: customerName, vehicle });
+    sendQuote({
+      customer: customerName,
+      vehicle,
+      futureRepairs: futureRepairs
+        .filter((repair) => repair.description.trim() || repair.remainingKm !== '')
+        .map((repair) => ({
+          description: repair.description.trim(),
+          remainingKm: repair.remainingKm === '' ? null : Number(repair.remainingKm),
+        })),
+    });
+    setFutureRepairs([]);
+  };
+
+  const addFutureRepair = () => {
+    setFutureRepairs((previous) => [
+      ...previous,
+      { id: Date.now(), description: '', remainingKm: '' },
+    ]);
+  };
+
+  const updateFutureRepair = (id, field, value) => {
+    setFutureRepairs((previous) =>
+      previous.map((repair) => (repair.id === id ? { ...repair, [field]: value } : repair))
+    );
+  };
+
+  const removeFutureRepair = (id) => {
+    setFutureRepairs((previous) => previous.filter((repair) => repair.id !== id));
   };
 
   const handleEditDraft = (quote) => {
@@ -36,6 +65,13 @@ export default function QuotesPage() {
     if (!selected) return;
     setCustomerName(selected.customer.name);
     setVehicle(selected.vehicle);
+    setFutureRepairs(
+      (selected.futureRepairs ?? []).map((repair, index) => ({
+        ...repair,
+        id: repair.id ?? `${selected.id}-future-${index}`,
+        remainingKm: repair.remainingKm ?? '',
+      }))
+    );
   };
 
   // Filter recent quotes by search
@@ -43,9 +79,7 @@ export default function QuotesPage() {
   const currency = i18n.language?.startsWith('ar') ? 'ج.م' : 'EGP';
   //utitlys
   const filteredQuotes = filterQuotes(recentQuotes, search);
-  const activeWorkflowQuote = recentQuotes.find(
-    (quote) => quote.id === activeWorkflowQuoteId
-  );
+  const activeWorkflowQuote = recentQuotes.find((quote) => quote.id === activeWorkflowQuoteId);
 
   return (
     <div className="flex h-full flex-col">
@@ -67,7 +101,8 @@ export default function QuotesPage() {
       {/* ============ TWO-COLUMN GRID ============ */}
       <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-5">
         {/* ---- LEFT: Build a quote ---- */}
-        <div
+        <form
+          onSubmit={handleSend}
           className="flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-3"
           style={{ borderRadius: '16px' }}
         >
@@ -159,12 +194,85 @@ export default function QuotesPage() {
 
           {/* Add line item button */}
           <button
+            type="button"
             onClick={addLineItem}
             className="mt-3 inline-flex items-center gap-1.5 self-start rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-semibold text-[#5A6968] transition-colors hover:border-[#0E5C5B] hover:text-[#0E5C5B]"
           >
             <Plus className="h-3.5 w-3.5" />
             {t('addLineItem', { defaultValue: 'Add line item' })}
           </button>
+
+          {/* Optional future repairs */}
+          <div className="mt-5 rounded-xl border border-[#CFE2DF] bg-[#F7FBFA] p-4">
+            <div className="mb-2 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold tracking-wide text-[#0E5C5B] uppercase">
+                  {t('futureRepairs', { defaultValue: 'Future repairs or recommendations' })}
+                </p>
+                <p className="mt-1 text-sm text-[#5A6968]">
+                  {t('futureRepairsSubtitle', {
+                    defaultValue: 'Optional suggestions to share with the customer.',
+                  })}
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[#0E5C5B]">
+                {t('optional', { defaultValue: 'Optional' })}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {futureRepairs.map((repair) => (
+                <div
+                  key={repair.id}
+                  className="flex items-center gap-2 rounded-lg border border-[#D9E7E5] bg-white p-2.5"
+                >
+                  <input
+                    type="text"
+                    value={repair.description}
+                    onChange={(event) =>
+                      updateFutureRepair(repair.id, 'description', event.target.value)
+                    }
+                    placeholder={t('futureRepairPlaceholder', {
+                      defaultValue: 'Recommended repair or suggestion',
+                    })}
+                    className="h-10 min-w-0 flex-1 rounded-md border border-gray-200 px-3 text-xs text-gray-900 placeholder:text-gray-400 focus:border-[#0E5C5B] focus:ring-2 focus:ring-[#0E5C5B]/10 focus:outline-none"
+                  />
+                  <div className="flex h-10 w-44 shrink-0 items-center rounded-md border border-gray-200 focus-within:border-[#0E5C5B] focus-within:ring-2 focus-within:ring-[#0E5C5B]/10">
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={repair.remainingKm}
+                      onChange={(event) =>
+                        updateFutureRepair(repair.id, 'remainingKm', event.target.value)
+                      }
+                      placeholder={t('remainingKmPlaceholder', { defaultValue: 'Remaining km' })}
+                      className="h-full w-full min-w-0 bg-transparent px-3 text-center text-xs text-gray-900 placeholder:text-center placeholder:text-gray-400 focus:outline-none"
+                    />
+                    <span className="pr-3 text-xs text-gray-400">km</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeFutureRepair(repair.id)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                    aria-label={t('removeFutureRepair', { defaultValue: 'Remove suggestion' })}
+                    title={t('removeFutureRepair', { defaultValue: 'Remove suggestion' })}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={addFutureRepair}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[#8FB9B4] bg-white px-3.5 py-2 text-sm font-semibold text-[#0E5C5B] transition-colors hover:border-[#0E5C5B] hover:bg-[#EDF7F5]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t('addFutureRepair', { defaultValue: 'Add recommendation' })}
+            </button>
+          </div>
 
           {/* Total + Send button */}
           <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
@@ -180,7 +288,7 @@ export default function QuotesPage() {
               </p>
             </div>
             <button
-              onClick={handleSend}
+              type="submit"
               disabled={total === 0}
               className="inline-flex items-center gap-2 rounded-lg px-5 text-white shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               style={{
@@ -194,7 +302,7 @@ export default function QuotesPage() {
               {t('sendToCustomer', { defaultValue: 'Send to customer' })}
             </button>
           </div>
-        </div>
+        </form>
 
         {/* ---- RIGHT: Recent quotes ---- */}
         <div

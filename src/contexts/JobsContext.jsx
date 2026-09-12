@@ -36,6 +36,7 @@ const quoteFromJob = (job) => ({
   status: job.quoteStatus ?? 'draft',
   sentAt: job.quoteStatus === 'sent' ? 'Previously sent' : null,
   lineItems: [{ id: `${job.id}-service`, label: job.service, amount: 0 }],
+  futureRepairs: [],
 });
 
 // Never infer that billing was sent from the job stage. Only explicit mock
@@ -122,7 +123,7 @@ export function JobsProvider({ children }) {
     });
   };
 
-  const sendWorkflowQuote = (quoteId, lineItems) => {
+  const sendWorkflowQuote = (quoteId, lineItems, futureRepairs = []) => {
     const total = lineItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const quote = workflowQuotes.find((item) => item.id === quoteId);
     if (!quote || total <= 0) return null;
@@ -136,7 +137,7 @@ export function JobsProvider({ children }) {
     setWorkflowQuotes((current) =>
       current.map((item) =>
         item.id === quoteId
-          ? { ...item, lineItems, amount: total, status: 'sent', sentAt }
+          ? { ...item, lineItems, futureRepairs, amount: total, status: 'sent', sentAt }
           : item
       )
     );
@@ -149,7 +150,7 @@ export function JobsProvider({ children }) {
       quoteId,
       quoteSentAt: new Date().toISOString(),
     });
-    return { ...quote, lineItems, amount: total, status: 'sent', sentAt };
+    return { ...quote, lineItems, futureRepairs, amount: total, status: 'sent', sentAt };
   };
 
   /**
@@ -179,10 +180,9 @@ export function JobsProvider({ children }) {
 
   const cancelJob = (jobId) => {
     const job = jobs.find((item) => item.id === jobId);
-    setJobs((current) =>
-      current.filter((item) => !(item.id === jobId && item.stage === 'new'))
-    );
-    if (job?.stage === 'new') updateBookingStatus(job.bookingId, 'cancelled', { cancellationFee: 50 });
+    setJobs((current) => current.filter((item) => !(item.id === jobId && item.stage === 'new')));
+    if (job?.stage === 'new')
+      updateBookingStatus(job.bookingId, 'cancelled', { cancellationFee: 50 });
   };
 
   const value = useMemo(
