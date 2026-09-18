@@ -3,6 +3,7 @@
   "subtitle": "تحكم في الخدمات التي تقدمها وما يراه العملاء.",
   "addService": "إضافة خدمة",
   "loading": "جارٍ تحميل الخدمات...",
+  "noServices": "لم يتم العثور على خدمات.",
   "table": {
     "serviceName": "اسم الخدمة",
     "category": "الفئة",
@@ -50,5 +51,34 @@
     "finalWarning": "لا يمكن التراجع عن هذا الإجراء.",
     "serviceDetails": "أنت على وشك حذف {{name}} ({{id}}) نهائيًا.",
     "confirm": "حذف نهائي"
+  },
+  "vehicleCatalog": {
+    "title": "كتالوج السيارات",
+    "subtitle": "إدارة ماركات سيارات العملاء.",
+    "addBrand": "إضافة ماركة",
+    "table": {
+      "brand": "الماركة",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "status": {
+      "active": "نشطة",
+      "inactive": "غير نشطة"
+    },
+    "modal": {
+      "title": "إضافة ماركة سيارة",
+      "searchTitle": "البحث في كتالوج السيارات",
+      "searchDescription": "اختر ماركة لإتاحتها للعملاء."
+    },
+    "fields": {
+      "brand": "ماركة السيارة",
+      "searchPlaceholder": "ابحث عن تويوتا أو بي إم دبليو أو هيونداي...",
+      "searchLabel": "البحث عن ماركات السيارات"
+    },
+    "actions": {
+      "cancel": "إلغاء",
+      "deleteBrand": "حذف {{brand}}"
+    },
+    "noBrands": "لم يتم العثور على ماركات."
   }
 }

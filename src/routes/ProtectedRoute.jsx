@@ -9,9 +9,9 @@ export default function ProtectedRoute({ children }) {
 
   if (loading) return <RouteFallback />;
 
-  if (!user) {
-    return <Navigate to={`/${lang}/login`} state={{ from: location }} replace />;
-  }
+  // if (!user) {
+  //   return <Navigate to={`/${lang}/login`} state={{ from: location }} replace />;
+  // }
 
   return children;
 }

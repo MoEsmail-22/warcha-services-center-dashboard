@@ -40,12 +40,12 @@ export function QuotesProvider({ children }) {
     setLineItems((previous) => previous.filter((item) => item.id !== id));
   };
 
-  const sendQuote = ({ customer, vehicle }) => {
+  const sendQuote = ({ customer, vehicle, futureRepairs = [] }) => {
     const total = lineItems.reduce((sum, item) => sum + (item.amount || 0), 0);
 
     // Sending an auto-created diagnostic draft advances its linked workflow.
     if (activeWorkflowQuoteId) {
-      const sentQuote = sendWorkflowQuote(activeWorkflowQuoteId, lineItems);
+      const sentQuote = sendWorkflowQuote(activeWorkflowQuoteId, lineItems, futureRepairs);
       if (sentQuote) {
         setActiveWorkflowQuoteId(null);
         setLineItems(createDefaultLineItems());
@@ -72,6 +72,7 @@ export function QuotesProvider({ children }) {
           .map((item) => item.label)
           .filter(Boolean)
           .join(', ') || MOCK_QUOTE_DEFAULTS.serviceName,
+      futureRepairs,
       amount: total,
       status: MOCK_QUOTE_DEFAULTS.status,
       sentAt: new Date().toLocaleDateString('en-US', {

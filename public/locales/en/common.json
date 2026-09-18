@@ -56,7 +56,7 @@
     "submit": "Create account",
     "loading": "Creating account…",
     "hasAccount": "Already have an account?",
-    "loginLink": "Sign in",
+    "loginLink": "login",
     "passwordMismatch": "Passwords do not match",
     "passwordTooShort": "Password must be at least 8 characters"
   },

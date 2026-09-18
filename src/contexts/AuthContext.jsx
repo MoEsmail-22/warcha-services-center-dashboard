@@ -20,13 +20,20 @@ export function AuthProvider({ children }) {
   }, []);
 
   const saveUserSession = (userData) => {
+    const source = {
+      ...userData,
+      ...userData?.data,
+      ...userData?.user,
+      ...userData?.data?.user,
+    };
+    const id = source.id || source.userId || source.workshopId || source.workshop?.id;
     const safeUser = {
-      id: userData.id || userData.userId,
-      userId: userData.userId || userData.id,
-      name: userData.name,
-      email: userData.email,
-      phone: userData.phone,
-      address: userData.address,
+      id,
+      userId: source.userId || id,
+      name: source.name || source.workshop?.name,
+      email: source.email,
+      phone: source.phone,
+      address: source.address,
     };
 
     localStorage.setItem('auth_user', JSON.stringify(safeUser));
@@ -36,16 +43,47 @@ export function AuthProvider({ children }) {
   };
 
   const login = async ({ email, password }) => {
+    const devToken = import.meta.env.VITE_DEV_ACCESS_TOKEN;
+    if (import.meta.env.VITE_ENABLE_DEV_AUTH === 'true' && devToken) {
+      localStorage.setItem('auth_token', devToken);
+
+      const loggedInUser = saveUserSession({
+        userId: 1,
+        email,
+      });
+
+      return {
+        isSuccess: true,
+        message: 'Development login successful',
+        data: {
+          userId: loggedInUser.userId,
+          email,
+          accessToken: devToken,
+        },
+        user: loggedInUser,
+      };
+    }
+
     const response = await loginUser({
       email,
       password,
     });
 
-    console.log(response);
+    const accessToken =
+      response?.data?.accessToken ||
+      response?.data?.token ||
+      response?.accessToken ||
+      response?.token;
+    if (accessToken) {
+      localStorage.setItem('auth_token', accessToken);
+    }
+
+    if (response?.data?.expiresAt) {
+      localStorage.setItem('auth_token_expires_at', response.data.expiresAt);
+    }
 
     const loggedInUser = saveUserSession({
-      ...response.data,
-      userId: response.data?.userId,
+      ...response,
       email,
     });
 
@@ -57,21 +95,20 @@ export function AuthProvider({ children }) {
 
   const register = async (workshopData) => {
     const result = await createWorkshop(workshopData);
-    const registeredUser = result?.user ||
-      result?.data || {
-        name: workshopData.name,
-        email: workshopData.email,
-      };
+    const registeredUser = saveUserSession({
+      ...result,
+      ...workshopData,
+    });
 
-    if (result?.token) localStorage.setItem('auth_token', result.token);
-    localStorage.setItem('auth_user', JSON.stringify(registeredUser));
-    setUser(registeredUser);
+    const token = result?.token || result?.data?.token;
+    if (token) localStorage.setItem('auth_token', token);
     return result;
   };
 
   const logout = () => {
     localStorage.removeItem('auth_user');
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_token_expires_at');
     setUser(null);
   };
 

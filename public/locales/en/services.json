@@ -3,6 +3,7 @@
   "subtitle": "Control what you offer and what customers see.",
   "addService": "Add Service",
   "loading": "Loading services...",
+  "noServices": "No services found.",
   "table": {
     "serviceName": "Service Name",
     "category": "Category",
@@ -50,5 +51,34 @@
     "finalWarning": "This action cannot be undone.",
     "serviceDetails": "You are about to permanently delete {{name}} ({{id}}).",
     "confirm": "Delete permanently"
+  },
+  "vehicleCatalog": {
+    "title": "Vehicle catalog",
+    "subtitle": "Manage customer car brands.",
+    "addBrand": "Add brand",
+    "table": {
+      "brand": "Brand",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "modal": {
+      "title": "Add a vehicle brand",
+      "searchTitle": "Search the market catalog",
+      "searchDescription": "Select a brand to make it available to customers."
+    },
+    "fields": {
+      "brand": "Vehicle brand",
+      "searchPlaceholder": "Search Toyota, BMW, Hyundai...",
+      "searchLabel": "Search market brands"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "deleteBrand": "Delete {{brand}}"
+    },
+    "noBrands": "No brands found."
   }
 }

@@ -8,6 +8,7 @@
  */
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import mockSettings from '@/mocks/settings.json';
+import { updateProfile, updateSettings } from '@/API/Service';
 
 const SettingsContext = createContext(null);
 
@@ -58,7 +59,19 @@ export function SettingsProvider({ children }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        dispatch({ type: 'LOAD_SUCCESS', payload: mockSettings });
+        const stored = localStorage.getItem('workshop_settings');
+        const savedSettings = stored ? JSON.parse(stored) : null;
+        dispatch({
+          type: 'LOAD_SUCCESS',
+          payload: savedSettings
+            ? {
+                ...mockSettings,
+                ...savedSettings,
+                workshop: { ...mockSettings.workshop, ...savedSettings.workshop },
+                preferences: { ...mockSettings.preferences, ...savedSettings.preferences },
+              }
+            : mockSettings,
+        });
       } catch (err) {
         dispatch({ type: 'LOAD_ERROR', payload: err.message });
       }
@@ -66,13 +79,57 @@ export function SettingsProvider({ children }) {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    if (state.data) localStorage.setItem('workshop_settings', JSON.stringify(state.data));
+  }, [state.data]);
+
   const updateWorkshop = (updates) => dispatch({ type: 'UPDATE_WORKSHOP', payload: updates });
-  const updatePreferences = (updates) => dispatch({ type: 'UPDATE_PREFERENCES', payload: updates });
-  const togglePreference = (key) => dispatch({ type: 'TOGGLE_PREFERENCE', payload: key });
+  const saveWorkshopProfile = async (updates, profileData = updates) => {
+    const storedUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
+    const workshopId = storedUser?.userId || storedUser?.id;
+
+    if (!workshopId) throw new Error('Workshop ID is missing from the saved session.');
+
+    const result = await updateProfile(workshopId, profileData);
+    dispatch({ type: 'UPDATE_WORKSHOP', payload: updates });
+    return result;
+  };
+  const savePreferences = async (preferences) => {
+    const storedUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
+    const workshopId = storedUser?.userId || storedUser?.id;
+    const previousPreferences = state.data.preferences;
+
+    if (!workshopId) throw new Error('Workshop ID is missing from the saved session.');
+
+    const settingsData = {
+      workshopId,
+      acceptOnlineBookings: Boolean(preferences.acceptOnlineBookings),
+      showPricesToCustomers: Boolean(preferences.showPrices),
+      autoSendUpdates: Boolean(preferences.autoSendServiceUpdates),
+      emailDailySummary: Boolean(preferences.emailDailySummary),
+    };
+
+    dispatch({ type: 'UPDATE_PREFERENCES', payload: preferences });
+    try {
+      return await updateSettings(workshopId, settingsData);
+    } catch (error) {
+      dispatch({ type: 'UPDATE_PREFERENCES', payload: previousPreferences });
+      throw error;
+    }
+  };
+
+  const updatePreferences = (updates) => savePreferences({ ...state.data.preferences, ...updates });
+  const togglePreference = (key) =>
+    savePreferences({
+      ...state.data.preferences,
+      [key]: !state.data.preferences[key],
+    });
 
   const value = {
     ...state,
     updateWorkshop,
+    saveWorkshopProfile,
+    savePreferences,
     updatePreferences,
     togglePreference,
   };

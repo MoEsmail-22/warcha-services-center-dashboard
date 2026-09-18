@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { Button, Modal, Table, TBody, TD, TH, THead, Toggle, TR } from '@/components/ui';
 import ServiceFormModal from '@/components/services/ServiceFormModal';
+import VehicleCatalogDemo from '@/components/services/VehicleCatalogDemo';
 
 function formatDuration(minutes, language) {
   const value = Number(minutes);
@@ -45,6 +46,8 @@ export default function ServicesPricingPage() {
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteStep, setDeleteStep] = useState(0);
+  const [savingService, setSavingService] = useState(false);
+  const [serviceSaveError, setServiceSaveError] = useState('');
 
   useEffect(() => {
     if (!activeMenuId) return undefined;
@@ -57,30 +60,43 @@ export default function ServicesPricingPage() {
     return () => document.removeEventListener('mousedown', closeMenu);
   }, [activeMenuId]);
 
-  const closeFormModal = () => setFormModal({ open: false, service: null });
+  const closeFormModal = () => {
+    if (savingService) return;
+    setServiceSaveError('');
+    setFormModal({ open: false, service: null });
+  };
 
-  const saveService = (form) => {
-    if (!formModal.service) {
-      addService(form);
-      closeFormModal();
-      return;
+  const saveService = async (form) => {
+    setServiceSaveError('');
+    setSavingService(true);
+
+    try {
+      if (!formModal.service) {
+        await addService(form);
+      } else {
+        await updateService(formModal.service.id, {
+          name: { en: form.nameEn.trim(), ar: form.nameAr.trim() },
+          description: {
+            en: form.descriptionEn.trim(),
+            ar: form.descriptionAr.trim(),
+          },
+          category: form.category,
+          durationMinutes: Number(form.durationMinutes),
+          price: {
+            from: Number(form.minPricing),
+            to: Number(form.maxPricing),
+          },
+          updatedAt: new Date().toISOString(),
+        });
+      }
+      setFormModal({ open: false, service: null });
+    } catch (error) {
+      setServiceSaveError(
+        error.message || t('saveError', { defaultValue: 'Unable to save service.' })
+      );
+    } finally {
+      setSavingService(false);
     }
-
-    updateService(formModal.service.id, {
-      name: { en: form.nameEn.trim(), ar: form.nameAr.trim() },
-      description: {
-        en: form.descriptionEn.trim(),
-        ar: form.descriptionAr.trim(),
-      },
-      category: form.category,
-      durationMinutes: Number(form.durationMinutes),
-      price: {
-        from: Number(form.minPricing),
-        to: Number(form.maxPricing),
-      },
-      updatedAt: new Date().toISOString(),
-    });
-    closeFormModal();
   };
 
   const requestDelete = (service) => {
@@ -94,8 +110,8 @@ export default function ServicesPricingPage() {
     setDeleteStep(0);
   };
 
-  const confirmDelete = () => {
-    deleteService(deleteTarget.id);
+  const confirmDelete = async () => {
+    await deleteService(deleteTarget.id);
     closeDeleteModal();
   };
 
@@ -140,6 +156,12 @@ export default function ServicesPricingPage() {
                 <TR>
                   <TD colSpan={6} className="py-10 text-center text-gray-500">
                     {t('loading')}
+                  </TD>
+                </TR>
+              ) : services.length === 0 ? (
+                <TR>
+                  <TD colSpan={6} className="py-10 text-center text-gray-500">
+                    {t('noServices')}
                   </TD>
                 </TR>
               ) : (
@@ -230,11 +252,15 @@ export default function ServicesPricingPage() {
         </div>
       </div>
 
+      <VehicleCatalogDemo />
+
       <ServiceFormModal
         open={formModal.open}
         service={formModal.service}
         onClose={closeFormModal}
         onSave={saveService}
+        saving={savingService}
+        error={serviceSaveError}
       />
 
       <Modal

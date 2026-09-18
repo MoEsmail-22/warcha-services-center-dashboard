@@ -1,6 +1,4 @@
-const API_BASE_URL = import.meta.env.DEV
-  ? '/api/v1'
-  : import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
 
 export async function loginUser(credentials) {
   const response = await fetch(`${API_BASE_URL}/Auth/workshop/login`, {
