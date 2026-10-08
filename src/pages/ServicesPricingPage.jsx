@@ -57,6 +57,7 @@ export default function ServicesPricingPage() {
   const { lang } = useLanguage();
   const {
     data: services,
+    categories,
     loading,
     error: loadError,
     pagination,
@@ -80,16 +81,10 @@ export default function ServicesPricingPage() {
     }
   }, [loading, page, pagination.totalPages, setPage]);
 
-  // Existing service records can provide the backend category IDs used when
-  // creating or changing a service category.
-  const categoryIdByName = useMemo(
-    () =>
-      services.reduce((mapping, service) => {
-        const id = service.serviceCategoryId;
-        if (service.category && id != null) mapping[service.category] = String(id);
-        return mapping;
-      }, {}),
-    [services]
+  // "3" → { en: "Oils & Fluids", ar: "الزيوت والسوائل" } for the Category column.
+  const categoryNames = useMemo(
+    () => new Map(categories.map((category) => [category.id, category.name])),
+    [categories]
   );
 
   const [formModal, setFormModal] = useState({ open: false, service: null });
@@ -269,10 +264,8 @@ export default function ServicesPricingPage() {
                   return (
                     <TR key={service.id}>
                       <TD className="font-medium">{service.name[lang] || service.name.en}</TD>
-                      <TD className="text-gray-600 capitalize">
-                        {t(`categories.${service.category[lang] || service.category.en}`, {
-                          defaultValue: service.category,
-                        })}
+                      <TD className="text-gray-600">
+                        {categoryNames.get(String(service.serviceCategoryId))?.[lang] ?? '—'}
                       </TD>
                       <TD className="text-gray-600">
                         {formatDuration(service.durationMinutes, lang)}
@@ -368,7 +361,6 @@ export default function ServicesPricingPage() {
       <ServiceFormModal
         open={formModal.open}
         service={formModal.service}
-        categoryIdByName={categoryIdByName}
         onClose={closeFormModal}
         onSave={saveService}
         saving={savingService}

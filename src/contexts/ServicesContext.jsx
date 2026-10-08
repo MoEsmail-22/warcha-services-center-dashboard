@@ -13,15 +13,26 @@
  *   { data, loading, error, pagination, loadServices, addService, updateService,
  *     toggleStatus, deleteService, duplicateService }
  */
-import { createContext, useCallback, useContext, useReducer, useRef } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  useReducer,
+  useRef,
+} from 'react';
 import {
   createService,
   editService,
   getServices,
   removeService,
   toggleServiceVisibility,
+  getServiceCategories,
 } from '@/API/Service';
 import { isDemoMode } from '@/API/client';
+
+import { useAuth } from './AuthContext';
 
 const ServicesContext = createContext(null);
 
@@ -171,7 +182,19 @@ function reducer(state, action) {
   }
 }
 
+/** One backend category → what the UI needs. */
+function normalizeCategory(category) {
+  return {
+    id: String(category.id),
+    name: { en: category.nameEn ?? '', ar: category.nameAr ?? '' },
+    icon: category.icon ?? '',
+  };
+}
+
 export function ServicesProvider({ children }) {
+  const { user } = useAuth();
+  const [categories, setCategories] = useState([]);
+
   const [state, dispatch] = useReducer(reducer, initialState);
   // The page currently shown, so add/delete can reload the same page.
   const lastQuery = useRef({ pageNumber: 1, pageSize: 10 });
@@ -192,6 +215,23 @@ export function ServicesProvider({ children }) {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setCategories([]);
+      return undefined;
+    }
+    let cancelled = false;
+    getServiceCategories()
+      .then((result) => {
+        if (!cancelled) setCategories((result?.data ?? []).map(normalizeCategory));
+      })
+      .catch((error) => console.error('Could not load service categories:', error.details));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const addService = async (form) => {
     const parsedCategoryId = Number(form.categoryId);
@@ -219,10 +259,7 @@ export function ServicesProvider({ children }) {
     const current = state.data.find((service) => String(service.id) === String(id));
     if (!current) throw new Error('This service is no longer in the list. Refresh and try again.');
 
-    const categoryChanged = updates.category !== current.category;
-    const categoryId = Number(
-      categoryChanged ? updates.categoryId : updates.categoryId || current.serviceCategoryId
-    );
+    const categoryId = Number(updates.categoryId || current.serviceCategoryId);
     const resolvedCategoryId = Number.isInteger(categoryId) && categoryId > 0 ? categoryId : null;
 
     const payload = isDemoMode()
@@ -250,7 +287,6 @@ export function ServicesProvider({ children }) {
         en: updates.descriptionEn.trim(),
         ar: updates.descriptionAr.trim(),
       },
-      category: updates.category,
       serviceCategoryId: resolvedCategoryId ?? current.serviceCategoryId,
       durationMinutes: Number(updates.durationMinutes),
       price: { from: Number(updates.minPricing), to: Number(updates.maxPricing) },
@@ -288,6 +324,7 @@ export function ServicesProvider({ children }) {
         toggleStatus,
         deleteService,
         duplicateService,
+        categories,
       }}
     >
       {children}

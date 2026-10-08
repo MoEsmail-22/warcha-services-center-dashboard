@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Button, Input, Modal, Select } from '@/components/ui';
-import { SERVICE_CATEGORY_OPTIONS } from '@/constants/serviceCategories';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
+import { useServices } from '@/contexts';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const EMPTY_FORM = {
   nameEn: '',
   nameAr: '',
-  category: '',
   categoryId: '',
   minPricing: '',
   maxPricing: '',
@@ -15,23 +15,12 @@ const EMPTY_FORM = {
   descriptionAr: '',
 };
 
-function serviceToForm(service, categoryIdByName) {
+function serviceToForm(service) {
   if (!service) return EMPTY_FORM;
-
-  const categoryKey = service.category ?? '';
-  const categoryOption = SERVICE_CATEGORY_OPTIONS.find(({ key }) => key === categoryKey);
-
   return {
     nameEn: service.name?.en ?? '',
     nameAr: service.name?.ar ?? '',
-    category: categoryKey,
-    categoryId: String(
-      service.serviceCategoryId ??
-        service.categoryId ??
-        categoryIdByName?.[categoryKey] ??
-        categoryOption?.id ??
-        ''
-    ),
+    categoryId: String(service.serviceCategoryId ?? service.categoryId ?? ''),
     minPricing: String(service.price?.from ?? ''),
     maxPricing: String(service.price?.to ?? ''),
     durationMinutes: String(service.durationMinutes ?? ''),
@@ -41,42 +30,19 @@ function serviceToForm(service, categoryIdByName) {
 }
 
 /** One form is shared by both Add and Edit so their fields stay consistent. */
-export default function ServiceFormModal({
-  open,
-  service,
-  categoryIdByName = {},
-  onClose,
-  onSave,
-  saving = false,
-}) {
+export default function ServiceFormModal({ open, service, onClose, onSave, saving = false }) {
+  const { categories } = useServices();
+  const { lang } = useLanguage();
   const { t } = useAppTranslation('services');
   const [form, setForm] = useState(EMPTY_FORM);
   const isEditing = Boolean(service);
 
   useEffect(() => {
-    if (open) setForm(serviceToForm(service, categoryIdByName));
-  }, [open, service, categoryIdByName]);
+    if (open) setForm(serviceToForm(service));
+  }, [open, service]);
 
   const updateField = (field, value) => {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-      ...(field === 'category'
-        ? {
-            categoryId: String(
-              value === service?.category
-                ? (service?.serviceCategoryId ??
-                    service?.categoryId ??
-                    categoryIdByName[value] ??
-                    SERVICE_CATEGORY_OPTIONS.find(({ key }) => key === value)?.id ??
-                    '')
-                : (categoryIdByName[value] ??
-                    SERVICE_CATEGORY_OPTIONS.find(({ key }) => key === value)?.id ??
-                    '')
-            ),
-          }
-        : {}),
-    }));
+    setForm((current) => ({ ...current, [field]: value }));
   };
 
   const handleSubmit = (event) => {
@@ -155,20 +121,16 @@ export default function ServiceFormModal({
             id={`${formId}-category`}
             label={t('fields.category')}
             value={form.categoryId}
-            onChange={(event) => {
-              const selected = SERVICE_CATEGORY_OPTIONS.find(
-                ({ id, key }) => String(categoryIdByName[key] ?? id) === event.target.value
-              );
-              if (selected) updateField('category', selected.key);
-            }}
+            onChange={(event) => updateField('categoryId', event.target.value)}
+            disabled={categories.length === 0}
             required
           >
             <option value="" disabled>
-              {t('fields.selectCategory')}
+              {categories.length === 0 ? t('loading') : t('fields.selectCategory')}
             </option>
-            {SERVICE_CATEGORY_OPTIONS.map(({ id, key }) => (
-              <option key={id} value={categoryIdByName[key] ?? id}>
-                {t(`categories.${key}`)}
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name[lang] || category.name.en}
               </option>
             ))}
           </Select>
