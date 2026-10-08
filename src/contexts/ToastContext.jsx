@@ -72,10 +72,10 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      {/* end-4 = right in English, left in Arabic. z-[70] stays above dialogs and the loader. */}
+      {/* Centered at the top of the screen. z-[70] stays above dialogs and the loader. */}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed end-4 top-4 z-[70] flex w-[min(380px,calc(100vw-2rem))] flex-col gap-2"
+        className="pointer-events-none fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 w-[min(380px,calc(100vw-2rem))] flex-col gap-2"
       >
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onClose={removeToast} />
