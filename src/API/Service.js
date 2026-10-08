@@ -1,3 +1,4 @@
+import { tr } from 'date-fns/locale';
 import apiClient, { isDemoMode } from './client';
 import { assertApiSuccess, handleApiError } from './errors';
 
@@ -13,6 +14,16 @@ function getBackendServiceId(id) {
 }
 
 /** The backend returns services one page at a time: { items, totalCount, totalPages, ... }. */
+
+export async function getServiceCategories() {
+  try {
+    const response = await apiClient.get('/Workshop/service-categories');
+    return assertApiSuccess(response.data, 'Failed to get service categories.');
+  } catch (error) {
+    return handleApiError(error, 'get service categories error');
+  }
+}
+
 export async function getServices({ pageNumber = 1, pageSize = 10 } = {}) {
   try {
     const response = await apiClient.get('/Workshop/service', {
