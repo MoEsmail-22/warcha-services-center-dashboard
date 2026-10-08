@@ -41,10 +41,18 @@
     "subtitle": "Sign in to your dashboard",
     "email": "Email address",
     "password": "Password",
-    "submit": "log in",
+    "submit": "Sign in",
     "loading": "Signing in…",
     "noAccount": "Don't have an account?",
-    "registerLink": "Sign in"
+    "registerLink": "Create one",
+    "forgotPassword": "Forgot password?",
+    "sendingCode": "Sending code…",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "sendCodeFailed": "Unable to send reset code",
+    "failed": "Login failed"
   },
   "register": {
     "title": "Create your account",
@@ -58,7 +66,9 @@
     "hasAccount": "Already have an account?",
     "loginLink": "login",
     "passwordMismatch": "Passwords do not match",
-    "passwordTooShort": "Password must be at least 8 characters"
+    "passwordTooShort": "Password must be at least 8 characters",
+    "pendingVerification": "Account created. An admin must verify it before you can sign in.",
+    "goToLogin": "Go to login"
   },
   "trends": {
     "vsYesterday": "vs yesterday",
@@ -74,5 +84,45 @@
   "footer": {
     "copyright": "© {{year}} Warsha. All rights reserved.",
     "tagline": "Workshop management made simpler."
+  },
+  "topbar": {
+    "busyMode": "Busy Mode"
+  },
+  "errorPage": {
+    "notFoundTitle": "Looks like this page broke down",
+    "notFoundText": "The page you're looking for doesn't exist or has been moved.",
+    "errorTitle": "Something went wrong",
+    "errorText": "This page ran into a problem. Try again, or go back.",
+    "home": "Back to dashboard",
+    "back": "Go back",
+    "retry": "Try again"
+  },
+  "pagination": {
+    "navigation": "Pagination",
+    "showing": "Showing",
+    "of": "of",
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "loading": {
+    "default": "Loading…",
+    "saving": "Saving…",
+    "deleting": "Deleting…"
+  },
+  "notifications": {
+    "serviceAdded": "Service added",
+    "serviceUpdated": "Service updated",
+    "serviceDeleted": "Service deleted",
+    "serviceShown": "Service is now visible to customers",
+    "serviceHidden": "Service is now hidden from customers",
+    "busySet": "Busy time saved",
+    "busyRemoved": "Busy time removed",
+    "offerCreated": "Offer created",
+    "settingsSaved": "Changes saved",
+    "preferenceSaved": "Preference saved",
+    "codeSent": "A reset code was sent to your email",
+    "passwordReset": "Password changed. You can sign in now",
+    "registered": "Account created"
   }
 }

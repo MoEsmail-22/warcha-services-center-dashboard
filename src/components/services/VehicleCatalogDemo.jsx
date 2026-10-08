@@ -64,7 +64,7 @@ export default function VehicleCatalogDemo() {
   };
 
   return (
-    <section className="mt-8 w-full max-w-2xl lg:w-fit" dir={isRTL ? 'rtl' : 'ltr'}>
+    <section className="flex w-full min-w-0 flex-1 flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-xl font-bold text-[#15201F]">
@@ -80,9 +80,9 @@ export default function VehicleCatalogDemo() {
         </Button>
       </div>
 
-      <Card padded={false}>
-        <div className="overflow-x-auto px-4 pb-4">
-          <Table className="w-auto min-w-[520px]">
+      <Card padded={false} className="flex flex-1 flex-col">
+        <div className="flex-1 overflow-x-auto px-4 pb-4">
+          <Table className="w-full min-w-[520px]">
             <THead>
               <TR className="hover:bg-gray-50">
                 <TH className="px-3 py-2.5 whitespace-nowrap">

@@ -1,77 +1,85 @@
-import { apiFetch } from './client';
+import apiClient, { isDemoMode } from './client';
+import { assertApiSuccess, handleApiError } from './errors';
 
-async function parseResponse(response, action) {
-  const result = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(result?.message || `${action} failed: ${response.status}`);
+function getBackendServiceId(id) {
+  const numericId = Number(id);
+  if (isDemoMode()) return id;
+  if (!Number.isInteger(numericId) || numericId <= 0) {
+    throw new Error(
+      'This service has no valid backend ID. Refresh the service list and try again.'
+    );
   }
-
-  return result;
+  return numericId;
 }
 
-export async function getServices() {
-  const response = await apiFetch('/Workshop/service');
-  return parseResponse(response, 'Loading services');
+/** The backend returns services one page at a time: { items, totalCount, totalPages, ... }. */
+export async function getServices({ pageNumber = 1, pageSize = 10 } = {}) {
+  try {
+    const response = await apiClient.get('/Workshop/service', {
+      params: { PageNumber: pageNumber, PageSize: pageSize },
+    });
+    return assertApiSuccess(response.data, 'Failed to load services.');
+  } catch (error) {
+    return handleApiError(error, 'Load services');
+  }
 }
 
 export async function createService(serviceData) {
-  const response = await apiFetch('/Workshop/service', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(serviceData),
-  });
-
-  return parseResponse(response, 'Creating service');
+  try {
+    const response = await apiClient.post('/Workshop/service', serviceData, { skipDemoMode: true });
+    return assertApiSuccess(response.data, 'Failed to create service.');
+  } catch (error) {
+    return handleApiError(error, 'Create service');
+  }
 }
 
 export async function editService(id, serviceData) {
-  const response = await apiFetch(`/Workshop/service/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(serviceData),
-  });
+  try {
+    const serviceId = getBackendServiceId(id);
+    const requestBody = isDemoMode()
+      ? serviceData
+      : { ...serviceData, workshopServiceId: Number(serviceData.workshopServiceId ?? serviceId) };
+    const response = await apiClient.put(`/Workshop/service/${serviceId}`, requestBody);
+    return assertApiSuccess(response.data, 'Failed to update service.');
+  } catch (error) {
+    return handleApiError(error, 'Update service');
+  }
+}
 
-  return parseResponse(response, 'Updating service');
+export async function toggleServiceVisibility(id) {
+  try {
+    const serviceId = getBackendServiceId(id);
+    const response = await apiClient.put(`/Workshop/service/toggle-visibility/${serviceId}`);
+    return assertApiSuccess(response.data, 'Failed to change service visibility.');
+  } catch (error) {
+    return handleApiError(error, 'Change service visibility');
+  }
 }
 
 export async function removeService(id) {
-  const response = await apiFetch(`/Workshop/service/${id}`, { method: 'DELETE' });
-  return parseResponse(response, 'Deleting service');
+  try {
+    const serviceId = getBackendServiceId(id);
+    const response = await apiClient.delete(`/Workshop/service/${serviceId}`);
+    return assertApiSuccess(response.data, 'Failed to delete service.');
+  } catch (error) {
+    return handleApiError(error, 'Delete service');
+  }
 }
 
 export async function updateProfile(id, profileData) {
-  const response = await apiFetch(`/Workshop/update-profile/${id}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(profileData),
-  });
-
-  const result = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(result?.message || `Profile update failed: ${response.status}`);
+  try {
+    const response = await apiClient.post(`/Workshop/update-profile/${id}`, profileData);
+    return assertApiSuccess(response.data, 'Failed to update profile.');
+  } catch (error) {
+    return handleApiError(error, 'Update profile');
   }
-
-  return result;
 }
 
 export async function updateSettings(id, settingsData) {
-  const response = await apiFetch(`/Workshop/update-settings/${id}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(settingsData),
-  });
-
-  const result = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(result?.message || `Settings update failed: ${response.status}`);
+  try {
+    const response = await apiClient.post(`/Workshop/update-settings/${id}`, settingsData);
+    return assertApiSuccess(response.data, 'Failed to update settings.');
+  } catch (error) {
+    return handleApiError(error, 'Update settings');
   }
-
-  return result;
 }

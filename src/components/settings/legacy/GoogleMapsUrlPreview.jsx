@@ -56,7 +56,7 @@ export default function GoogleMapsUrlPreview({ googleMapsUrl }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
       <div className="flex items-center gap-2 border-b border-gray-200 px-5 py-4">
-        <MapPinned className="h-5 w-5 text-primary" aria-hidden="true" />
+        <MapPinned className="text-primary h-5 w-5" aria-hidden="true" />
         <h2 className="text-base font-semibold text-[#15201F]">
           {t('locationPreview', { defaultValue: 'Workshop location' })}
         </h2>

@@ -5,6 +5,7 @@ import FormHookInput from '@/components/ui/FormHookInput';
 import { ErrorState, ResponsiveAccordion, SkeletonCard } from '@/components/widgets';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
+import { useNotify } from '@/hooks/useNotify';
 import GoogleMapsPreview from '@/components/settings/GoogleMapsPreview';
 import LocationPicker from '@/components/settings/LocationPicker';
 import WorkingHoursEditor from '@/components/settings/WorkingHoursEditor';
@@ -59,10 +60,8 @@ export default function SettingsPage() {
   const { data, loading, error, updateWorkshop, saveWorkshopProfile, togglePreference } =
     useSettings();
   const [workshopForm, setWorkshopForm] = useState(null);
-  const [saved, setSaved] = useState(false);
+  const notify = useNotify();
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState('');
-  const [preferenceError, setPreferenceError] = useState('');
   const [locationError, setLocationError] = useState('');
   const initializedForm = useRef(false);
   const {
@@ -93,8 +92,6 @@ export default function SettingsPage() {
   }, [data?.workshop, reset]);
 
   const handleSubmit = async (formValues) => {
-    setSaveError('');
-
     const enteredMapsUrl = formValues.googleMapsUrl?.trim() || '';
     const currentLocation = data.workshop.location;
     const savedMapsUrl = currentLocation?.googleMapsUrl || '';
@@ -126,10 +123,8 @@ export default function SettingsPage() {
         ? { ...currentLocation, googleMapsUrl: enteredMapsUrl }
         : currentLocation,
     };
-    const storedUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
     const openingHours = getFirstOpeningHours(data.workshop.workingHours);
     const profileData = {
-      workshopId: storedUser?.userId || storedUser?.id || 0,
       name: nextWorkshop.name,
       phone: nextWorkshop.phone,
       googleMapsLink: enteredMapsUrl || savedMapsUrl,
@@ -145,20 +140,20 @@ export default function SettingsPage() {
       await saveWorkshopProfile(updates, profileData);
       reset({ name: '', address: '', phone: '', secondaryPhone: '', googleMapsUrl: '' });
       setLocationError('');
-      setSaved(true);
+      notify.success('settingsSaved');
     } catch (err) {
-      setSaveError(err.message || t('saveError', { defaultValue: 'Unable to save changes.' }));
+      notify.error(err, 'settings.save');
     } finally {
       setSaving(false);
     }
   };
 
   const handlePreferenceToggle = async (key) => {
-    setPreferenceError('');
     try {
       await togglePreference(key);
+      notify.success('preferenceSaved');
     } catch (err) {
-      setPreferenceError(err.message || 'Unable to save preference.');
+      notify.error(err, 'settings.save');
     }
   };
 
@@ -214,7 +209,6 @@ export default function SettingsPage() {
                   }
                   register={register}
                   name={field.key}
-                  rules={{ onChange: () => setSaved(false) }}
                 />
               ))}
 
@@ -227,10 +221,7 @@ export default function SettingsPage() {
                 register={register}
                 name="googleMapsUrl"
                 rules={{
-                  onChange: () => {
-                    setSaved(false);
-                    setLocationError('');
-                  },
+                  onChange: () => setLocationError(''),
                 }}
               />
               <LocationPicker
@@ -238,7 +229,6 @@ export default function SettingsPage() {
                 onChange={(location) => {
                   updateWorkshop({ location });
                   setLocationError('');
-                  setSaved(false);
                 }}
               />
 
@@ -246,7 +236,6 @@ export default function SettingsPage() {
                 value={data.workshop.workingHours}
                 onChange={(workingHours) => {
                   updateWorkshop({ workingHours });
-                  setSaved(false);
                 }}
               />
 
@@ -254,12 +243,6 @@ export default function SettingsPage() {
                 <Button type="submit" className="min-h-10 px-5" disabled={saving}>
                   {t('saveChanges', { defaultValue: 'Save changes' })}
                 </Button>
-                {saveError && <p className="text-sm font-medium text-red-600">{saveError}</p>}
-                {saved && (
-                  <p role="status" className="text-sm font-medium text-emerald-700">
-                    {t('changesSaved', { defaultValue: 'Changes saved' })}
-                  </p>
-                )}
               </div>
             </form>
           </ResponsiveAccordion>
@@ -272,11 +255,6 @@ export default function SettingsPage() {
               defaultOpen={false}
             >
               <div>
-                {preferenceError && (
-                  <p className="border-b border-red-100 bg-red-50 px-5 py-3 text-sm text-red-600">
-                    {preferenceError}
-                  </p>
-                )}
                 {PREFERENCE_FIELDS.map((preference) => (
                   <div
                     key={preference.key}

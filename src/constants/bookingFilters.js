@@ -19,4 +19,3 @@ export const BOOKING_STATUS_VALUES = {
   Completed: 'completed',
 };
 
-export const BOOKINGS_PAGE_SIZE = 8;

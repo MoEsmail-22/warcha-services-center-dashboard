@@ -4,6 +4,7 @@
   "addService": "إضافة خدمة",
   "loading": "جارٍ تحميل الخدمات...",
   "noServices": "لم يتم العثور على خدمات.",
+  "saveErrorTitle": "تعذر حفظ الخدمة.",
   "table": {
     "serviceName": "اسم الخدمة",
     "category": "الفئة",
@@ -50,7 +51,64 @@
     "finalTitle": "التأكيد النهائي",
     "finalWarning": "لا يمكن التراجع عن هذا الإجراء.",
     "serviceDetails": "أنت على وشك حذف {{name}} ({{id}}) نهائيًا.",
+    "errorTitle": "تعذر حذف الخدمة.",
+    "errorHint": "حدّث قائمة الخدمات ثم حاول مرة أخرى.",
     "confirm": "حذف نهائي"
+  },
+  "busyTime": {
+    "title": "مشغول حالياً",
+    "subtitle": "أخبر عملاءك أنك مشغول ولا يمكنك استقبال حجوزات.",
+    "add": "تفعيل الانشغال",
+    "empty": "أنت متاح حالياً — لا توجد أوقات انشغال.",
+    "table": {
+      "startAt": "يبدأ في",
+      "duration": "المدة",
+      "endAt": "ينتهي في",
+      "actions": "الإجراءات"
+    },
+    "modal": {
+      "title": "تفعيل الانشغال"
+    },
+    "fields": {
+      "startAt": "يبدأ في",
+      "endAt": "ينتهي في"
+    },
+    "units": {
+      "hour": "ساعة",
+      "hours": "ساعات"
+    },
+    "actions": {
+      "cancel": "إلغاء",
+      "delete": "إزالة وقت الانشغال"
+    },
+    "saving": "جارٍ الحفظ…"
+  },
+  "offers": {
+    "title": "العروض",
+    "subtitle": "إدارة خصومات الخدمات ومواعيد العروض.",
+    "addOffer": "إضافة عرض",
+    "empty": "لا توجد عروض حتى الآن.",
+    "table": {
+      "service": "الخدمة",
+      "discountPercentage": "نسبة الخصم",
+      "startAt": "يبدأ في",
+      "endAt": "ينتهي في"
+    },
+    "modal": {
+      "title": "إضافة عرض"
+    },
+    "fields": {
+      "service": "الخدمة",
+      "selectService": "اختر خدمة",
+      "discountPercentage": "نسبة الخصم",
+      "startAt": "يبدأ في",
+      "endAt": "ينتهي في"
+    },
+    "actions": {
+      "cancel": "إلغاء"
+    },
+    "noServices": "أضف خدمة أولاً لإنشاء عرض.",
+    "saving": "جارٍ الحفظ…"
   },
   "vehicleCatalog": {
     "title": "كتالوج السيارات",

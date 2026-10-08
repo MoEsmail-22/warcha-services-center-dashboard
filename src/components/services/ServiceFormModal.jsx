@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Button, Input, Modal, Select } from '@/components/ui';
+import { SERVICE_CATEGORY_OPTIONS } from '@/constants/serviceCategories';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 
 const EMPTY_FORM = {
   nameEn: '',
   nameAr: '',
   category: '',
+  categoryId: '',
   minPricing: '',
   maxPricing: '',
   durationMinutes: '',
@@ -13,13 +15,23 @@ const EMPTY_FORM = {
   descriptionAr: '',
 };
 
-function serviceToForm(service) {
+function serviceToForm(service, categoryIdByName) {
   if (!service) return EMPTY_FORM;
+
+  const categoryKey = service.category ?? '';
+  const categoryOption = SERVICE_CATEGORY_OPTIONS.find(({ key }) => key === categoryKey);
 
   return {
     nameEn: service.name?.en ?? '',
     nameAr: service.name?.ar ?? '',
-    category: service.category ?? '',
+    category: categoryKey,
+    categoryId: String(
+      service.serviceCategoryId ??
+        service.categoryId ??
+        categoryIdByName?.[categoryKey] ??
+        categoryOption?.id ??
+        ''
+    ),
     minPricing: String(service.price?.from ?? ''),
     maxPricing: String(service.price?.to ?? ''),
     durationMinutes: String(service.durationMinutes ?? ''),
@@ -32,21 +44,39 @@ function serviceToForm(service) {
 export default function ServiceFormModal({
   open,
   service,
+  categoryIdByName = {},
   onClose,
   onSave,
   saving = false,
-  error = '',
 }) {
   const { t } = useAppTranslation('services');
   const [form, setForm] = useState(EMPTY_FORM);
   const isEditing = Boolean(service);
 
   useEffect(() => {
-    if (open) setForm(serviceToForm(service));
-  }, [open, service]);
+    if (open) setForm(serviceToForm(service, categoryIdByName));
+  }, [open, service, categoryIdByName]);
 
   const updateField = (field, value) => {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+      ...(field === 'category'
+        ? {
+            categoryId: String(
+              value === service?.category
+                ? (service?.serviceCategoryId ??
+                    service?.categoryId ??
+                    categoryIdByName[value] ??
+                    SERVICE_CATEGORY_OPTIONS.find(({ key }) => key === value)?.id ??
+                    '')
+                : (categoryIdByName[value] ??
+                    SERVICE_CATEGORY_OPTIONS.find(({ key }) => key === value)?.id ??
+                    '')
+            ),
+          }
+        : {}),
+    }));
   };
 
   const handleSubmit = (event) => {
@@ -74,15 +104,6 @@ export default function ServiceFormModal({
       }
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-5">
-        {error && (
-          <div
-            role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-          >
-            {error}
-          </div>
-        )}
-
         {isEditing && (
           <div className="rounded-lg border border-[#E8E2D8] bg-[#F6F3EE] px-3 py-2 text-sm">
             <span className="font-medium text-[#5A5045]">{t('fields.serviceId')}: </span>
@@ -133,17 +154,23 @@ export default function ServiceFormModal({
           <Select
             id={`${formId}-category`}
             label={t('fields.category')}
-            value={form.category}
-            onChange={(event) => updateField('category', event.target.value)}
+            value={form.categoryId}
+            onChange={(event) => {
+              const selected = SERVICE_CATEGORY_OPTIONS.find(
+                ({ id, key }) => String(categoryIdByName[key] ?? id) === event.target.value
+              );
+              if (selected) updateField('category', selected.key);
+            }}
             required
           >
             <option value="" disabled>
               {t('fields.selectCategory')}
             </option>
-            <option value="maintenance">{t('categories.maintenance')}</option>
-            <option value="repair">{t('categories.repair')}</option>
-            <option value="diagnostics">{t('categories.diagnostics')}</option>
-            <option value="bodywork">{t('categories.bodywork')}</option>
+            {SERVICE_CATEGORY_OPTIONS.map(({ id, key }) => (
+              <option key={id} value={categoryIdByName[key] ?? id}>
+                {t(`categories.${key}`)}
+              </option>
+            ))}
           </Select>
 
           <Input

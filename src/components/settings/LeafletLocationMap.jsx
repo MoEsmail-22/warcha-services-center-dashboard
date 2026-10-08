@@ -36,11 +36,7 @@ function MapViewUpdater({ position }) {
  * Leaflet implementation lives in its own lazy-loaded file so its JavaScript,
  * CSS, and map tiles are requested only after the location modal is opened.
  */
-export default function LeafletLocationMap({
-  position,
-  onPositionChange,
-  missingLayerMessage,
-}) {
+export default function LeafletLocationMap({ position, onPositionChange, missingLayerMessage }) {
   const tileUrl = MAPTILER_API_KEY
     ? `https://api.maptiler.com/maps/streets-v4/256/{z}/{x}/{y}.png?key=${MAPTILER_API_KEY}`
     : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -62,13 +58,7 @@ export default function LeafletLocationMap({
         scrollWheelZoom
         className="h-[300px] w-full rounded-xl sm:h-[380px]"
       >
-        <TileLayer
-          attribution={attribution}
-          url={tileUrl}
-          minZoom={1}
-          maxZoom={20}
-          crossOrigin
-        />
+        <TileLayer attribution={attribution} url={tileUrl} minZoom={1} maxZoom={20} crossOrigin />
         <MapClickHandler onPositionChange={onPositionChange} />
         <MapViewUpdater position={position} />
         <Marker

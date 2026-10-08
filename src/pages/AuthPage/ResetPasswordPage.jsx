@@ -6,6 +6,8 @@ import FormHookInput from '../../components/ui/FormHookInput';
 import { forgotPassword } from '../../API/Auth/ForgotPassword';
 import { resetPassword } from '../../API/Auth/ResetPassword';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useNotify } from '../../hooks/useNotify';
+import { useErrorMessage } from '../../hooks/useErrorMessage';
 
 const passwordRules = {
   required: 'Password is required',
@@ -22,8 +24,8 @@ export default function ResetPasswordPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [serverError, setServerError] = useState('');
-  const [resendMessage, setResendMessage] = useState('');
+  const notify = useNotify();
+  const { getErrorMessage } = useErrorMessage();
 
   const {
     register: registerField,
@@ -44,18 +46,15 @@ export default function ResetPasswordPage() {
   const email = watch('email');
 
   const onResend = async () => {
-    setResendMessage('');
-    setServerError('');
     try {
-      const response = await forgotPassword(email);
-      setResendMessage(response?.message || 'A new reset code was sent.');
+      await forgotPassword(email);
+      notify.success('codeSent');
     } catch (error) {
-      setError('email', { type: 'server', message: error.message || 'Unable to resend code' });
+      setError('email', { type: 'server', message: getErrorMessage(error, 'auth.forgot') });
     }
   };
 
   const onSubmit = async (formData) => {
-    setServerError('');
     try {
       await resetPassword({
         email: formData.email,
@@ -63,9 +62,10 @@ export default function ResetPasswordPage() {
         newPassword: formData.newPassword,
         confirmPassword: formData.confirmPassword,
       });
+      notify.success('passwordReset');
       navigate(`/${lang}/login`, { replace: true });
     } catch (error) {
-      setServerError(error.message || 'Unable to reset password');
+      notify.error(error, 'auth.reset');
     }
   };
 
@@ -76,15 +76,6 @@ export default function ResetPasswordPage() {
           <h1 className="text-2xl font-bold text-gray-900">Create a new password</h1>
           <p className="mt-1 text-sm text-gray-500">Enter the code sent to your email.</p>
         </div>
-
-        {serverError && (
-          <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{serverError}</p>
-        )}
-        {resendMessage && (
-          <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {resendMessage}
-          </p>
-        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FormHookInput

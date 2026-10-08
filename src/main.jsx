@@ -19,6 +19,8 @@ import { RouterProvider } from 'react-router-dom';
 import './i18n';
 import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
+import { LoadingProvider } from './contexts/LoadingContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { router } from './routes';
 import {
   BookingsProvider,
@@ -31,21 +33,25 @@ import {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      {/* Only active feature providers are mounted globally. */}
-      <BookingsProvider>
-        <JobsProvider>
-          <QuotesProvider>
-            <ServicesProvider>
-              <ReviewsProvider>
-                <SettingsProvider>
-                  <RouterProvider router={router} />
-                </SettingsProvider>
-              </ReviewsProvider>
-            </ServicesProvider>
-          </QuotesProvider>
-        </JobsProvider>
-      </BookingsProvider>
-    </AuthProvider>
+    <ToastProvider>
+      <LoadingProvider>
+        <AuthProvider>
+          {/* Only active feature providers are mounted globally. */}
+          <BookingsProvider>
+            <JobsProvider>
+              <QuotesProvider>
+                <ServicesProvider>
+                  <ReviewsProvider>
+                    <SettingsProvider>
+                      <RouterProvider router={router} />
+                    </SettingsProvider>
+                  </ReviewsProvider>
+                </ServicesProvider>
+              </QuotesProvider>
+            </JobsProvider>
+          </BookingsProvider>
+        </AuthProvider>
+      </LoadingProvider>
+    </ToastProvider>
   </StrictMode>
 );
