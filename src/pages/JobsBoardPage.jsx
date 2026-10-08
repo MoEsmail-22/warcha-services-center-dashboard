@@ -8,15 +8,8 @@ import CancelBookingModal from '../components/bookings/CancelBookingModal';
 
 export default function JobsBoardPage() {
   const { t } = useAppTranslation('dashboard');
-  const {
-    jobs,
-    workflowQuotes,
-    moveJob,
-    reorderJobs,
-    canMoveJob,
-    createWorkflowQuote,
-    cancelJob,
-  } = useJobs();
+  const { jobs, workflowQuotes, moveJob, reorderJobs, canMoveJob, createWorkflowQuote, cancelJob } =
+    useJobs();
   const [search, setSearch] = useState('');
   const [cancelTarget, setCancelTarget] = useState(null);
   const [workflowMessage, setWorkflowMessage] = useState('');

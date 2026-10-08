@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import FormHookInput from '../../components/ui/FormHookInput';
+import { useNotify } from '../../hooks/useNotify';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -14,14 +15,14 @@ export default function RegisterPage() {
   const { t } = useAppTranslation('common');
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setErrors] = useState('');
+  const notify = useNotify();
+  // Stays on screen (with a link to login) until the admin verifies the account.
+  const [pendingVerification, setPendingVerification] = useState(false);
   const { lang = 'en' } = useParams();
 
   const {
     register: registerField,
     handleSubmit,
-    setError,
-    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm({
     mode: 'onChange',
@@ -36,30 +37,31 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (formData) => {
-    setErrors('');
-    clearErrors('root.server');
+    setPendingVerification(false);
 
     try {
-      await register({
+      const result = await register({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
         password: formData.password,
       });
+
+      // The .NET backend does NOT return a JWT on workshop registration — the
+      // account must first be verified by an admin (POST /api/v1/Admin/verify-workshop/{id}).
+      // So we do NOT auto-login. Show a clear banner and send the user to /login.
+      if (result?.pendingVerification) {
+        setPendingVerification(true);
+        // Keep the user on the register page so they see the banner; offer a link to /login.
+        return;
+      }
+
+      // If the backend DID return a token (some configurations do), go to the dashboard.
+      notify.success('registered');
       navigate(`/${lang}/`, { replace: true });
     } catch (err) {
-      const message = err.message || 'Registration failed';
-      const normalizedMessage = message.toLowerCase();
-      const field = ['name', 'email', 'phone', 'address', 'password'].find((fieldName) =>
-        normalizedMessage.includes(fieldName)
-      );
-
-      if (field) {
-        setError(field, { type: 'server', message });
-      } else {
-        setErrors(message);
-      }
+      notify.error(err, 'auth.register');
     }
   };
 
@@ -75,8 +77,15 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+        {pendingVerification && (
+          <div className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {t('register.pendingVerification', {
+              defaultValue: 'Account created. An admin must verify it before you can sign in.',
+            })}{' '}
+            <Link to={`/${lang}/login`} className="font-semibold underline">
+              {t('register.goToLogin', { defaultValue: 'Go to login' })}
+            </Link>
+          </div>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -110,7 +119,14 @@ export default function RegisterPage() {
             error={errors.phone?.message}
             register={registerField}
             name="phone"
-            rules={{ required: 'Phone is required' }}
+            rules={{
+              required: 'Phone is required',
+              pattern: {
+                // Egyptian mobile: 01 followed by 9 digits (e.g. 01012345678)
+                value: /^01[0-9]{9}$/,
+                message: 'Enter a valid Egyptian mobile (e.g. 01012345678)',
+              },
+            }}
           />
 
           <FormHookInput

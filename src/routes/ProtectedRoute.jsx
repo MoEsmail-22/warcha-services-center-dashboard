@@ -9,9 +9,11 @@ export default function ProtectedRoute({ children }) {
 
   if (loading) return <RouteFallback />;
 
-  // if (!user) {
-  //   return <Navigate to={`/${lang}/login`} state={{ from: location }} replace />;
-  // }
+  // Auth gate. Without this, an unauthenticated user lands on the dashboard and
+  // every API call returns 401 "Unauthorized" because no JWT is in localStorage.
+  if (!user) {
+    return <Navigate to={`/${lang}/login`} state={{ from: location }} replace />;
+  }
 
   return children;
 }

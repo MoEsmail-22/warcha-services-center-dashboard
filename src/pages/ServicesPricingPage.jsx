@@ -1,10 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useServices } from '@/contexts';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { Button, Modal, Table, TBody, TD, TH, THead, Toggle, TR } from '@/components/ui';
+import { useLoading } from '@/contexts/LoadingContext';
+import { useNotify } from '@/hooks/useNotify';
+import { useErrorMessage } from '@/hooks/useErrorMessage';
+import { PAGE_SIZE_OPTIONS, usePaginationParams } from '@/hooks/usePaginationParams';
+import Pagination from '@/components/widgets/Pagination';
+import {
+  Button,
+  LoadingScreen,
+  Modal,
+  Table,
+  TBody,
+  TD,
+  TH,
+  THead,
+  Toggle,
+  TR,
+} from '@/components/ui';
 import ServiceFormModal from '@/components/services/ServiceFormModal';
+import BusyTime from '@/components/services/BusyTime';
+import Offers from '@/components/services/Offers';
 import VehicleCatalogDemo from '@/components/services/VehicleCatalogDemo';
 
 function formatDuration(minutes, language) {
@@ -32,22 +50,56 @@ function formatPrice(price, language) {
 
 export default function ServicesPricingPage() {
   const { t } = useAppTranslation('services');
+  const { t: tCommon } = useAppTranslation('common');
+  const { withLoading } = useLoading();
+  const notify = useNotify();
+  const { getErrorMessage } = useErrorMessage();
   const { lang } = useLanguage();
   const {
     data: services,
     loading,
+    error: loadError,
+    pagination,
+    loadServices,
     addService,
     updateService,
     toggleStatus,
     deleteService,
   } = useServices();
+  // ?page=2&size=20 in the URL decides which page of services is loaded.
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams();
+
+  useEffect(() => {
+    loadServices({ pageNumber: page, pageSize });
+  }, [page, pageSize, loadServices]);
+
+  // After deleting the last service on the last page, step back one page.
+  useEffect(() => {
+    if (!loading && pagination.totalPages > 0 && page > pagination.totalPages) {
+      setPage(pagination.totalPages);
+    }
+  }, [loading, page, pagination.totalPages, setPage]);
+
+  // Existing service records can provide the backend category IDs used when
+  // creating or changing a service category.
+  const categoryIdByName = useMemo(
+    () =>
+      services.reduce((mapping, service) => {
+        const id = service.serviceCategoryId;
+        if (service.category && id != null) mapping[service.category] = String(id);
+        return mapping;
+      }, {}),
+    [services]
+  );
 
   const [formModal, setFormModal] = useState({ open: false, service: null });
   const [activeMenuId, setActiveMenuId] = useState(null);
+  // Screen position of the open actions menu. It is fixed-positioned so the
+  // table's scroll container can't clip it.
+  const [menuPosition, setMenuPosition] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteStep, setDeleteStep] = useState(0);
   const [savingService, setSavingService] = useState(false);
-  const [serviceSaveError, setServiceSaveError] = useState('');
 
   useEffect(() => {
     if (!activeMenuId) return undefined;
@@ -56,46 +108,70 @@ export default function ServicesPricingPage() {
       if (!event.target.closest('[data-service-actions]')) setActiveMenuId(null);
     };
 
+    // A fixed menu would drift away from its row while scrolling, so close it.
+    const closeOnScroll = () => setActiveMenuId(null);
+
     document.addEventListener('mousedown', closeMenu);
-    return () => document.removeEventListener('mousedown', closeMenu);
+    window.addEventListener('scroll', closeOnScroll, true);
+    window.addEventListener('resize', closeOnScroll);
+    return () => {
+      document.removeEventListener('mousedown', closeMenu);
+      window.removeEventListener('scroll', closeOnScroll, true);
+      window.removeEventListener('resize', closeOnScroll);
+    };
   }, [activeMenuId]);
+
+  const toggleMenu = (serviceId, button) => {
+    if (activeMenuId === serviceId) {
+      setActiveMenuId(null);
+      return;
+    }
+
+    const MENU_HEIGHT = 96;
+    const GAP = 4;
+    const rect = button.getBoundingClientRect();
+    const openUp = window.innerHeight - rect.bottom < MENU_HEIGHT + GAP && rect.top > MENU_HEIGHT;
+    const isRTL = document.documentElement.dir === 'rtl';
+
+    setMenuPosition({
+      ...(openUp ? { bottom: window.innerHeight - rect.top + GAP } : { top: rect.bottom + GAP }),
+      // Align the menu's end edge with the button's end edge.
+      ...(isRTL ? { left: rect.left } : { right: window.innerWidth - rect.right }),
+    });
+    setActiveMenuId(serviceId);
+  };
 
   const closeFormModal = () => {
     if (savingService) return;
-    setServiceSaveError('');
     setFormModal({ open: false, service: null });
   };
 
   const saveService = async (form) => {
-    setServiceSaveError('');
     setSavingService(true);
+    const isNew = !formModal.service;
 
     try {
-      if (!formModal.service) {
+      if (isNew) {
         await addService(form);
       } else {
-        await updateService(formModal.service.id, {
-          name: { en: form.nameEn.trim(), ar: form.nameAr.trim() },
-          description: {
-            en: form.descriptionEn.trim(),
-            ar: form.descriptionAr.trim(),
-          },
-          category: form.category,
-          durationMinutes: Number(form.durationMinutes),
-          price: {
-            from: Number(form.minPricing),
-            to: Number(form.maxPricing),
-          },
-          updatedAt: new Date().toISOString(),
-        });
+        await updateService(formModal.service.id, form);
       }
       setFormModal({ open: false, service: null });
+      notify.success(isNew ? 'serviceAdded' : 'serviceUpdated');
     } catch (error) {
-      setServiceSaveError(
-        error.message || t('saveError', { defaultValue: 'Unable to save service.' })
-      );
+      // The form stays open with the user's input so they can fix it and retry.
+      notify.error(error, 'service.save');
     } finally {
       setSavingService(false);
+    }
+  };
+
+  const changeVisibility = async (service) => {
+    try {
+      const updated = await toggleStatus(service.id);
+      notify.success(updated?.status === 'active' ? 'serviceShown' : 'serviceHidden');
+    } catch (error) {
+      notify.error(error, 'service.toggle');
     }
   };
 
@@ -111,8 +187,14 @@ export default function ServicesPricingPage() {
   };
 
   const confirmDelete = async () => {
-    await deleteService(deleteTarget.id);
-    closeDeleteModal();
+    try {
+      await withLoading(() => deleteService(deleteTarget.id), tCommon('loading.deleting'));
+      notify.success('serviceDeleted');
+    } catch (error) {
+      notify.error(error, 'service.delete');
+    } finally {
+      closeDeleteModal();
+    }
   };
 
   return (
@@ -154,8 +236,24 @@ export default function ServicesPricingPage() {
             <TBody>
               {loading ? (
                 <TR>
-                  <TD colSpan={6} className="py-10 text-center text-gray-500">
-                    {t('loading')}
+                  <TD colSpan={6}>
+                    <LoadingScreen variant="section" />
+                  </TD>
+                </TR>
+              ) : loadError ? (
+                <TR>
+                  <TD colSpan={6} className="py-10 text-center">
+                    <p className="text-sm text-red-600">
+                      {getErrorMessage(loadError, 'service.load')}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => loadServices({ pageNumber: page, pageSize })}
+                    >
+                      {tCommon('errorPage.retry')}
+                    </Button>
                   </TD>
                 </TR>
               ) : services.length === 0 ? (
@@ -165,14 +263,14 @@ export default function ServicesPricingPage() {
                   </TD>
                 </TR>
               ) : (
-                services.map((service, index) => {
+                services.map((service) => {
                   const isActive = service.status === 'active';
 
                   return (
                     <TR key={service.id}>
                       <TD className="font-medium">{service.name[lang] || service.name.en}</TD>
                       <TD className="text-gray-600 capitalize">
-                        {t(`categories.${service.category}`, {
+                        {t(`categories.${service.category[lang] || service.category.en}`, {
                           defaultValue: service.category,
                         })}
                       </TD>
@@ -185,7 +283,7 @@ export default function ServicesPricingPage() {
                           <Toggle
                             id={`service-status-${service.id}`}
                             checked={isActive}
-                            onChange={() => toggleStatus(service.id)}
+                            onChange={() => changeVisibility(service)}
                           />
                           <span
                             className={
@@ -202,11 +300,7 @@ export default function ServicesPricingPage() {
                         <div className="relative inline-block" data-service-actions>
                           <button
                             type="button"
-                            onClick={() =>
-                              setActiveMenuId((current) =>
-                                current === service.id ? null : service.id
-                              )
-                            }
+                            onClick={(event) => toggleMenu(service.id, event.currentTarget)}
                             className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-[#F2EDE4] hover:text-[#1C1712]"
                             aria-label={t('actions.openMenu', { name: service.name[lang] })}
                             aria-expanded={activeMenuId === service.id}
@@ -214,11 +308,10 @@ export default function ServicesPricingPage() {
                             <MoreVertical className="h-4 w-4" />
                           </button>
 
-                          {activeMenuId === service.id && (
+                          {activeMenuId === service.id && menuPosition && (
                             <div
-                              className={`absolute end-0 z-20 w-44 overflow-hidden rounded-xl border border-[#E8E2D8] bg-white py-1 text-start shadow-lg ${
-                                index >= services.length - 2 ? 'bottom-full mb-1' : 'top-full mt-1'
-                              }`}
+                              style={menuPosition}
+                              className="fixed z-50 w-44 overflow-hidden rounded-xl border border-[#E8E2D8] bg-white py-1 text-start shadow-lg"
                             >
                               <button
                                 type="button"
@@ -250,17 +343,35 @@ export default function ServicesPricingPage() {
             </TBody>
           </Table>
         </div>
+
+        {pagination.totalCount > 0 && (
+          <Pagination
+            currentPage={page}
+            totalItems={pagination.totalCount}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onPageSizeChange={setPageSize}
+          />
+        )}
       </div>
 
-      <VehicleCatalogDemo />
+      <div className="mt-8 flex flex-col gap-8 xl:flex-row xl:items-stretch">
+        <VehicleCatalogDemo />
+        <Offers />
+      </div>
+
+      <div className="mt-8">
+        <BusyTime />
+      </div>
 
       <ServiceFormModal
         open={formModal.open}
         service={formModal.service}
+        categoryIdByName={categoryIdByName}
         onClose={closeFormModal}
         onSave={saveService}
         saving={savingService}
-        error={serviceSaveError}
       />
 
       <Modal

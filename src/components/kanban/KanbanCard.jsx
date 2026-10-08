@@ -41,7 +41,6 @@ export default function KanbanCard({ job, index, onCancel, onCreateQuote }) {
                 {t('cancellation.button')}
               </button>
             )}
-
           </div>
 
           {/* ---- Service (gray, below vehicle) ---- */}

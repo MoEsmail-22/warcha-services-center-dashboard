@@ -14,19 +14,32 @@
  *   onMenuClick → function called when hamburger is clicked (opens sidebar drawer)
  *   user        → the current user object from AuthContext { name, email, ... }
  */
+
 import { useState, useRef, useEffect } from 'react';
-import { Menu, Search, Globe, LogOut, Settings as SettingsIcon, ChevronDown } from 'lucide-react';
+import { Menu, Globe, LogOut, Settings as SettingsIcon, ChevronDown, Clock3 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useAuth } from '../../contexts/AuthContext';
+import Button from '../ui/Button';
 
 export default function Topbar({ onMenuClick, user }) {
   const { lang, toggleLanguage } = useLanguage();
   const { t } = useAppTranslation('common');
+  const navigate = useNavigate();
 
   return (
     <header className="flex h-16 items-center gap-3 border-b border-gray-200 bg-white px-4 lg:px-6">
+      <Button
+        variant="primary"
+        size="md"
+        onClick={() => navigate(`/${lang}/services#busy-time`)}
+        className="cursor-pointer gap-2.5 px-4 py-2.5 text-sm whitespace-nowrap shadow-sm"
+      >
+        <Clock3 className="h-5 w-5" />
+        <span>{t('topbar.busyMode', { defaultValue: 'Busy Mode' })}</span>
+      </Button>
+
       {/* ===== LEFT: Hamburger (mobile only) ===== */}
       <button
         onClick={onMenuClick}

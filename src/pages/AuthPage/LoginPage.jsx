@@ -8,16 +8,20 @@ import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useParams } from 'react-router-dom';
 import FormHookInput from '../../components/ui/FormHookInput';
 import { forgotPassword } from '../../API/Auth/ForgotPassword';
+import { useNotify } from '../../hooks/useNotify';
+import { useErrorMessage } from '../../hooks/useErrorMessage';
+import { findKnownBackendError } from '../../utils/knownBackendErrors';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginAsDemo } = useAuth();
   const { dir } = useLanguage();
   const { t } = useAppTranslation('common');
   const navigate = useNavigate();
   const location = useLocation();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const notify = useNotify();
+  const { getErrorMessage } = useErrorMessage();
   const [forgotLoading, setForgotLoading] = useState(false);
   const { lang = 'en' } = useParams();
 
@@ -38,56 +42,51 @@ export default function LoginPage() {
 
   const from = location.state?.from?.pathname || `/${lang}/`;
 
+  const handleDemoLogin = () => {
+    loginAsDemo();
+    navigate(from, { replace: true });
+  };
+
   const handleForgotPassword = async () => {
     const currentEmail = getValues('email').trim();
-    setError('');
 
     if (!currentEmail) {
-      setFieldError('email', { type: 'manual', message: 'Email is required' });
+      setFieldError('email', { type: 'manual', message: t('login.emailRequired') });
       return;
     }
 
     setForgotLoading(true);
     try {
       await forgotPassword(currentEmail);
+      notify.success('codeSent');
       navigate(`/${lang}/reset-password`, {
         state: { email: currentEmail },
       });
     } catch (err) {
-      setFieldError('email', {
-        type: 'server',
-        message: err.message || 'Unable to send reset code',
-      });
+      // Shown under the email field, since the problem is usually the email itself.
+      setFieldError('email', { type: 'server', message: getErrorMessage(err, 'auth.forgot') });
     } finally {
       setForgotLoading(false);
     }
   };
 
   const onSubmit = async (formData) => {
-    setError('');
     clearErrors(['email', 'password']);
     try {
       await login(formData);
       navigate(from, { replace: true });
     } catch (err) {
-      const message = err.message || 'Login failed';
-      const normalizedMessage = message.toLowerCase();
-      const isInvalidCredentials =
-        normalizedMessage.includes('invalid email or password') ||
-        (normalizedMessage.includes('email') && normalizedMessage.includes('password'));
-      const field = normalizedMessage.includes('email')
-        ? 'email'
-        : normalizedMessage.includes('password')
-          ? 'password'
-          : null;
+      const message = getErrorMessage(err, 'auth.login');
+      const knownError = findKnownBackendError(err.details);
 
-      if (isInvalidCredentials) {
+      // Wrong credentials belong next to the fields; anything else is a toast.
+      if (knownError === 'auth.invalidCredentials') {
         setFieldError('email', { type: 'server', message });
         setFieldError('password', { type: 'server', message });
-      } else if (field) {
-        setFieldError(field, { type: 'server', message });
+      } else if (knownError === 'auth.userNotFound') {
+        setFieldError('email', { type: 'server', message });
       } else {
-        setError(message);
+        notify.error(err, 'auth.login');
       }
     }
   };
@@ -104,10 +103,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
-        )}
-
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FormHookInput
             id="login-email"
@@ -118,7 +113,7 @@ export default function LoginPage() {
             error={errors.email?.message}
             register={registerField}
             name="email"
-            rules={{ required: 'Email is required' }}
+            rules={{ required: t('login.emailRequired') }}
           />
 
           <div className="relative">
@@ -132,15 +127,15 @@ export default function LoginPage() {
               className="pe-16"
               register={registerField}
               name="password"
-              rules={{ required: 'Password is required' }}
+              rules={{ required: t('login.passwordRequired') }}
             />
             <div className="absolute end-2 top-8">
               <button
                 type="button"
                 onClick={() => setShowPassword((current) => !current)}
                 className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                title={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
+                title={showPassword ? t('login.hidePassword') : t('login.showPassword')}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -170,7 +165,7 @@ export default function LoginPage() {
             disabled={forgotLoading}
             className="font-semibold text-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {forgotLoading ? 'Sending code...' : 'Forgot password?'}
+            {forgotLoading ? t('login.sendingCode') : t('login.forgotPassword')}
           </button>
         </p>
       </div>

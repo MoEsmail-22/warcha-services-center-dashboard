@@ -4,6 +4,7 @@
   "addService": "Add Service",
   "loading": "Loading services...",
   "noServices": "No services found.",
+  "saveErrorTitle": "We couldn't save this service.",
   "table": {
     "serviceName": "Service Name",
     "category": "Category",
@@ -50,7 +51,64 @@
     "finalTitle": "Final confirmation",
     "finalWarning": "This action cannot be undone.",
     "serviceDetails": "You are about to permanently delete {{name}} ({{id}}).",
+    "errorTitle": "Could not delete service.",
+    "errorHint": "Please refresh the service list and try again.",
     "confirm": "Delete permanently"
+  },
+  "busyTime": {
+    "title": "Busy Mode",
+    "subtitle": "Let customers know you're busy and can't take bookings.",
+    "add": "Set as busy",
+    "empty": "You're available — no busy times set.",
+    "table": {
+      "startAt": "Starts at",
+      "duration": "Duration",
+      "endAt": "Ends at",
+      "actions": "Actions"
+    },
+    "modal": {
+      "title": "Set as busy"
+    },
+    "fields": {
+      "startAt": "Starts at",
+      "endAt": "Ends at"
+    },
+    "units": {
+      "hour": "hour",
+      "hours": "hours"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "delete": "Remove busy time"
+    },
+    "saving": "Saving…"
+  },
+  "offers": {
+    "title": "Offers",
+    "subtitle": "Manage service discounts and offer dates.",
+    "addOffer": "Add offer",
+    "empty": "No offers yet.",
+    "table": {
+      "service": "Service",
+      "discountPercentage": "Discount percentage",
+      "startAt": "Starts at",
+      "endAt": "Ends at"
+    },
+    "modal": {
+      "title": "Add an offer"
+    },
+    "fields": {
+      "service": "Service",
+      "selectService": "Choose a service",
+      "discountPercentage": "Discount percentage",
+      "startAt": "Starts at",
+      "endAt": "Ends at"
+    },
+    "actions": {
+      "cancel": "Cancel"
+    },
+    "noServices": "Add a service first to create an offer.",
+    "saving": "Saving…"
   },
   "vehicleCatalog": {
     "title": "Vehicle catalog",

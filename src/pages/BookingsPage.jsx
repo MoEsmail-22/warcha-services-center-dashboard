@@ -1,13 +1,14 @@
 import { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, SlidersHorizontal, MoreHorizontal } from 'lucide-react';
 import { useBookings } from '../contexts/BookingsContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
+import { PAGE_SIZE_OPTIONS, usePaginationParams } from '../hooks/usePaginationParams';
 import StatusBadge from '../components/widgets/StatusBadge';
 import Avatar from '../components/ui/Avatar';
 import FilterBookingsDrawer from '../components/widgets/FilterBookingsDrawer';
 import BookingDetailsDrawer from '../components/widgets/BookingDetailsDrawer';
 import Pagination from '../components/widgets/Pagination';
-import { BOOKING_FILTER_TABS, BOOKINGS_PAGE_SIZE } from '../constants/bookingFilters';
+import { BOOKING_FILTER_TABS } from '../constants/bookingFilters';
 import { filterBookings, formatBookingDate } from '../utils/bookingHelpers';
 import CancelBookingModal from '../components/bookings/CancelBookingModal';
 
@@ -16,7 +17,13 @@ export default function BookingsPage() {
   const { bookings, cancelBooking } = useBookings();
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  // ?page=2&size=20 in the URL.
+  const {
+    page: currentPage,
+    pageSize,
+    setPage: setCurrentPage,
+    setPageSize,
+  } = usePaginationParams();
   const [advancedFilters, setAdvancedFilters] = useState(null);
 
   // ---- Drawer state ----
@@ -29,12 +36,9 @@ export default function BookingsPage() {
     [bookings, activeTab, search, advancedFilters]
   );
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / BOOKINGS_PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPageSafe = Math.min(currentPage, totalPages);
-  const paginated = filtered.slice(
-    (currentPageSafe - 1) * BOOKINGS_PAGE_SIZE,
-    currentPageSafe * BOOKINGS_PAGE_SIZE
-  );
+  const paginated = filtered.slice((currentPageSafe - 1) * pageSize, currentPageSafe * pageSize);
 
   const handleApplyFilters = (filters) => {
     setAdvancedFilters(filters);
@@ -246,8 +250,10 @@ export default function BookingsPage() {
           <Pagination
             currentPage={currentPageSafe}
             totalItems={filtered.length}
-            pageSize={BOOKINGS_PAGE_SIZE}
+            pageSize={pageSize}
             onPageChange={setCurrentPage}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onPageSizeChange={setPageSize}
             labels={{
               showing: t('showing', { defaultValue: 'Showing' }),
               of: t('of', { defaultValue: 'of' }),
@@ -256,49 +262,6 @@ export default function BookingsPage() {
             }}
           />
         </div>
-
-        {false && (
-          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
-            <p className="text-xs text-[#5A6968]">
-              {t('showing', { defaultValue: 'Showing' })}{' '}
-              <span className="font-semibold text-[#15201F]">
-                {filtered.length === 0 ? 0 : (currentPageSafe - 1) * BOOKINGS_PAGE_SIZE + 1}–
-                {Math.min(currentPageSafe * BOOKINGS_PAGE_SIZE, filtered.length)}
-              </span>{' '}
-              {t('of', { defaultValue: 'of' })}{' '}
-              <span className="font-semibold text-[#15201F]">{filtered.length}</span>
-            </p>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPageSafe === 1}
-                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-semibold transition-colors ${
-                    currentPageSafe === page
-                      ? 'bg-[#0E5C5B] text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPageSafe === totalPages}
-                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ============ DRAWERS ============ */}

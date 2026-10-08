@@ -47,7 +47,15 @@
     "submit": "تسجيل الدخول",
     "loading": "جارٍ تسجيل الدخول…",
     "noAccount": "ليس لديك حساب؟",
-    "registerLink": "أنشئ واحدًا"
+    "registerLink": "أنشئ واحدًا",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "sendingCode": "جارٍ إرسال الرمز…",
+    "emailRequired": "البريد الإلكتروني مطلوب",
+    "passwordRequired": "كلمة المرور مطلوبة",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور",
+    "sendCodeFailed": "تعذّر إرسال رمز إعادة التعيين",
+    "failed": "فشل تسجيل الدخول"
   },
   "register": {
     "title": "أنشئ حسابك",
@@ -61,7 +69,9 @@
     "hasAccount": "لديك حساب بالفعل؟",
     "loginLink": "تسجيل الدخول",
     "passwordMismatch": "كلمتا المرور غير متطابقتين",
-    "passwordTooShort": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل"
+    "passwordTooShort": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل",
+    "pendingVerification": "تم إنشاء الحساب. يجب أن يوثّقه أحد المسؤولين قبل أن تتمكن من تسجيل الدخول.",
+    "goToLogin": "الذهاب لتسجيل الدخول"
   },
   "trends": {
     "vsYesterday": "عن الأمس",
@@ -77,5 +87,45 @@
   "footer": {
     "copyright": "© {{year}} ورشة. جميع الحقوق محفوظة.",
     "tagline": "إدارة الورشة أصبحت أسهل."
+  },
+  "topbar": {
+    "busyMode": "مشغول حالياً"
+  },
+  "errorPage": {
+    "notFoundTitle": "يبدو أن هذه الصفحة تعطّلت",
+    "notFoundText": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+    "errorTitle": "حدث خطأ ما",
+    "errorText": "واجهت هذه الصفحة مشكلة. حاول مرة أخرى أو ارجع للخلف.",
+    "home": "العودة للوحة التحكم",
+    "back": "رجوع",
+    "retry": "حاول مرة أخرى"
+  },
+  "pagination": {
+    "navigation": "التنقل بين الصفحات",
+    "showing": "عرض",
+    "of": "من",
+    "rowsPerPage": "عدد الصفوف",
+    "previous": "الصفحة السابقة",
+    "next": "الصفحة التالية"
+  },
+  "loading": {
+    "default": "جارٍ التحميل…",
+    "saving": "جارٍ الحفظ…",
+    "deleting": "جارٍ الحذف…"
+  },
+  "notifications": {
+    "serviceAdded": "تمت إضافة الخدمة",
+    "serviceUpdated": "تم تحديث الخدمة",
+    "serviceDeleted": "تم حذف الخدمة",
+    "serviceShown": "الخدمة ظاهرة الآن للعملاء",
+    "serviceHidden": "الخدمة مخفية الآن عن العملاء",
+    "busySet": "تم حفظ وقت الانشغال",
+    "busyRemoved": "تمت إزالة وقت الانشغال",
+    "offerCreated": "تم إنشاء العرض",
+    "settingsSaved": "تم حفظ التغييرات",
+    "preferenceSaved": "تم حفظ الإعداد",
+    "codeSent": "تم إرسال رمز إعادة التعيين إلى بريدك",
+    "passwordReset": "تم تغيير كلمة المرور. يمكنك تسجيل الدخول الآن",
+    "registered": "تم إنشاء الحساب"
   }
 }

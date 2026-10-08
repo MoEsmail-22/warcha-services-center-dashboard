@@ -4,7 +4,7 @@ import RouteFallback from '../components/ui/RouteFallback';
 import AppLayout from '../components/layout/AppLayout';
 import AuthLayout from '../components/layout/AuthLayout';
 import ProtectedRoute from './ProtectedRoute';
-import { LanguageProvider } from '../contexts/LanguageContext';
+import NotFoundPage from '../pages/NotFoundPage';
 import {
   DashboardPage,
   JobsBoardPage,
@@ -17,28 +17,32 @@ import {
   RegisterPage,
   ResetPasswordPage,
 } from './lazyPages';
-import DevPage from '../pages/DevPage'; // Direct import (not lazy) — it's a dev tool
 
 const withSuspense = (node) => <Suspense fallback={<RouteFallback />}>{node}</Suspense>;
-const googleMapsLinkDemoEnabled = import.meta.env.VITE_ENABLE_GOOGLE_MAPS_LINK_DEMO === 'true';
+const SUPPORTED_LANGS = ['en', 'ar'];
+
+// Error screen for crashes inside any route; AuthLayout supplies the language.
+const routeErrorElement = <AuthLayout>{withSuspense(<NotFoundPage variant="error" />)}</AuthLayout>;
 
 export const router = createBrowserRouter([
   // ---------- Root redirect ----------
   {
     path: '/',
     loader: () => redirect('/en/'),
+    errorElement: routeErrorElement,
   },
 
   // ---------- Language-prefixed routes ----------
   {
     path: '/:lang',
+    // Paths without a language prefix (e.g. /bookings) get /en added in front.
+    loader: ({ params, request }) => {
+      if (SUPPORTED_LANGS.includes(params.lang)) return null;
+      const { pathname, search, hash } = new URL(request.url);
+      return redirect(`/en${pathname}${search}${hash}`);
+    },
+    errorElement: routeErrorElement,
     children: [
-      // ===== STANDALONE /dev ROUTE (no sidebar/topbar, but needs LanguageProvider) =====
-      {
-        path: 'dev',
-        element: <LanguageProvider>{withSuspense(<DevPage />)}</LanguageProvider>,
-      },
-
       // ===== PUBLIC AUTH ROUTES =====
       {
         path: 'login',
@@ -69,6 +73,12 @@ export const router = createBrowserRouter([
           { path: 'reviews', element: withSuspense(<ReviewsPage />) },
           { path: 'settings', element: withSuspense(<SettingsPage />) },
         ],
+      },
+
+      // ===== 404 =====
+      {
+        path: '*',
+        element: <AuthLayout>{withSuspense(<NotFoundPage />)}</AuthLayout>,
       },
     ],
   },
