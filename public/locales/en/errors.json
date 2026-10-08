@@ -55,5 +55,13 @@
     "save": {
       "server": "Your changes couldn't be saved right now. Please try again."
     }
+  },
+  "notifications": {
+    "load": {
+      "server": "Notifications couldn't be loaded right now. Please try again."
+    },
+    "markRead": {
+      "server": "The notification couldn't be marked as read. Please try again."
+    }
   }
 }

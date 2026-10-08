@@ -1,0 +1,198 @@
+/**
+ * NotificationBell — Topbar bell with an unread badge and a dropdown list.
+ * Clicking an unread notification marks it as read.
+ */
+import { useEffect, useRef, useState } from 'react';
+import { Bell, CheckCheck } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ar, enUS } from 'date-fns/locale';
+import { useNotifications } from '@/contexts/NotificationsContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useAppTranslation } from '@/hooks/useAppTranslation';
+import { useNotify } from '@/hooks/useNotify';
+import { useErrorMessage } from '@/hooks/useErrorMessage';
+import { Spinner } from '@/components/ui/Spinner';
+import { cn } from '@/utils/cn';
+
+function timeAgo(value, lang) {
+  const date = new Date(value);
+  if (!value || Number.isNaN(date.getTime())) return '';
+  return formatDistanceToNow(date, { addSuffix: true, locale: lang === 'ar' ? ar : enUS });
+}
+
+export default function NotificationBell() {
+  const { t } = useAppTranslation('common');
+  const { lang } = useLanguage();
+  const notify = useNotify();
+  const { getErrorMessage } = useErrorMessage();
+  const {
+    items,
+    unreadCount,
+    loading,
+    error,
+    hasMore,
+    refresh,
+    loadMore,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+  const text = (key, defaultValue, options) =>
+    t(`notificationsPanel.${key}`, { defaultValue, ...options });
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (event) => {
+      if (!containerRef.current?.contains(event.target)) setOpen(false);
+    };
+    const closeOnEscape = (event) => event.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [open]);
+
+  const toggle = () => {
+    // Opening shows the latest notifications, not the ones from the last minute's check.
+    if (!open) refresh();
+    setOpen((current) => !current);
+  };
+
+  const handleItemClick = async (item) => {
+    if (item.isRead) return;
+    try {
+      await markAsRead(item.id);
+    } catch (err) {
+      notify.error(err, 'notifications.markRead');
+    }
+  };
+
+  const handleMarkAll = async () => {
+    try {
+      await markAllAsRead();
+    } catch (err) {
+      notify.error(err, 'notifications.markRead');
+    }
+  };
+
+  const badge = unreadCount > 99 ? '99+' : unreadCount;
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={toggle}
+        className="relative rounded-md p-2 text-gray-600 transition hover:bg-gray-100"
+        aria-label={text('open', 'Notifications, {{count}} unread', { count: unreadCount })}
+        aria-expanded={open}
+      >
+        <Bell className="h-5 w-5" />
+        {unreadCount > 0 && (
+          <span className="absolute -end-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+            {badge}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute end-0 z-50 mt-2 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
+          <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-3">
+            <p className="text-sm font-semibold text-[#15201F]">{text('title', 'Notifications')}</p>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={handleMarkAll}
+                className="flex items-center gap-1 text-xs font-semibold text-[#0E5C5B] hover:underline"
+              >
+                <CheckCheck className="h-3.5 w-3.5" />
+                {text('markAllRead', 'Mark all as read')}
+              </button>
+            )}
+          </div>
+
+          <div className="max-h-[60vh] overflow-y-auto">
+            {error && items.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-sm text-red-600">
+                  {getErrorMessage(error, 'notifications.load')}
+                </p>
+                <button
+                  type="button"
+                  onClick={refresh}
+                  className="mt-2 text-xs font-semibold text-[#0E5C5B] hover:underline"
+                >
+                  {t('errorPage.retry', { defaultValue: 'Try again' })}
+                </button>
+              </div>
+            ) : loading && items.length === 0 ? (
+              <div className="flex justify-center py-8">
+                <Spinner size="md" />
+              </div>
+            ) : items.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+                <Bell className="h-6 w-6 text-gray-300" />
+                <p className="text-sm text-gray-500">{text('empty', 'No notifications yet.')}</p>
+              </div>
+            ) : (
+              <ul>
+                {items.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleItemClick(item)}
+                      className={cn(
+                        'flex w-full gap-3 border-b border-gray-100 px-4 py-3 text-start transition last:border-b-0 hover:bg-gray-50',
+                        !item.isRead && 'bg-[#F2F8F7]'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'mt-1.5 h-2 w-2 shrink-0 rounded-full',
+                          item.isRead ? 'bg-transparent' : 'bg-[#0E5C5B]'
+                        )}
+                        aria-label={item.isRead ? undefined : text('unread', 'Unread')}
+                      />
+                      <span className="min-w-0 flex-1">
+                        {(item.title[lang] || item.title.en) && (
+                          <span
+                            className={cn(
+                              'block text-sm text-[#15201F]',
+                              !item.isRead && 'font-semibold'
+                            )}
+                          >
+                            {item.title[lang] || item.title.en}
+                          </span>
+                        )}
+                        <span className="block text-sm text-[#5A6968]">
+                          {item.message[lang] || item.message.en}
+                        </span>
+                        <span className="mt-1 block text-xs text-gray-400">
+                          {timeAgo(item.createdAt, lang)}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {hasMore && items.length > 0 && (
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 border-t border-gray-100 py-2.5 text-xs font-semibold text-[#0E5C5B] hover:bg-gray-50 disabled:opacity-60"
+            >
+              {loading && <Spinner size="sm" />}
+              {text('loadMore', 'Load more')}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

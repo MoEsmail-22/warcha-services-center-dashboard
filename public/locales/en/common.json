@@ -124,5 +124,13 @@
     "codeSent": "A reset code was sent to your email",
     "passwordReset": "Password changed. You can sign in now",
     "registered": "Account created"
+  },
+  "notificationsPanel": {
+    "title": "Notifications",
+    "open": "Notifications, {{count}} unread",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications yet.",
+    "unread": "Unread",
+    "loadMore": "Load more"
   }
 }

@@ -22,6 +22,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../ui/Button';
+import NotificationBell from './NotificationBell';
 
 export default function Topbar({ onMenuClick, user }) {
   const { lang, toggleLanguage } = useLanguage();
@@ -65,6 +66,8 @@ export default function Topbar({ onMenuClick, user }) {
           <Globe className="h-4 w-4" />
           {lang === 'en' ? 'AR' : 'EN'}
         </button>
+
+        <NotificationBell />
 
         {/* User avatar + dropdown menu */}
         <UserMenu user={user} />
