@@ -31,17 +31,7 @@ export default function Topbar({ onMenuClick, user }) {
 
   return (
     <header className="flex h-16 items-center gap-3 border-b border-gray-200 bg-white px-4 lg:px-6">
-      <Button
-        variant="primary"
-        size="md"
-        onClick={() => navigate(`/${lang}/services#busy-time`)}
-        className="cursor-pointer gap-2.5 px-4 py-2.5 text-sm whitespace-nowrap shadow-sm"
-      >
-        <Clock3 className="h-5 w-5" />
-        <span>{t('topbar.busyMode', { defaultValue: 'Busy Mode' })}</span>
-      </Button>
-
-      {/* ===== LEFT: Hamburger (mobile only) ===== */}
+      {/* ===== LEFT: Hamburger (mobile only) — always the first item on small screens ===== */}
       <button
         onClick={onMenuClick}
         className="rounded-md p-2 text-gray-600 hover:bg-gray-100 lg:hidden"
@@ -49,6 +39,20 @@ export default function Topbar({ onMenuClick, user }) {
       >
         <Menu className="h-5 w-5" />
       </button>
+
+      {/* Busy Mode: icon only on phones, icon + label from sm up */}
+      <Button
+        variant="primary"
+        size="md"
+        onClick={() => navigate(`/${lang}/services#busy-time`)}
+        className="cursor-pointer gap-2.5 px-2.5 py-2.5 text-sm whitespace-nowrap shadow-sm sm:px-4"
+        aria-label={t('topbar.busyMode', { defaultValue: 'Busy Mode' })}
+      >
+        <Clock3 className="h-5 w-5" />
+        <span className="hidden sm:inline">
+          {t('topbar.busyMode', { defaultValue: 'Busy Mode' })}
+        </span>
+      </Button>
 
       {/* ===== CENTER: Search bar (desktop only — too cramped on mobile) ===== */}
 

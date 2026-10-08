@@ -1,5 +1,6 @@
 /**
  * ToastContext — small pop-up messages for success and errors.
+ * Styled like the Admin Dashboard's ActionToast so both apps feel the same.
  *
  *   const { showToast } = useToast();
  *   showToast('success', 'Service saved');
@@ -9,46 +10,101 @@
  */
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const ToastContext = createContext(null);
 
-const DURATION_MS = { success: 3500, error: 6000 };
+// Same timings as the Admin Dashboard.
+const DURATION_MS = { success: 3500, error: 5000 };
+const MAX_VISIBLE = 5;
+// Matches the action-toast-pop-out animation in index.css.
+const EXIT_MS = 220;
 
 const STYLES = {
-  success: { icon: CheckCircle2, box: 'border-emerald-200', icon_: 'text-emerald-600' },
-  error: { icon: AlertCircle, box: 'border-red-200', icon_: 'text-red-600' },
+  success: {
+    icon: Check,
+    titleKey: 'toast.success',
+    titleFallback: 'Success',
+    badge: 'bg-[#EAF8EF] text-[#2F9E5B]',
+  },
+  error: {
+    icon: X,
+    titleKey: 'toast.error',
+    titleFallback: 'Something went wrong',
+    badge: 'bg-[#FDECEC] text-[#D64545]',
+  },
 };
 
 function ToastItem({ toast, onClose }) {
   const { t } = useTranslation('common', { useSuspense: false });
   const style = STYLES[toast.type] ?? STYLES.success;
   const Icon = style.icon;
+  const [leaving, setLeaving] = useState(false);
+
+  // Time left before closing; hovering pauses it so longer messages can be read.
+  const remaining = useRef(DURATION_MS[toast.type] ?? 4000);
+  const startedAt = useRef(0);
+  const timer = useRef(null);
+
+  const close = useCallback(() => {
+    clearTimeout(timer.current);
+    setLeaving(true);
+    // Let the pop-out animation finish before removing the toast.
+    setTimeout(() => onClose(toast.id), EXIT_MS);
+  }, [onClose, toast.id]);
+
+  const resume = useCallback(() => {
+    startedAt.current = Date.now();
+    timer.current = setTimeout(close, remaining.current);
+  }, [close]);
+
+  const pause = () => {
+    clearTimeout(timer.current);
+    remaining.current -= Date.now() - startedAt.current;
+  };
 
   useEffect(() => {
-    const timer = setTimeout(() => onClose(toast.id), DURATION_MS[toast.type] ?? 4000);
-    return () => clearTimeout(timer);
-  }, [toast.id, toast.type, onClose]);
+    resume();
+    return () => clearTimeout(timer.current);
+  }, [resume]);
 
   return (
     <div
       role={toast.type === 'error' ? 'alert' : 'status'}
+      aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
+      onMouseEnter={pause}
+      onMouseLeave={resume}
       className={cn(
-        'pointer-events-auto flex w-full items-start gap-3 rounded-xl border bg-white px-4 py-3 shadow-lg',
-        'animate-[toast-in_0.2s_ease-out]',
-        style.box
+        'action-toast pointer-events-auto flex w-full items-center gap-3 rounded-xl border border-[#E8E2D8] bg-white px-4 py-3.5',
+        'shadow-[0_14px_36px_rgba(28,23,18,0.16)]',
+        leaving ? 'action-toast--hidden' : 'action-toast--visible'
       )}
     >
-      <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', style.icon_)} aria-hidden="true" />
-      <p className="flex-1 text-sm font-medium text-[#15201F]">{toast.message}</p>
+      <span
+        className={cn(
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
+          style.badge
+        )}
+        aria-hidden="true"
+      >
+        <Icon className="h-5 w-5" strokeWidth={2.4} />
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold text-[#1C1712]">
+          {t(style.titleKey, { defaultValue: style.titleFallback })}
+        </p>
+        <p className="mt-0.5 text-sm leading-5 text-[#6F665C]">{toast.message}</p>
+      </div>
+
       <button
         type="button"
-        onClick={() => onClose(toast.id)}
-        className="rounded-md p-0.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+        onClick={close}
+        className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-[#8A8074] transition-colors hover:bg-[#F6F3EE] hover:text-[#1C1712] focus-visible:ring-2 focus-visible:ring-[#E08B2F]/40 focus-visible:outline-none"
         aria-label={t('actions.close', { defaultValue: 'Close' })}
       >
-        <X className="h-4 w-4" />
+        <X className="h-4 w-4" strokeWidth={2} />
       </button>
     </div>
   );
@@ -65,17 +121,17 @@ export function ToastProvider({ children }) {
   const showToast = useCallback((type, message) => {
     if (!message) return;
     const id = ++nextId.current;
-    // Keep at most 4 on screen; the oldest goes first.
-    setToasts((current) => [...current.slice(-3), { id, type, message }]);
+    // Keep at most MAX_VISIBLE on screen; the oldest goes first.
+    setToasts((current) => [...current.slice(-(MAX_VISIBLE - 1)), { id, type, message }]);
   }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      {/* Centered at the top of the screen. z-[70] stays above dialogs and the loader. */}
+      {/* Top-center like the Admin Dashboard. z-[70] stays above dialogs and the loader. */}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 w-[min(380px,calc(100vw-2rem))] flex-col gap-2"
+        className="pointer-events-none fixed top-5 left-1/2 z-[70] flex w-[min(420px,calc(100vw-32px))] -translate-x-1/2 flex-col gap-3"
       >
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onClose={removeToast} />

@@ -132,5 +132,9 @@
     "empty": "No notifications yet.",
     "unread": "Unread",
     "loadMore": "Load more"
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Something went wrong"
   }
 }
