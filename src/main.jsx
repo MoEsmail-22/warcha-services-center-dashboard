@@ -21,6 +21,7 @@ import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { LoadingProvider } from './contexts/LoadingContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { NotificationsProvider } from './contexts/NotificationsContext';
 import { router } from './routes';
 import {
   BookingsProvider,
@@ -36,20 +37,22 @@ createRoot(document.getElementById('root')).render(
     <ToastProvider>
       <LoadingProvider>
         <AuthProvider>
-          {/* Only active feature providers are mounted globally. */}
-          <BookingsProvider>
-            <JobsProvider>
-              <QuotesProvider>
-                <ServicesProvider>
-                  <ReviewsProvider>
-                    <SettingsProvider>
-                      <RouterProvider router={router} />
-                    </SettingsProvider>
-                  </ReviewsProvider>
-                </ServicesProvider>
-              </QuotesProvider>
-            </JobsProvider>
-          </BookingsProvider>
+          <NotificationsProvider>
+            {/* Only active feature providers are mounted globally. */}
+            <BookingsProvider>
+              <JobsProvider>
+                <QuotesProvider>
+                  <ServicesProvider>
+                    <ReviewsProvider>
+                      <SettingsProvider>
+                        <RouterProvider router={router} />
+                      </SettingsProvider>
+                    </ReviewsProvider>
+                  </ServicesProvider>
+                </QuotesProvider>
+              </JobsProvider>
+            </BookingsProvider>
+          </NotificationsProvider>
         </AuthProvider>
       </LoadingProvider>
     </ToastProvider>
