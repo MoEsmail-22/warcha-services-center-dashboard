@@ -29,6 +29,7 @@
     }
   },
   "service": {
+    "alreadyExists": "A service named “{{name}}” already exists. Choose a different name.",
     "load": {
       "server": "Services couldn't be loaded right now. Please try again later."
     },

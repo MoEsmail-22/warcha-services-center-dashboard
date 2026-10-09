@@ -11,8 +11,8 @@ import { findKnownBackendError } from '@/utils/knownBackendErrors';
  *
  * It tries, in order:
  *   1. the error's own key (local checks, e.g. "form.endBeforeStart")
- *   2. a message for this action + error code   → errors.json "service.delete.server"
- *   3. a translation of a known backend message → "Invalid email or password"
+ *   2. a translation of a known backend message → "Service 'X' already exists…"
+ *   3. a message for this action + error code   → errors.json "service.delete.server"
  *   4. the general message for the error code   → errors.json "general.server"
  *   5. "Something went wrong"
  */
@@ -24,15 +24,18 @@ export function useErrorMessage() {
       if (!error) return '';
 
       const code = ERROR_CODES[error.code] ? error.code : ERROR_CODES.unknown;
+      const known = findKnownBackendError(error.details ?? error.message);
       const candidates = [
         error.i18nKey,
+        known?.key,
         action && `${action}.${code}`,
-        findKnownBackendError(error.details ?? error.message),
         `general.${code}`,
       ];
 
       const key = candidates.find((candidate) => candidate && i18n.exists(`errors:${candidate}`));
       return t(key ?? 'general.unknown', {
+        // e.g. { name: 'adlf' } for "A service named “{{name}}” already exists"
+        ...(key === known?.key ? known.values : {}),
         defaultValue: 'Something went wrong. Please try again.',
       });
     },
