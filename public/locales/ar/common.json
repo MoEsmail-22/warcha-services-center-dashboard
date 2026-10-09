@@ -126,7 +126,15 @@
     "preferenceSaved": "تم حفظ الإعداد",
     "codeSent": "تم إرسال رمز إعادة التعيين إلى بريدك",
     "passwordReset": "تم تغيير كلمة المرور. يمكنك تسجيل الدخول الآن",
-    "registered": "تم إنشاء الحساب"
+    "registered": "تم إنشاء الحساب",
+    "newBookings": "{{count}} طلب حجز جديد",
+    "newBookings_one": "طلب حجز جديد",
+    "newBookings_two": "طلبا حجز جديدان",
+    "newBookings_few": "{{count}} طلبات حجز جديدة",
+    "newBookings_many": "{{count}} طلب حجز جديد",
+    "newBookings_other": "{{count}} طلب حجز جديد",
+    "bookingCancelled": "تم إلغاء الحجز",
+    "bookingStatusChanged": "تم تحديث حالة الحجز"
   },
   "notificationsPanel": {
     "title": "الإشعارات",

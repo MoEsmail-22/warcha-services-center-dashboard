@@ -123,7 +123,11 @@
     "preferenceSaved": "Preference saved",
     "codeSent": "A reset code was sent to your email",
     "passwordReset": "Password changed. You can sign in now",
-    "registered": "Account created"
+    "registered": "Account created",
+    "newBookings_one": "New booking request",
+    "newBookings_other": "{{count}} new booking requests",
+    "bookingCancelled": "Booking cancelled",
+    "bookingStatusChanged": "Booking status updated"
   },
   "notificationsPanel": {
     "title": "Notifications",

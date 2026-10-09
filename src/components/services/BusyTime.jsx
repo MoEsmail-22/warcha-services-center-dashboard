@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotify } from '@/hooks/useNotify';
 import { Button, Card, Input, Modal, Table, TBody, TD, TH, THead, TR } from '@/components/ui';
+import { EmptyState } from '@/components/widgets/EmptyState';
 import { clearWorkshopBusy, setWorkshopBusy, toBusyPayload } from '@/API/busyApi';
 
 const EMPTY_FORM = {
@@ -160,7 +161,7 @@ export default function BusyTime() {
 
       <Card padded={false}>
         <div className="overflow-x-auto px-4 pb-4">
-          <Table className="w-full min-w-[680px]">
+          <Table className={busyTimes.length ? 'w-full min-w-[680px]' : 'w-full'}>
             <THead>
               <TR className="hover:bg-gray-50">
                 <TH className="px-4 py-3 text-start text-xs font-semibold whitespace-nowrap text-[#5A6968]">
@@ -180,15 +181,15 @@ export default function BusyTime() {
             <TBody>
               {busyTimes.length === 0 ? (
                 <TR>
-                  <TD colSpan={4} className="px-3 py-12 text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#F6F3EE] text-[#8A8074]">
-                        <Clock3 className="h-5 w-5" />
-                      </div>
-                      <p className="text-sm font-semibold text-[#1C1712]">
-                        {busyText('empty', 'No busy times added.')}
-                      </p>
-                    </div>
+                  <TD colSpan={4}>
+                    <EmptyState
+                      icon={<Clock3 />}
+                      title={busyText('empty', 'No busy times added.')}
+                      description={busyText(
+                        'emptyDescription',
+                        'Customers can book you anytime during your working hours.'
+                      )}
+                    />
                   </TD>
                 </TR>
               ) : (

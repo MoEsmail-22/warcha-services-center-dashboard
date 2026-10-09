@@ -64,5 +64,16 @@
     "markRead": {
       "server": "The notification couldn't be marked as read. Please try again."
     }
+  },
+  "booking": {
+    "load": {
+      "server": "Bookings couldn't be loaded right now. Please try again."
+    },
+    "cancel": {
+      "server": "The booking couldn't be cancelled. Please try again."
+    },
+    "status": {
+      "server": "The booking status couldn't be changed. Please try again."
+    }
   }
 }
