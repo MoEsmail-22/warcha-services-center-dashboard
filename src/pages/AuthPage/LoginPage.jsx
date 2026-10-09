@@ -77,7 +77,7 @@ export default function LoginPage() {
       navigate(from, { replace: true });
     } catch (err) {
       const message = getErrorMessage(err, 'auth.login');
-      const knownError = findKnownBackendError(err.details);
+      const knownError = findKnownBackendError(err.details)?.key;
 
       // Wrong credentials belong next to the fields; anything else is a toast.
       if (knownError === 'auth.invalidCredentials') {

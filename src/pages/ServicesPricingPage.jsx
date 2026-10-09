@@ -25,18 +25,26 @@ import BusyTime from '@/components/services/BusyTime';
 import Offers from '@/components/services/Offers';
 import VehicleCatalogDemo from '@/components/services/VehicleCatalogDemo';
 
-function formatDuration(minutes, language) {
-  const value = Number(minutes);
+// 45 → "45 min", 60 → "1 hr", 232 → "3 hrs 52 min"
+function formatDuration(totalMinutes, language) {
+  const value = Math.round(Number(totalMinutes));
+  if (!Number.isFinite(value) || value <= 0) return '—';
 
-  if (value < 60) {
-    return language === 'ar' ? `${value} دقيقة` : `${value} min`;
+  const hours = Math.floor(value / 60);
+  const minutes = value % 60;
+  const parts = [];
+
+  if (language === 'ar') {
+    if (hours === 1) parts.push('ساعة');
+    else if (hours === 2) parts.push('ساعتان');
+    else if (hours > 2) parts.push(`${hours} ${hours <= 10 ? 'ساعات' : 'ساعة'}`);
+    if (minutes > 0) parts.push(`${minutes} دقيقة`);
+    return parts.join(' و ');
   }
 
-  const hours = value / 60;
-
-  return language === 'ar'
-    ? `${hours} ${hours === 1 ? 'ساعة' : 'ساعات'}`
-    : `${hours} ${hours === 1 ? 'hr' : 'hrs'}`;
+  if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'hr' : 'hrs'}`);
+  if (minutes > 0) parts.push(`${minutes} min`);
+  return parts.join(' ');
 }
 
 function formatPrice(price, language) {
@@ -86,6 +94,23 @@ export default function ServicesPricingPage() {
     () => new Map(categories.map((category) => [category.id, category.name])),
     [categories]
   );
+
+  /** Category name in the current language: by ID first, then by the name sent with the service. */
+  const categoryLabel = (service) => {
+    const byId = categoryNames.get(String(service.serviceCategoryId));
+    if (byId) return byId[lang] || byId.en;
+
+    const sentName = service.categoryName ?? { en: '', ar: '' };
+    // Match the English name against the list to get the Arabic name too.
+    const match = sentName.en
+      ? categories.find(
+          (category) => category.name.en.toLowerCase() === sentName.en.trim().toLowerCase()
+        )
+      : null;
+    if (match) return match.name[lang] || match.name.en;
+
+    return sentName[lang] || sentName.en || '—';
+  };
 
   const [formModal, setFormModal] = useState({ open: false, service: null });
   const [activeMenuId, setActiveMenuId] = useState(null);
@@ -264,9 +289,7 @@ export default function ServicesPricingPage() {
                   return (
                     <TR key={service.id}>
                       <TD className="font-medium">{service.name[lang] || service.name.en}</TD>
-                      <TD className="text-gray-600">
-                        {categoryNames.get(String(service.serviceCategoryId))?.[lang] ?? '—'}
-                      </TD>
+                      <TD className="text-gray-600">{categoryLabel(service)}</TD>
                       <TD className="text-gray-600">
                         {formatDuration(service.durationMinutes, lang)}
                       </TD>

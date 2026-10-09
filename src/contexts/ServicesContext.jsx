@@ -37,7 +37,7 @@ import { useAuth } from './AuthContext';
 const ServicesContext = createContext(null);
 
 function normalizeService(service) {
-  const visible = service.visible ?? service.isVisible ?? true;
+  const visible = service.isActive ?? service.visible ?? service.isVisible ?? true;
   const categoryValue =
     service.category?.key ??
     service.category?.nameEn ??
@@ -72,6 +72,26 @@ function normalizeService(service) {
       service.categoryId ??
       service.category?.id ??
       service.serviceCategory?.id,
+    // The category's name if the backend sends it with the service (used when there is no ID).
+    categoryName: {
+      en:
+        service.categoryEn ??
+        service.serviceCategory?.nameEn ??
+        service.category?.nameEn ??
+        service.serviceCategoryNameEn ??
+        service.categoryNameEn ??
+        service.serviceCategoryName ??
+        (typeof service.categoryName === 'string' ? service.categoryName : null) ??
+        (typeof service.category === 'string' ? service.category : null) ??
+        '',
+      ar:
+        service.categoryAr ??
+        service.serviceCategory?.nameAr ??
+        service.category?.nameAr ??
+        service.serviceCategoryNameAr ??
+        service.categoryNameAr ??
+        '',
+    },
     durationMinutes: service.durationMinutes ?? service.duration ?? 0,
     price: {
       from: service.price?.from ?? service.minPrice ?? 0,

@@ -13,8 +13,30 @@ export const KNOWN_BACKEND_ERRORS = {
   'invalid or expired otp': 'auth.invalidOtp',
 };
 
+/**
+ * Messages with a changing part (e.g. a name). Each captured group becomes a
+ * value for the translated text: "Service 'adlf' already exists…" → { name: 'adlf' }.
+ */
+export const KNOWN_BACKEND_PATTERNS = [
+  {
+    pattern: /^service ['"](.+)['"] already exists in this workshop$/i,
+    key: 'service.alreadyExists',
+    values: (match) => ({ name: match[1] }),
+  },
+];
+
+/** Returns { key, values } for a recognised backend message, or null. */
 export function findKnownBackendError(details) {
   if (!details) return null;
-  const normalized = String(details).trim().toLowerCase().replace(/\.$/, '');
-  return KNOWN_BACKEND_ERRORS[normalized] ?? null;
+  const text = String(details).trim().replace(/\.$/, '');
+
+  const exactKey = KNOWN_BACKEND_ERRORS[text.toLowerCase()];
+  if (exactKey) return { key: exactKey, values: {} };
+
+  for (const { pattern, key, values } of KNOWN_BACKEND_PATTERNS) {
+    const match = text.match(pattern);
+    if (match) return { key, values: values(match) };
+  }
+
+  return null;
 }

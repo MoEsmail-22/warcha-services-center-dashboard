@@ -15,12 +15,20 @@ const EMPTY_FORM = {
   descriptionAr: '',
 };
 
-function serviceToForm(service) {
+/** The services list sends the category name only, so find its ID in the categories list. */
+function findCategoryId(service, categories) {
+  if (service.serviceCategoryId != null) return String(service.serviceCategoryId);
+  const name = service.categoryName?.en?.trim().toLowerCase();
+  const match = name && categories.find((category) => category.name.en.toLowerCase() === name);
+  return match?.id ?? '';
+}
+
+function serviceToForm(service, categories) {
   if (!service) return EMPTY_FORM;
   return {
     nameEn: service.name?.en ?? '',
     nameAr: service.name?.ar ?? '',
-    categoryId: String(service.serviceCategoryId ?? service.categoryId ?? ''),
+    categoryId: findCategoryId(service, categories),
     minPricing: String(service.price?.from ?? ''),
     maxPricing: String(service.price?.to ?? ''),
     durationMinutes: String(service.durationMinutes ?? ''),
@@ -38,8 +46,17 @@ export default function ServiceFormModal({ open, service, onClose, onSave, savin
   const isEditing = Boolean(service);
 
   useEffect(() => {
-    if (open) setForm(serviceToForm(service));
+    if (open) setForm(serviceToForm(service, categories));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset when the form opens
   }, [open, service]);
+
+  // If the categories arrive after the edit form opened, fill in only the category.
+  useEffect(() => {
+    if (!open || !service || categories.length === 0) return;
+    setForm((current) =>
+      current.categoryId ? current : { ...current, categoryId: findCategoryId(service, categories) }
+    );
+  }, [open, service, categories]);
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
