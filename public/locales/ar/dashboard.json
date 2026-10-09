@@ -22,7 +22,9 @@
     "customer": "العميل",
     "service": "الخدمة",
     "time": "الوقت",
-    "status": "الحالة"
+    "status": "الحالة",
+    "emptyTitle": "لا توجد حجوزات اليوم",
+    "emptyDescription": "ستظهر هنا حجوزات اليوم."
   },
   "revenue": {
     "title": "إيرادات الأسبوع",

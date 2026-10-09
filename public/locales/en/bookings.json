@@ -45,5 +45,13 @@
     "billing": "Billing",
     "billing_in_progress": "Billing in progress",
     "ready": "Ready"
-  }
+  },
+  "empty": {
+    "title": "No bookings yet",
+    "description": "New bookings from customers will appear here.",
+    "noMatchTitle": "No bookings match your filters",
+    "noMatchDescription": "Try another search, tab or filter.",
+    "clearAll": "Clear search and filters"
+  },
+  "retry": "Try again"
 }

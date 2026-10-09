@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, Send, Search, FilePenLine, Trash2 } from 'lucide-react';
+import { Plus, Send, Search, FilePenLine, Trash2, FileText } from 'lucide-react';
+import { EmptyState } from '../components/widgets/EmptyState';
 import { useQuotes } from '../contexts/QuotesContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import Avatar from '../components/ui/Avatar';
@@ -22,8 +23,8 @@ export default function QuotesPage() {
   } = useQuotes();
 
   // Quote header info (customer + vehicle being quoted)
-  const [customerName, setCustomerName] = useState('Hazem M.');
-  const [vehicle, setVehicle] = useState('Toyota Corolla');
+  const [customerName, setCustomerName] = useState('');
+  const [vehicle, setVehicle] = useState('');
   const [search, setSearch] = useState('');
   const [futureRepairs, setFutureRepairs] = useState([]);
 
@@ -336,8 +337,15 @@ export default function QuotesPage() {
           {/* Quotes list */}
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pe-1">
             {filteredQuotes.length === 0 ? (
-              <div className="rounded-lg border-2 border-dashed border-gray-200 py-8 text-center text-sm text-gray-400">
-                {t('noQuotes', { defaultValue: 'No quotes found.' })}
+              <div className="rounded-xl border-2 border-dashed border-[#E8E2D8]">
+                <EmptyState
+                  compact
+                  icon={<FileText />}
+                  title={t('noQuotes', { defaultValue: 'No quotes found.' })}
+                  description={t('emptyDescription', {
+                    defaultValue: 'Quotes you send to customers will appear here.',
+                  })}
+                />
               </div>
             ) : (
               filteredQuotes.map((quote) => (

@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, MoreHorizontal } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, SlidersHorizontal, MoreHorizontal, CalendarX2 } from 'lucide-react';
 import { useBookings } from '../contexts/BookingsContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { PAGE_SIZE_OPTIONS, usePaginationParams } from '../hooks/usePaginationParams';
@@ -8,15 +9,19 @@ import Avatar from '../components/ui/Avatar';
 import FilterBookingsDrawer from '../components/widgets/FilterBookingsDrawer';
 import BookingDetailsDrawer from '../components/widgets/BookingDetailsDrawer';
 import Pagination from '../components/widgets/Pagination';
+import { EmptyState } from '../components/widgets/EmptyState';
 import { BOOKING_FILTER_TABS } from '../constants/bookingFilters';
 import { filterBookings, formatBookingDate } from '../utils/bookingHelpers';
 import CancelBookingModal from '../components/bookings/CancelBookingModal';
+import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { useNotify } from '../hooks/useNotify';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 
 export default function BookingsPage() {
   const { t } = useAppTranslation('bookings');
-  const { bookings, cancelBooking } = useBookings();
-  const [activeTab, setActiveTab] = useState('all');
-  const [search, setSearch] = useState('');
+  const { bookings, loading, error, refresh, cancelBooking } = useBookings();
+  const notify = useNotify();
+  const { getErrorMessage } = useErrorMessage();
   // ?page=2&size=20 in the URL.
   const {
     page: currentPage,
@@ -24,12 +29,70 @@ export default function BookingsPage() {
     setPage: setCurrentPage,
     setPageSize,
   } = usePaginationParams();
-  const [advancedFilters, setAdvancedFilters] = useState(null);
+
+  /*
+   * Everything that decides what the page shows lives in the URL, so a link or a
+   * refresh opens the same view:
+   *   ?tab=today&q=ahmed&status=pending&from=2026-10-01&to=2026-10-31
+   *    &services=Oil%20Change,Engine&customer=ali&booking=B-001
+   */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const activeTab = BOOKING_FILTER_TABS.some((tab) => tab.key === requestedTab)
+    ? requestedTab
+    : 'all';
+  const search = searchParams.get('q') ?? '';
+  const selectedBookingId = searchParams.get('booking');
+
+  const advancedFilters = useMemo(() => {
+    const filters = {
+      search: searchParams.get('customer') ?? '',
+      services: searchParams.get('services')?.split(',').filter(Boolean) ?? [],
+      status: searchParams.get('status') ?? '',
+      dateFrom: searchParams.get('from') ?? '',
+      dateTo: searchParams.get('to') ?? '',
+    };
+    const anySet =
+      filters.search ||
+      filters.services.length ||
+      filters.status ||
+      filters.dateFrom ||
+      filters.dateTo;
+    return anySet ? filters : null;
+  }, [searchParams]);
+
+  /**
+   * Changes several URL values in ONE update (separate calls in the same click can
+   * overwrite each other). null / '' removes the key. Filter changes go back to page 1.
+   */
+  const updateParams = useCallback(
+    (changes, { resetPage = false, addToHistory = false } = {}) => {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          Object.entries(changes).forEach(([key, value]) => {
+            if (value == null || value === '') next.delete(key);
+            else next.set(key, String(value));
+          });
+          if (resetPage) next.delete('page');
+          return next;
+        },
+        { replace: !addToHistory }
+      );
+    },
+    [setSearchParams]
+  );
 
   // ---- Drawer state ----
   const [filterOpen, setFilterOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
+
+  const selectedBooking = selectedBookingId
+    ? (bookings.find((booking) => String(booking.id) === selectedBookingId) ?? null)
+    : null;
+  // Opening a booking adds a history entry, so the browser's Back button closes it.
+  const openBooking = (booking) => updateParams({ booking: booking.id }, { addToHistory: true });
+  const closeBooking = () => updateParams({ booking: null });
 
   const filtered = useMemo(
     () => filterBookings(bookings, { tab: activeTab, search, advanced: advancedFilters }),
@@ -41,13 +104,30 @@ export default function BookingsPage() {
   const paginated = filtered.slice((currentPageSafe - 1) * pageSize, currentPageSafe * pageSize);
 
   const handleApplyFilters = (filters) => {
-    setAdvancedFilters(filters);
-    setCurrentPage(1);
+    updateParams(
+      {
+        customer: filters.search?.trim(),
+        services: filters.services?.length ? filters.services.join(',') : null,
+        status: filters.status,
+        from: filters.dateFrom,
+        to: filters.dateTo,
+      },
+      { resetPage: true }
+    );
   };
 
+  const isFiltering = Boolean(search || activeTab !== 'all' || advancedFilters);
+  const clearAllFilters = () =>
+    updateParams(
+      { tab: null, q: null, customer: null, services: null, status: null, from: null, to: null },
+      { resetPage: true }
+    );
+
   const handleClearFilters = () => {
-    setAdvancedFilters(null);
-    setCurrentPage(1);
+    updateParams(
+      { customer: null, services: null, status: null, from: null, to: null },
+      { resetPage: true }
+    );
   };
 
   // Check if advanced filters are active
@@ -82,10 +162,9 @@ export default function BookingsPage() {
           {BOOKING_FILTER_TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => {
-                setActiveTab(tab.key);
-                setCurrentPage(1);
-              }}
+              onClick={() =>
+                updateParams({ tab: tab.key === 'all' ? null : tab.key }, { resetPage: true })
+              }
               className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
                 activeTab === tab.key
                   ? 'border-[#1C1712] bg-[#1C1712] text-white'
@@ -128,10 +207,7 @@ export default function BookingsPage() {
           <input
             type="text"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => updateParams({ q: e.target.value }, { resetPage: true })}
             placeholder={t('search', { defaultValue: 'Search bookings...' })}
             className="w-full rounded-lg border border-gray-200 bg-white py-2 pr-3 pl-9 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0E5C5B] focus:ring-2 focus:ring-[#0E5C5B]/10 focus:outline-none"
           />
@@ -140,11 +216,11 @@ export default function BookingsPage() {
 
       {/* ============ TABLE ============ */}
       <div
-        className="flex-1 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
+        className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
         style={{ borderRadius: '16px' }}
       >
-        <div className="h-full overflow-x-auto">
-          <table className="w-full min-w-[900px]">
+        <div className="overflow-x-auto">
+          <table className={paginated.length ? 'w-full min-w-[900px]' : 'w-full'}>
             <thead className="border-b border-gray-100 bg-gray-50/50">
               <tr>
                 {[
@@ -169,10 +245,56 @@ export default function BookingsPage() {
               </tr>
             </thead>
             <tbody>
-              {paginated.length === 0 ? (
+              {loading && bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-16 text-center text-sm text-gray-400">
-                    {t('noResults', { defaultValue: 'No bookings found.' })}
+                  <td colSpan={8}>
+                    <LoadingScreen variant="section" />
+                  </td>
+                </tr>
+              ) : error && bookings.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-10 text-center">
+                    <p className="text-sm text-red-600">{getErrorMessage(error, 'booking.load')}</p>
+                    <button
+                      type="button"
+                      onClick={() => refresh()}
+                      className="mt-3 rounded-lg border border-[#E8E2D8] bg-white px-3 py-1.5 text-xs font-semibold text-[#5A5045] hover:bg-[#F2EDE4]"
+                    >
+                      {t('retry', { defaultValue: 'Try again' })}
+                    </button>
+                  </td>
+                </tr>
+              ) : paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={8}>
+                    {isFiltering ? (
+                      <EmptyState
+                        icon={<Search />}
+                        title={t('empty.noMatchTitle', {
+                          defaultValue: 'No bookings match your filters',
+                        })}
+                        description={t('empty.noMatchDescription', {
+                          defaultValue: 'Try another search, tab or filter.',
+                        })}
+                        action={
+                          <button
+                            type="button"
+                            onClick={clearAllFilters}
+                            className="rounded-lg border border-[#E8E2D8] bg-white px-3 py-1.5 text-xs font-semibold text-[#5A5045] hover:bg-[#F2EDE4]"
+                          >
+                            {t('empty.clearAll', { defaultValue: 'Clear search and filters' })}
+                          </button>
+                        }
+                      />
+                    ) : (
+                      <EmptyState
+                        icon={<CalendarX2 />}
+                        title={t('empty.title', { defaultValue: 'No bookings yet' })}
+                        description={t('empty.description', {
+                          defaultValue: 'New bookings from customers will appear here.',
+                        })}
+                      />
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -233,7 +355,7 @@ export default function BookingsPage() {
                           </button>
                         )}
                         <button
-                          onClick={() => setSelectedBooking(booking)}
+                          onClick={() => openBooking(booking)}
                           className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
                           aria-label="View details"
                         >
@@ -246,7 +368,9 @@ export default function BookingsPage() {
               )}
             </tbody>
           </table>
+        </div>
 
+        {filtered.length > 0 && (
           <Pagination
             currentPage={currentPageSafe}
             totalItems={filtered.length}
@@ -261,7 +385,7 @@ export default function BookingsPage() {
               next: t('nextPage', { defaultValue: 'Next page' }),
             }}
           />
-        </div>
+        )}
       </div>
 
       {/* ============ DRAWERS ============ */}
@@ -269,19 +393,26 @@ export default function BookingsPage() {
         open={filterOpen}
         onClose={() => setFilterOpen(false)}
         onApply={handleApplyFilters}
+        value={advancedFilters}
       />
       <BookingDetailsDrawer
         open={!!selectedBooking}
-        onClose={() => setSelectedBooking(null)}
+        onClose={closeBooking}
         booking={selectedBooking}
       />
       <CancelBookingModal
         open={Boolean(cancelTarget)}
         itemName={cancelTarget ? `#${cancelTarget.id}` : ''}
         onClose={() => setCancelTarget(null)}
-        onConfirm={() => {
-          cancelBooking(cancelTarget.id);
-          setCancelTarget(null);
+        onConfirm={async () => {
+          try {
+            await cancelBooking(cancelTarget.id);
+            notify.success('bookingCancelled');
+          } catch (err) {
+            notify.error(err, 'booking.cancel');
+          } finally {
+            setCancelTarget(null);
+          }
         }}
       />
     </div>

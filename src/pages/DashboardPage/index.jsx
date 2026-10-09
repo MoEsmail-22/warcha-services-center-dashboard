@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { CalendarCheck, Car, Wallet, Star, Plus, ChevronRight } from 'lucide-react';
+import { CalendarCheck, Car, Wallet, Star, Plus, ChevronRight, CalendarX2 } from 'lucide-react';
+import { EmptyState } from '../../components/widgets/EmptyState';
 import { useBookings } from '../../contexts/BookingsContext';
 import { useReviews } from '../../contexts/ReviewsContext';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
@@ -49,8 +50,9 @@ export default function DashboardPage() {
   const kpiCardValues = {
     'todays-bookings': {
       value: String(todaysCount),
-      change: `+${difference} ${t('vsYesterday', { defaultValue: 'vs yesterday' })}`,
-      trend: 'up',
+      // "+2", "-1" or "0" — the arrow follows the sign.
+      change: `${difference > 0 ? '+' : ''}${difference} ${t('vsYesterday', { defaultValue: 'vs yesterday' })}`,
+      trend: difference > 0 ? 'up' : difference < 0 ? 'down' : 'neutral',
     },
     'cars-in-service': {
       value: String(carsInServiceCount),
@@ -196,6 +198,20 @@ export default function DashboardPage() {
                     </td>
                   </tr>
                 ))}
+                {todaysBookings.length === 0 && (
+                  <tr>
+                    <td colSpan={4}>
+                      <EmptyState
+                        compact
+                        icon={<CalendarX2 />}
+                        title={t('schedule.emptyTitle', { defaultValue: 'No bookings today' })}
+                        description={t('schedule.emptyDescription', {
+                          defaultValue: "Today's bookings will show up here.",
+                        })}
+                      />
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

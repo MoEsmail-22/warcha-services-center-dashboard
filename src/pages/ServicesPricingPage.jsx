@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
+import { MoreVertical, Pencil, Plus, Trash2, Wrench } from 'lucide-react';
 import { useServices } from '@/contexts';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
@@ -8,6 +8,7 @@ import { useNotify } from '@/hooks/useNotify';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { PAGE_SIZE_OPTIONS, usePaginationParams } from '@/hooks/usePaginationParams';
 import Pagination from '@/components/widgets/Pagination';
+import { EmptyState } from '@/components/widgets/EmptyState';
 import {
   Button,
   LoadingScreen,
@@ -278,8 +279,23 @@ export default function ServicesPricingPage() {
                 </TR>
               ) : services.length === 0 ? (
                 <TR>
-                  <TD colSpan={6} className="py-10 text-center text-gray-500">
-                    {t('noServices')}
+                  <TD colSpan={6}>
+                    <EmptyState
+                      icon={<Wrench />}
+                      title={t('noServices')}
+                      description={t('emptyDescription', {
+                        defaultValue: 'Add the services you offer so customers can book them.',
+                      })}
+                      action={
+                        <Button
+                          onClick={() => setFormModal({ open: true, service: null })}
+                          className="gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          {t('addService')}
+                        </Button>
+                      }
+                    />
                   </TD>
                 </TR>
               ) : (

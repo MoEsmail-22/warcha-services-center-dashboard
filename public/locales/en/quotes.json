@@ -32,5 +32,6 @@
     "rejected": "Declined",
     "expired": "Expired",
     "draft": "Draft"
-  }
+  },
+  "emptyDescription": "Quotes you send to customers will appear here."
 }

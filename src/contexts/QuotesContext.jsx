@@ -1,24 +1,16 @@
 import { createContext, useContext, useState } from 'react';
 import { MOCK_AVATAR_COLORS, MOCK_QUOTE_DEFAULTS } from '@/mocks/constants';
-import quoteMockData from '@/mocks/quotes.json';
 import { useJobs } from './JobsContext';
 
 const QuotesContext = createContext(null);
 
-const createDefaultLineItems = () => quoteMockData.defaultLineItems.map((item) => ({ ...item }));
-
-// JSON cannot import JavaScript constants, so apply the shared avatar default
-// while reading the quote mock data.
-const createRecentQuotes = () =>
-  quoteMockData.recentQuotes.map((quote) => ({
-    ...quote,
-    customer: { ...quote.customer, avatarColor: MOCK_AVATAR_COLORS.customer },
-  }));
+// A new quote starts with one empty line for the user to fill in.
+const createDefaultLineItems = () => [{ id: Date.now(), label: '', amount: 0 }];
 
 export function QuotesProvider({ children }) {
   const { workflowQuotes, sendWorkflowQuote } = useJobs();
-  // quotes.json is the single source of truth for the initial quote data.
-  const [recentQuotes, setRecentQuotes] = useState(createRecentQuotes);
+  // Empty until quotes are loaded from the API (no mock data).
+  const [recentQuotes, setRecentQuotes] = useState([]);
   const [lineItems, setLineItems] = useState(createDefaultLineItems);
   const [activeWorkflowQuoteId, setActiveWorkflowQuoteId] = useState(null);
 

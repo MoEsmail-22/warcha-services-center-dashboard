@@ -22,7 +22,9 @@
     "customer": "Customer",
     "service": "Service",
     "time": "Time",
-    "status": "Status"
+    "status": "Status",
+    "emptyTitle": "No bookings today",
+    "emptyDescription": "Today's bookings will show up here."
   },
   "revenue": {
     "title": "Revenue this week",

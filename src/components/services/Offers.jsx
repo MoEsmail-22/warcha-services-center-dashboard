@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { BadgePercent, Plus } from 'lucide-react';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,6 +7,7 @@ import { useNotify } from '@/hooks/useNotify';
 import { loadAllServiceOptions } from '@/contexts/ServicesContext';
 import { PAGE_SIZE_OPTIONS, usePaginationParams } from '@/hooks/usePaginationParams';
 import Pagination from '@/components/widgets/Pagination';
+import { EmptyState } from '@/components/widgets/EmptyState';
 import {
   Button,
   Card,
@@ -157,7 +158,7 @@ export default function Offers() {
 
       <Card padded={false} className="flex flex-1 flex-col">
         <div className="flex-1 overflow-x-auto px-4 pb-4">
-          <Table className="w-full min-w-[560px]">
+          <Table className={offers.length ? 'w-full min-w-[560px]' : 'w-full'}>
             <THead>
               <TR className="hover:bg-gray-50">
                 <TH className="px-3 py-2.5 whitespace-nowrap">
@@ -177,8 +178,15 @@ export default function Offers() {
             <TBody>
               {offers.length === 0 ? (
                 <TR>
-                  <TD colSpan={4} className="px-3 py-10 text-center text-sm text-gray-500">
-                    {offerText('empty', 'No offers yet.')}
+                  <TD colSpan={4}>
+                    <EmptyState
+                      icon={<BadgePercent />}
+                      title={offerText('empty', 'No offers yet.')}
+                      description={offerText(
+                        'emptyDescription',
+                        'Create a discount on a service for a set time.'
+                      )}
+                    />
                   </TD>
                 </TR>
               ) : (

@@ -7,24 +7,64 @@
  *   { data, loading, error, updateWorkshop, updatePreferences, togglePreference }
  */
 import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
-import mockSettings from '@/mocks/settings.json';
 import { updateProfile, updateSettings } from '@/API/Service';
 import { isDemoMode } from '@/API/client';
 import { useAuth } from './AuthContext';
 
 const SettingsContext = createContext(null);
 
+/**
+ * The API wants times as "hh:mm AM/PM" (e.g. "09:00 AM", "09:30 PM"),
+ * but the working-hours editor uses 24-hour "HH:mm" (e.g. "21:30").
+ */
+export function toApiTime(value) {
+  const match = /^(\d{1,2}):(\d{2})/.exec(value || '');
+  if (!match) return '';
+  const hours = Number(match[1]);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12; // 0 → 12 AM, 13 → 1 PM
+  return `${String(hours12).padStart(2, '0')}:${match[2]} ${period}`;
+}
+
 const SETTINGS_STORAGE_KEY = 'workshop_settings';
 
-// Never show the mock workshop's name/address/phone to a real account.
-const EMPTY_WORKSHOP_IDENTITY = { name: '', address: '', phone: '', secondaryPhone: '' };
+const EMPTY_DAY = { enabled: true, open: '', close: '' };
+
+/**
+ * Starting values until the workshop saves its own settings. No made-up data:
+ * the API has no GET for settings yet, so real values only exist once saved.
+ */
+const DEFAULT_SETTINGS = {
+  workshop: {
+    name: '',
+    address: '',
+    phone: '',
+    secondaryPhone: '',
+    location: null,
+    workingHours: {
+      saturday: EMPTY_DAY,
+      sunday: EMPTY_DAY,
+      monday: EMPTY_DAY,
+      tuesday: EMPTY_DAY,
+      wednesday: EMPTY_DAY,
+      thursday: EMPTY_DAY,
+      friday: { ...EMPTY_DAY, enabled: false },
+    },
+  },
+  preferences: {
+    acceptOnlineBookings: false,
+    showPrices: false,
+    autoSendServiceUpdates: false,
+    emailDailySummary: false,
+  },
+};
 
 /** Saved settings win; anything missing falls back to the logged-in user's data. */
 function buildSettings(saved, user) {
-  const workshop = { ...mockSettings.workshop, ...EMPTY_WORKSHOP_IDENTITY, ...saved?.workshop };
+  const workshop = { ...DEFAULT_SETTINGS.workshop, ...saved?.workshop };
 
   return {
-    ...mockSettings,
+    ...DEFAULT_SETTINGS,
     ...saved,
     workshop: {
       ...workshop,
@@ -32,7 +72,7 @@ function buildSettings(saved, user) {
       phone: workshop.phone || user?.phone || '',
       address: workshop.address || user?.address || '',
     },
-    preferences: { ...mockSettings.preferences, ...saved?.preferences },
+    preferences: { ...DEFAULT_SETTINGS.preferences, ...saved?.preferences },
   };
 }
 
@@ -139,8 +179,8 @@ export function SettingsProvider({ children }) {
       address: profileData.address || '',
       lat: Number(profileData.lat) || 0,
       lng: Number(profileData.lng) || 0,
-      openingTime: profileData.openingTime || '',
-      closingTime: profileData.closingTime || '',
+      openingTime: toApiTime(profileData.openingTime),
+      closingTime: toApiTime(profileData.closingTime),
     };
 
     const result = await updateProfile(

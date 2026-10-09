@@ -81,7 +81,8 @@
       "cancel": "Cancel",
       "delete": "Remove busy time"
     },
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "emptyDescription": "Customers can book you anytime during your working hours."
   },
   "offers": {
     "title": "Offers",
@@ -108,7 +109,8 @@
       "cancel": "Cancel"
     },
     "noServices": "Add a service first to create an offer.",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "emptyDescription": "Create a discount on a service for a set time."
   },
   "vehicleCatalog": {
     "title": "Vehicle catalog",
@@ -138,5 +140,6 @@
       "deleteBrand": "Delete {{brand}}"
     },
     "noBrands": "No brands found."
-  }
+  },
+  "emptyDescription": "Add the services you offer so customers can book them."
 }

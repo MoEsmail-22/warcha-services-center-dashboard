@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Calendar, ChevronDown } from 'lucide-react';
 import Drawer from '../ui/Drawer';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
@@ -6,13 +6,23 @@ import { useAppTranslation } from '../../hooks/useAppTranslation';
 const SERVICE_TYPES = ['Brake Check', 'Oil Change', 'Engine', 'AC Repair'];
 const STATUSES = ['Pending', 'Confirmed', 'In Progress', 'Completed'];
 
-export default function FilterBookingsDrawer({ open, onClose, onApply }) {
+/** `value` holds the filters currently applied (read from the URL), shown when the drawer opens. */
+export default function FilterBookingsDrawer({ open, onClose, onApply, value }) {
   const { t } = useAppTranslation('bookings');
   const [search, setSearch] = useState('');
   const [services, setServices] = useState([]);
   const [status, setStatus] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+
+  useEffect(() => {
+    if (!open) return;
+    setSearch(value?.search ?? '');
+    setServices(value?.services ?? []);
+    setStatus(value?.status ?? '');
+    setDateFrom(value?.dateFrom ?? '');
+    setDateTo(value?.dateTo ?? '');
+  }, [open, value]);
 
   const toggleService = (s) =>
     setServices((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
