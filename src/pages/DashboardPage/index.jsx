@@ -6,7 +6,6 @@ import { useReviews } from '../../contexts/ReviewsContext';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useAuth } from '../../contexts/AuthContext';
 import StatCard from '../../components/widgets/StatCard';
-import RevenueBarChart from '../../components/charts/RevenueBarChart';
 import { statusStyles } from '../../constants/statusStyles';
 import {
   getCustomerInitials,
@@ -14,33 +13,33 @@ import {
   getCustomerName,
   getCustomerColor,
 } from '@/utils/dashboardHelpers';
-import { KPI_CARD_DEFINITIONS } from '@/mocks/dashboardKpis';
-import dashboardMock from '@/mocks/dashboard.json';
+import { KPI_CARD_DEFINITIONS } from '@/constants/dashboardKpis';
 
 export default function DashboardPage() {
   const { t } = useAppTranslation('dashboard');
   const { user } = useAuth();
 
   // Live page data still comes from its active feature contexts.
-  const { todaysBookings = [], todaysCount = 0, difference = 0 } = useBookings() ?? {};
+  const {
+    bookings = [],
+    todaysBookings = [],
+    newTodayCount = 0,
+    newBookingsDifference = 0,
+  } = useBookings() ?? {};
   const { avgRating = 0, totalReviews = 0 } = useReviews() ?? {};
 
-  // These values belong to the dashboard itself, so they remain available after
-  // removing the standalone Vehicles and Revenue feature areas.
-  const {
-    carsInService: carsInServiceCount = 0,
-    awaitingApproval: awaitingApprovalCount = 0,
-    revenueToday: todayRevenue = 0,
-    revenueChange = 0,
-  } = dashboardMock.stats;
+  // Cars in service = accepted bookings that aren't finished: confirmed or in progress
+  // (cancelled and completed ones don't count). Awaiting approval = still pending.
+  const carsInServiceCount = bookings.filter(
+    (booking) => booking.status === 'confirmed' || booking.status === 'in_progress'
+  ).length;
+  const awaitingApprovalCount = bookings.filter((booking) => booking.status === 'pending').length;
+  // There is no revenue endpoint yet, so revenue shows "—" instead of made-up numbers.
   const currency = 'EGP';
-  const weeklyRevenue = dashboardMock.revenueChart;
-
-  const weeklyTotal = weeklyRevenue.reduce((sum, d) => sum + (d.current || 0), 0);
 
   const currentHour = new Date().getHours();
   const greeting = getGreeting(currentHour, t);
-  const userName = user?.name || 'Ahmed';
+  const userName = user?.name || '';
   const kpiIcons = {
     calendar: <CalendarCheck className="h-5 w-5 text-[#0E5C5B]" />,
     car: <Car className="h-5 w-5 text-[#0E5C5B]" />,
@@ -49,19 +48,19 @@ export default function DashboardPage() {
   };
   const kpiCardValues = {
     'todays-bookings': {
-      value: String(todaysCount),
+      // Bookings received today, compared with yesterday.
+      value: String(newTodayCount),
       // "+2", "-1" or "0" — the arrow follows the sign.
-      change: `${difference > 0 ? '+' : ''}${difference} ${t('vsYesterday', { defaultValue: 'vs yesterday' })}`,
-      trend: difference > 0 ? 'up' : difference < 0 ? 'down' : 'neutral',
+      change: `${newBookingsDifference > 0 ? '+' : ''}${newBookingsDifference} ${t('vsYesterday', { defaultValue: 'vs yesterday' })}`,
+      trend: newBookingsDifference > 0 ? 'up' : newBookingsDifference < 0 ? 'down' : 'neutral',
     },
     'cars-in-service': {
       value: String(carsInServiceCount),
       subtext: `${awaitingApprovalCount} ${t('awaitingApproval', { defaultValue: 'awaiting approval' })}`,
     },
     'revenue-today': {
-      value: `${todayRevenue.toLocaleString()} ${currency}`,
-      change: `${revenueChange > 0 ? '+' : ''}${revenueChange}%`,
-      trend: revenueChange >= 0 ? 'up' : 'down',
+      value: '—',
+      subtext: t('revenue.notAvailable', { defaultValue: 'Not available yet' }),
     },
     'average-rating': {
       value: String(avgRating),
@@ -91,7 +90,8 @@ export default function DashboardPage() {
               lineHeight: '100%',
             }}
           >
-            {greeting}, {userName} 👋
+            {greeting}
+            {userName ? `${t('greetingSeparator', { defaultValue: ', ' })}${userName}` : ''} 👋
           </h1>
           <p
             className="mt-1.5 text-[#5A6968]"
@@ -238,15 +238,21 @@ export default function DashboardPage() {
               className="text-2xl font-bold text-[#15201F]"
               style={{ fontFamily: "'Sora', sans-serif" }}
             >
-              {weeklyTotal.toLocaleString()}{' '}
-              <span className="text-sm font-medium text-[#5A6968]">{currency}</span>
+              — <span className="text-sm font-medium text-[#5A6968]">{currency}</span>
             </p>
-            <p className="mt-0.5 text-xs text-green-600">
+            <p className="mt-0.5 text-xs text-[#5A6968]">
               {t('revenue.totalLabel', { defaultValue: 'Total this week' })}
             </p>
           </div>
 
-          <RevenueBarChart data={weeklyRevenue} />
+          <EmptyState
+            compact
+            icon={<Wallet />}
+            title={t('revenue.emptyTitle', { defaultValue: 'No revenue data yet' })}
+            description={t('revenue.emptyDescription', {
+              defaultValue: 'Revenue will appear here once it is available from the system.',
+            })}
+          />
         </div>
       </div>
     </div>

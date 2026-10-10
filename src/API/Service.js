@@ -1,6 +1,6 @@
-import { tr } from 'date-fns/locale';
 import apiClient, { isDemoMode } from './client';
 import { assertApiSuccess, handleApiError } from './errors';
+import { logError, logResponse } from './devLog';
 
 function getBackendServiceId(id) {
   const numericId = Number(id);
@@ -18,8 +18,10 @@ function getBackendServiceId(id) {
 export async function getServiceCategories() {
   try {
     const response = await apiClient.get('/Workshop/service-categories');
+    logResponse('Services API', 'GET service categories', response);
     return assertApiSuccess(response.data, 'Failed to get service categories.');
   } catch (error) {
+    logError('Services API', 'GET service categories', error);
     return handleApiError(error, 'get service categories error');
   }
 }
@@ -29,8 +31,10 @@ export async function getServices({ pageNumber = 1, pageSize = 10 } = {}) {
     const response = await apiClient.get('/Workshop/service', {
       params: { PageNumber: pageNumber, PageSize: pageSize },
     });
+    logResponse('Services API', 'GET services list', response);
     return assertApiSuccess(response.data, 'Failed to load services.');
   } catch (error) {
+    logError('Services API', 'GET services list', error);
     return handleApiError(error, 'Load services');
   }
 }
@@ -38,8 +42,10 @@ export async function getServices({ pageNumber = 1, pageSize = 10 } = {}) {
 export async function createService(serviceData) {
   try {
     const response = await apiClient.post('/Workshop/service', serviceData, { skipDemoMode: true });
+    logResponse('Services API', 'POST create service', response);
     return assertApiSuccess(response.data, 'Failed to create service.');
   } catch (error) {
+    logError('Services API', 'POST create service', error);
     return handleApiError(error, 'Create service');
   }
 }
@@ -51,8 +57,10 @@ export async function editService(id, serviceData) {
       ? serviceData
       : { ...serviceData, workshopServiceId: Number(serviceData.workshopServiceId ?? serviceId) };
     const response = await apiClient.put(`/Workshop/service/${serviceId}`, requestBody);
+    logResponse('Services API', 'PUT edit service', response);
     return assertApiSuccess(response.data, 'Failed to update service.');
   } catch (error) {
+    logError('Services API', 'PUT edit service', error);
     return handleApiError(error, 'Update service');
   }
 }
@@ -61,8 +69,10 @@ export async function toggleServiceVisibility(id) {
   try {
     const serviceId = getBackendServiceId(id);
     const response = await apiClient.put(`/Workshop/service/toggle-visibility/${serviceId}`);
+    logResponse('Services API', 'PUT toggle visibility', response);
     return assertApiSuccess(response.data, 'Failed to change service visibility.');
   } catch (error) {
+    logError('Services API', 'PUT toggle visibility', error);
     return handleApiError(error, 'Change service visibility');
   }
 }
@@ -71,8 +81,10 @@ export async function removeService(id) {
   try {
     const serviceId = getBackendServiceId(id);
     const response = await apiClient.delete(`/Workshop/service/${serviceId}`);
+    logResponse('Services API', 'DELETE service', response);
     return assertApiSuccess(response.data, 'Failed to delete service.');
   } catch (error) {
+    logError('Services API', 'DELETE service', error);
     return handleApiError(error, 'Delete service');
   }
 }
@@ -80,8 +92,10 @@ export async function removeService(id) {
 export async function updateProfile(id, profileData) {
   try {
     const response = await apiClient.post(`/Workshop/update-profile/${id}`, profileData);
+    logResponse('Services API', 'POST update profile', response);
     return assertApiSuccess(response.data, 'Failed to update profile.');
   } catch (error) {
+    logError('Services API', 'POST update profile', error);
     return handleApiError(error, 'Update profile');
   }
 }
@@ -89,8 +103,10 @@ export async function updateProfile(id, profileData) {
 export async function updateSettings(id, settingsData) {
   try {
     const response = await apiClient.post(`/Workshop/update-settings/${id}`, settingsData);
+    logResponse('Services API', 'POST update settings', response);
     return assertApiSuccess(response.data, 'Failed to update settings.');
   } catch (error) {
+    logError('Services API', 'POST update settings', error);
     return handleApiError(error, 'Update settings');
   }
 }

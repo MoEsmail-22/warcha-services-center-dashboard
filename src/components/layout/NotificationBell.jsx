@@ -4,8 +4,6 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { Bell, CheckCheck } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { ar, enUS } from 'date-fns/locale';
 import { useNotifications } from '@/contexts/NotificationsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
@@ -14,10 +12,26 @@ import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/utils/cn';
 
+// Largest unit first: the first one that fits is used ("3 hours ago", not "180 minutes ago").
+const TIME_UNITS = [
+  ['year', 365 * 24 * 60 * 60],
+  ['month', 30 * 24 * 60 * 60],
+  ['week', 7 * 24 * 60 * 60],
+  ['day', 24 * 60 * 60],
+  ['hour', 60 * 60],
+  ['minute', 60],
+];
+
+/** "5 minutes ago" / «منذ 5 دقائق» with the browser's built-in Intl (no date library needed). */
 function timeAgo(value, lang) {
   const date = new Date(value);
   if (!value || Number.isNaN(date.getTime())) return '';
-  return formatDistanceToNow(date, { addSuffix: true, locale: lang === 'ar' ? ar : enUS });
+  const seconds = Math.round((date.getTime() - Date.now()) / 1000);
+  const format = new Intl.RelativeTimeFormat(lang === 'ar' ? 'ar' : 'en', { numeric: 'auto' });
+  for (const [unit, size] of TIME_UNITS) {
+    if (Math.abs(seconds) >= size) return format.format(Math.round(seconds / size), unit);
+  }
+  return format.format(0, 'second'); // "now" / «الآن»
 }
 
 export default function NotificationBell() {

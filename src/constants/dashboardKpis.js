@@ -1,5 +1,5 @@
-// Static metadata only. React elements, translated labels, and live values
-// belong to the dashboard component, not its mock data.
+// The Dashboard's KPI cards: label keys and icon names only. Values come from
+// the feature contexts (bookings, reviews) in DashboardPage.
 export const KPI_CARD_DEFINITIONS = [
   {
     key: 'todays-bookings',

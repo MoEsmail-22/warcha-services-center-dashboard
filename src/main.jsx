@@ -23,6 +23,7 @@ import { LoadingProvider } from './contexts/LoadingContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { NotificationsProvider } from './contexts/NotificationsContext';
 import { router } from './routes';
+import { preloadCurrentPage } from './routes/lazyPages';
 import {
   BookingsProvider,
   JobsProvider,
@@ -31,6 +32,9 @@ import {
   ReviewsProvider,
   SettingsProvider,
 } from './contexts';
+
+// Download the opened page's code now, in parallel with the session and translations.
+preloadCurrentPage();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

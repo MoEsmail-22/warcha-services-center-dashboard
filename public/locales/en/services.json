@@ -112,6 +112,7 @@
     "saving": "Saving…",
     "emptyDescription": "Create a discount on a service for a set time."
   },
+  "emptyDescription": "Add the services you offer so customers can book them.",
   "vehicleCatalog": {
     "title": "Vehicle catalog",
     "subtitle": "Manage customer car brands.",
@@ -139,7 +140,7 @@
       "cancel": "Cancel",
       "deleteBrand": "Delete {{brand}}"
     },
-    "noBrands": "No brands found."
-  },
-  "emptyDescription": "Add the services you offer so customers can book them."
+    "noBrands": "No brands found.",
+    "emptyDescription": "Add the car brands your workshop services."
+  }
 }

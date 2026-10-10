@@ -1,6 +1,13 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createWorkshop } from '../API/Auth/Creat';
 import { loginUser } from '../API/Auth/Login';
+import { getTokenExpiresAt, refreshSession } from '../API/client';
+import { clearSessionAndReload } from '../utils/clearSession';
+
+// Renew this long before the token expires (tokens last 10 minutes → renewed every ~9).
+const REFRESH_BEFORE_EXPIRY_MS = 60_000;
+// Retry this soon when the server couldn't be reached.
+const RETRY_AFTER_MS = 30_000;
 const AuthContext = createContext(null);
 
 function saveAuthTokens(tokenResponse) {
@@ -31,7 +38,11 @@ export function AuthProvider({ children }) {
 
   // Restore session on first mount
   useEffect(() => {
-    const handleSessionExpired = () => setUser(null);
+    // An expired or rejected session is cleaned up the same way as a logout.
+    const handleSessionExpired = () => {
+      setUser(null);
+      clearSessionAndReload();
+    };
     window.addEventListener('auth:session-expired', handleSessionExpired);
 
     try {
@@ -47,6 +58,58 @@ export function AuthProvider({ children }) {
   }, []);
 
   const isDemoMode = () => localStorage.getItem('demo_mode') === 'true';
+
+  // Keep the session alive: renew the token shortly before it expires, instead of
+  // waiting for a request to fail with 401 (that still works as a backup).
+  useEffect(() => {
+    const usesDevToken =
+      import.meta.env.VITE_ENABLE_DEV_AUTH === 'true' && import.meta.env.VITE_DEV_ACCESS_TOKEN;
+    if (!user || isDemoMode() || usesDevToken) return undefined;
+
+    let timer = null;
+
+    const schedule = () => {
+      clearTimeout(timer);
+      if (!localStorage.getItem('auth_refresh_token')) {
+        // Nothing to renew with (the login response had no refresh token).
+        if (import.meta.env.DEV) console.warn('[Auth] no refresh token saved — the timer is off');
+        return;
+      }
+      const expiresAt = getTokenExpiresAt();
+      const delay = expiresAt ? Math.max(expiresAt - Date.now() - REFRESH_BEFORE_EXPIRY_MS, 0) : 0;
+      timer = setTimeout(renew, delay);
+      if (import.meta.env.DEV) {
+        console.log(
+          `%c[Auth] next token refresh at ${new Date(Date.now() + delay).toLocaleTimeString()}`,
+          'color:#0E5C5B;font-weight:bold',
+          { tokenExpiresAt: expiresAt ? new Date(expiresAt).toLocaleTimeString() : 'unknown' }
+        );
+      }
+    };
+
+    const renew = async () => {
+      try {
+        await refreshSession();
+        schedule(); // the new token has a new expiry
+      } catch (error) {
+        const serverUnreachable = Boolean(error?.request) && !error?.response;
+        // Rejected → refreshSession already ended the session. Unreachable → try again soon.
+        if (serverUnreachable) timer = setTimeout(renew, RETRY_AFTER_MS);
+      }
+    };
+
+    // Browsers slow down timers in background tabs, so check again when the tab is shown.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') schedule();
+    };
+
+    schedule();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [user?.id]);
 
   const saveUserSession = (userData) => {
     const source = {
@@ -103,6 +166,23 @@ export function AuthProvider({ children }) {
 
     // .NET convention: { isSuccess, message, data: { accessToken | token, expiresAt, ... } }
     const accessToken = saveAuthTokens(response);
+
+    // Development only: which workshop this login belongs to (to spot accounts sharing one).
+    if (import.meta.env.DEV && accessToken) {
+      try {
+        const claims = JSON.parse(
+          atob(accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+        );
+        console.log('%c[Auth] logged in', 'color:#0E5C5B;font-weight:bold', {
+          email,
+          userId: claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'],
+          workshopId: claims.workshopId ?? '❌ MISSING',
+          loginResponseId: response?.data?.id,
+        });
+      } catch {
+        // Not a readable JWT; nothing to log.
+      }
+    }
 
     if (!accessToken) {
       // Backend returned 200 + isSuccess=true but no token — should not normally happen.
@@ -184,14 +264,11 @@ export function AuthProvider({ children }) {
     });
   };
 
+  // Logging out clears everything saved for this account and reloads on the login page,
+  // so the next account never sees the previous one's services, bookings or settings.
   const logout = () => {
-    localStorage.removeItem('auth_user');
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_token_expires_at');
-    localStorage.removeItem('auth_refresh_token');
-    localStorage.removeItem('auth_refresh_token_expires_at');
-    localStorage.removeItem('demo_mode');
     setUser(null);
+    clearSessionAndReload();
   };
 
   return (

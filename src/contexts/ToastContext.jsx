@@ -5,18 +5,19 @@
  *   const { showToast } = useToast();
  *   showToast('success', 'Service saved');
  *   showToast('error', 'Something went wrong');
+ *   showToast('notification', 'Ali booked an oil change', { title: 'New booking' });
  *
  * Most code should use useNotify() instead, which also translates the text.
  */
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, X } from 'lucide-react';
+import { Bell, Check, X } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const ToastContext = createContext(null);
 
-// Same timings as the Admin Dashboard.
-const DURATION_MS = { success: 3500, error: 5000 };
+// Same timings as the Admin Dashboard; notifications stay longer so they can be read.
+const DURATION_MS = { success: 3500, error: 5000, notification: 8000 };
 const MAX_VISIBLE = 5;
 // Matches the action-toast-pop-out animation in index.css.
 const EXIT_MS = 220;
@@ -33,6 +34,13 @@ const STYLES = {
     titleKey: 'toast.error',
     titleFallback: 'Something went wrong',
     badge: 'bg-[#FDECEC] text-[#D64545]',
+  },
+  // Incoming notifications: brand teal bell and a small "New notification" label.
+  notification: {
+    icon: Bell,
+    titleKey: 'toast.notification',
+    titleFallback: 'New notification',
+    badge: 'bg-[#E8F1EF] text-[#0E5C5B]',
   },
 };
 
@@ -91,12 +99,24 @@ function ToastItem({ toast, onClose }) {
         <Icon className="h-5 w-5" strokeWidth={2.4} />
       </span>
 
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-[#1C1712]">
-          {t(style.titleKey, { defaultValue: style.titleFallback })}
-        </p>
-        <p className="mt-0.5 text-sm leading-5 text-[#6F665C]">{toast.message}</p>
-      </div>
+      {toast.type === 'notification' ? (
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold tracking-wide text-[#0E5C5B] uppercase">
+            {t(style.titleKey, { defaultValue: style.titleFallback })}
+          </p>
+          {toast.title && (
+            <p className="mt-0.5 truncate text-sm font-bold text-[#1C1712]">{toast.title}</p>
+          )}
+          <p className="mt-0.5 line-clamp-2 text-sm leading-5 text-[#6F665C]">{toast.message}</p>
+        </div>
+      ) : (
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-[#1C1712]">
+            {t(style.titleKey, { defaultValue: style.titleFallback })}
+          </p>
+          <p className="mt-0.5 text-sm leading-5 text-[#6F665C]">{toast.message}</p>
+        </div>
+      )}
 
       <button
         type="button"
@@ -118,12 +138,24 @@ export function ToastProvider({ children }) {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
-  const showToast = useCallback((type, message) => {
+  /** `options.title` adds a bold line above the message (used by notification toasts). */
+  const showToast = useCallback((type, message, options = {}) => {
     if (!message) return;
     const id = ++nextId.current;
     // Keep at most MAX_VISIBLE on screen; the oldest goes first.
-    setToasts((current) => [...current.slice(-(MAX_VISIBLE - 1)), { id, type, message }]);
+    setToasts((current) => [
+      ...current.slice(-(MAX_VISIBLE - 1)),
+      { id, type, message, title: options.title },
+    ]);
   }, []);
+
+  // Development only: try toasts from the browser console, e.g.
+  // window.__showToast('notification', 'Ali booked an oil change', { title: 'New booking' })
+  useEffect(() => {
+    if (!import.meta.env.DEV) return undefined;
+    window.__showToast = showToast;
+    return () => delete window.__showToast;
+  }, [showToast]);
 
   return (
     <ToastContext.Provider value={{ showToast }}>

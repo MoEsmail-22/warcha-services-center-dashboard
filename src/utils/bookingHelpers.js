@@ -6,100 +6,20 @@ const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 });
 
-const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-});
-
 const normalizeText = (value) =>
   String(value ?? '')
     .trim()
     .toLowerCase();
-
-const getInitials = (name = '') =>
-  name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0] ?? '')
-    .join('')
-    .toUpperCase();
 
 function toValidDate(value) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function formatMinutes(minutes = 0) {
-  if (minutes < 60) return `${minutes} mins est.`;
-  const hours = minutes / 60;
-  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} hours est.`;
-}
-
 export function formatBookingDate(isoDate) {
   if (!isoDate) return '';
   const date = toValidDate(isoDate);
   return date ? DATE_FORMATTER.format(date) : isoDate;
-}
-
-export function createBookingViewModels({ bookings, customers, vehicles, services, technicians }) {
-  const customersById = new Map(customers.map((item) => [item.id, item]));
-  const vehiclesById = new Map(vehicles.map((item) => [item.id, item]));
-  const servicesById = new Map(services.map((item) => [item.id, item]));
-  const techniciansById = new Map(technicians.map((item) => [item.id, item]));
-
-  return bookings.map((booking) => {
-    const customer = customersById.get(booking.customerId);
-    const vehicle = vehiclesById.get(booking.vehicleId);
-    const service = servicesById.get(booking.serviceId);
-    const technician = techniciansById.get(booking.technicianId);
-    const customerName = customer?.fullName ?? 'Unknown customer';
-    const technicianName = technician?.fullName ?? 'Unassigned';
-    const serviceName = service?.name?.en ?? 'Unknown service';
-    const createdAt = toValidDate(booking.createdAt);
-
-    return {
-      id: booking.id,
-      customer: {
-        name: customerName,
-        initials: getInitials(customerName),
-        avatarColor: '#C8730A',
-      },
-      vehicle: vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year}` : 'Unknown vehicle',
-      service: serviceName,
-      technician: {
-        name: technicianName,
-        initials: getInitials(technicianName),
-        avatarColor: '#8A8074',
-      },
-      date: booking.bookingDate,
-      time: booking.bookingTime,
-      status: booking.status,
-      createdAt: createdAt ? DATE_TIME_FORMATTER.format(createdAt) : booking.createdAt,
-      serviceBreakdown: service
-        ? [
-            {
-              label: serviceName,
-              description: service.description?.en ?? '',
-              price: service.price?.from ?? 0,
-              duration: formatMinutes(booking.estimatedDurationMinutes ?? service.durationMinutes),
-            },
-          ]
-        : [],
-      timeline: [
-        {
-          id: `${booking.id}-received`,
-          label: 'Booking Received',
-          timestamp: createdAt ? DATE_TIME_FORMATTER.format(createdAt) : booking.createdAt,
-          note: booking.notes ?? '',
-          done: true,
-        },
-      ],
-    };
-  });
 }
 
 function getDateBounds(now = new Date()) {
@@ -162,10 +82,10 @@ export function filterBookings(bookings, { tab, search, advanced }) {
 
     return [
       booking.id,
+      booking.number,
       booking.customer?.name,
       booking.vehicle,
       booking.service,
-      booking.technician?.name,
     ].some((value) => normalizeText(value).includes(topSearch));
   });
 }

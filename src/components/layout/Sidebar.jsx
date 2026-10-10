@@ -5,7 +5,7 @@ import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import ProPlanCard from '../widgets/ProPlanCard';
-import logo from '@/assets/warsha_logo.png';
+import logo from '@/assets/warsha-logo-sm.png';
 
 /**
  * Sidebar
@@ -66,7 +66,7 @@ export default function Sidebar({
         >
           <div className="flex items-center gap-1 overflow-hidden">
             <div className="flex w-14 shrink-0 items-center justify-center rounded-full shadow-md">
-              <img src={logo} alt="Logo" />
+              <img src={logo} alt="Logo" width={56} height={43} />
             </div>
             {!collapsed && (
               <div className="min-w-0">

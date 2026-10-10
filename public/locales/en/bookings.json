@@ -11,11 +11,10 @@
     "month": "Month"
   },
   "columns": {
-    "bookingid": "Booking ID",
+    "booking": "Booking",
     "customer": "Customer",
     "vehicle": "Vehicle",
     "service": "Service",
-    "technician": "Technician",
     "datetime": "Date/Time",
     "status": "Status",
     "actions": "Actions"
@@ -53,5 +52,61 @@
     "noMatchDescription": "Try another search, tab or filter.",
     "clearAll": "Clear search and filters"
   },
-  "retry": "Try again"
+  "retry": "Try again",
+  "actions": {
+    "status": "Status",
+    "updateStatus": "Update",
+    "createQuote": "Create quote for this booking",
+    "voucher": "Customer voucher",
+    "voucherPlaceholder": "Enter voucher code",
+    "redeem": "Redeem"
+  },
+  "quotes": {
+    "title": "Quotes",
+    "none": "No quotes for this booking yet.",
+    "pending": "Waiting for the customer",
+    "total": "Total",
+    "history": "Earlier quotes"
+  },
+  "close": "Close",
+  "details": {
+    "customer": "Customer",
+    "vehicle": "Vehicle",
+    "scheduled": "Date / Time",
+    "jobStage": "Job stage",
+    "payment": "Payment",
+    "notes": "Customer notes",
+    "cancellationReason": "Cancellation reason",
+    "noServices": "No service details available.",
+    "confirmationFee": "Booking confirmation fee",
+    "total": "Total",
+    "noActivity": "No activity yet."
+  },
+  "payment": {
+    "cashOnDelivery": "Pay at the workshop",
+    "online": "Paid online",
+    "card": "Card",
+    "creditCard": "Card",
+    "wallet": "Wallet"
+  },
+  "jobStage": {
+    "new": "New",
+    "diagnosing": "Diagnosing",
+    "in_progress": "In progress",
+    "ready": "Ready for pickup",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "timeline": {
+    "confirmed": "Booking confirmed",
+    "completed": "Service completed",
+    "cancelled": "Booking cancelled"
+  },
+  "footer": {
+    "pending": "Waiting for your confirmation.",
+    "confirmed": "✓ This booking has been accepted.",
+    "in_progress": "↻ Work is in progress on this booking.",
+    "completed": "✓ This booking is completed.",
+    "cancelled": "✗ This booking has been cancelled."
+  }
 }

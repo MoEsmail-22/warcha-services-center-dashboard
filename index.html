@@ -3,9 +3,31 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="./src/assets/warsha_logo.png" />
+  <link rel="icon" type="image/png" href="./src/assets/warsha-logo-sm.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Warsha dashboard for service centers: manage bookings, quotes, services and reviews." />
   <title>Warsha Dashboard</title>
+  <script>
+    // Start downloading the translation files together with the app code, instead of
+    // waiting for the app to load first. Keep this list in sync with `ns` in src/i18n.js.
+    (function () {
+      var namespaces = ['common', 'nav', 'dashboard', 'bookings', 'quotes', 'services', 'reviews', 'settings', 'errors'];
+      var match = location.pathname.match(/^\/(en|ar)(\/|$)/);
+      var lang = match ? match[1] : 'en';
+      // Arabic pages also load English, which fills in any missing Arabic text.
+      var languages = lang === 'en' ? ['en'] : [lang, 'en'];
+      languages.forEach(function (lng) {
+        namespaces.forEach(function (ns) {
+          var link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'fetch';
+          link.crossOrigin = 'anonymous';
+          link.href = '/locales/' + lng + '/' + ns + '.json';
+          document.head.appendChild(link);
+        });
+      });
+    })();
+  </script>
 </head>
 
 <body>

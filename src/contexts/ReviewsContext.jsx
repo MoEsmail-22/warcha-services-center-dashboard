@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useReducer } from 'react';
-import mockReviews from '@/mocks/reviews.json';
 
 const ReviewsContext = createContext(null);
 
@@ -53,16 +52,9 @@ function reducer(state, action) {
 export function ReviewsProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  // There is no reviews endpoint for workshops yet, so the list starts empty (no mock data).
   useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        dispatch({ type: 'LOAD_SUCCESS', payload: mockReviews });
-      } catch (error) {
-        dispatch({ type: 'LOAD_ERROR', payload: error.message });
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
+    dispatch({ type: 'LOAD_SUCCESS', payload: [] });
   }, []);
 
   const replyReview = (id, text) => dispatch({ type: 'REPLY_REVIEW', payload: { id, text } });

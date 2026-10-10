@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search } from 'lucide-react';
 import KanbanColumn from '../components/kanban/KanbanColumn';
 import { useJobs, JOB_STAGES } from '../contexts/JobsContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
@@ -89,7 +89,7 @@ export default function JobsBoardPage() {
           )}
         </div>
 
-        {/* ---- Search bar + filters ---- */}
+        {/* ---- Search bar ---- */}
         <div className="mt-4 flex items-center gap-2">
           <div className="relative max-w-md flex-1">
             <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -103,16 +103,6 @@ export default function JobsBoardPage() {
               className="w-full rounded-lg border border-gray-200 bg-white py-2 pr-3 pl-9 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0E5C5B] focus:ring-2 focus:ring-[#0E5C5B]/10 focus:outline-none"
             />
           </div>
-
-          <button
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            aria-label="Filters"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            <span className="hidden sm:inline">
-              {t('jobs.filters', { defaultValue: 'Filters' })}
-            </span>
-          </button>
         </div>
       </div>
 

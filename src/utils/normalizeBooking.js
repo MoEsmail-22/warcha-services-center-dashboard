@@ -2,13 +2,16 @@
  * Turns one booking from GET /Workshop/bookings into the shape the Bookings page,
  * the details drawer and the Dashboard already use.
  *
- * ⚠ The API docs don't describe the response, so each field is read from its most
- *   likely names. Once a real booking is available, trim this to the actual fields.
+ * Confirmed from GET /Workshop/bookings/{id}: carBrand, carModel, carYear, scheduledAt,
+ * services [{ name, price }], bookingStatus ("Confirmed"), jobStatus ("New"),
+ * bookingNumber, totalAmount, paymentType, customerNotes, confirmedAt, completedAt.
+ * The list (GET /Workshop/bookings) may use other names, so a few alternatives are kept.
+ * The API sends no customer name yet.
  */
 import { toStatusKey } from '@/constants/bookingStatuses';
+import { normalizeQuote } from '@/utils/normalizeQuote';
 
 const CUSTOMER_COLOR = '#C8730A';
-const TECHNICIAN_COLOR = '#8A8074';
 
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
   month: 'short',
@@ -16,6 +19,15 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
   hour: 'numeric',
   minute: '2-digit',
 });
+
+/** "InProgress" / "In Progress" / "in_progress" → "in_progress"; "New" → "new". */
+function toJobStage(value) {
+  if (!value) return '';
+  return String(value)
+    .replace(/([a-z])([A-Z])/g, '$1_$2')
+    .replace(/[\s-]+/g, '_')
+    .toLowerCase();
+}
 
 function getInitials(name = '') {
   return name
@@ -62,9 +74,10 @@ export function normalizeBooking(item) {
     item.client?.name ??
     'Customer';
 
-  const car = item.car ?? item.vehicle ?? {};
+  const car = typeof item.car === 'object' && item.car ? item.car : {};
   const vehicle =
     item.carName ??
+    (typeof item.car === 'string' ? item.car : null) ??
     (typeof item.vehicle === 'string' ? item.vehicle : null) ??
     [
       car.brand ?? car.brandName ?? item.carBrand ?? item.brandName,
@@ -74,16 +87,22 @@ export function normalizeBooking(item) {
       .filter(Boolean)
       .join(' ');
 
-  const services = Array.isArray(item.services) ? item.services : [];
+  // Services may come as objects ({ name, price }) or as plain names.
+  const services = (Array.isArray(item.services) ? item.services : []).map((s) =>
+    typeof s === 'string' ? { name: s } : s
+  );
   const serviceNames = services.map((s) => s.nameEn ?? s.name ?? s.serviceName).filter(Boolean);
   const service =
     item.serviceName ??
     (Array.isArray(item.serviceNames) ? item.serviceNames.join(', ') : null) ??
     (serviceNames.length ? serviceNames.join(', ') : 'Service');
 
-  const technicianName = item.technicianName ?? item.technician?.name ?? 'Unassigned';
   const scheduled = toDate(item.scheduledAt ?? item.bookingDate ?? item.date ?? item.startAt);
   const created = toDate(item.createdAt ?? item.createdOn);
+  // The day the booking arrived. The API sends no creation date yet; a booking is
+  // confirmed when it's placed (the customer pays the confirmation fee), so confirmedAt
+  // is the closest date until it does.
+  const received = created ?? toDate(item.confirmedAt);
   const notes = item.customerNotes ?? item.notes ?? '';
 
   return {
@@ -95,13 +114,26 @@ export function normalizeBooking(item) {
     },
     vehicle: vehicle || '—',
     service,
-    technician: {
-      name: technicianName,
-      initials: getInitials(technicianName),
-      avatarColor: TECHNICIAN_COLOR,
-    },
     ...toLocalDateAndTime(scheduled),
+    // Local "YYYY-MM-DD" the booking arrived (for the dashboard's "Today's bookings").
+    receivedDate: toLocalDateAndTime(received).date,
     status: toStatusKey(item.status ?? item.bookingStatus),
+    // Job stage on the workshop floor ("New", "InProgress", …) — quotes need "in_progress".
+    jobStatus: toJobStage(item.jobStatus),
+    number: item.bookingNumber ?? '',
+    totalAmount: Number(item.totalAmount ?? 0),
+    paymentType: item.paymentType ?? '',
+    // Fee the customer paid to confirm the booking (part of the total).
+    confirmationFee: Number(item.confirmationFeeAmount ?? 0),
+    cancellationReason: item.cancellationReason ?? '',
+    // Raw ISO dates; the drawer formats them in the current language.
+    confirmedAt: item.confirmedAt ?? null,
+    completedAt: item.completedAt ?? null,
+    scheduledAt: item.scheduledAt ?? null,
+    // The quote waiting for the customer's answer (only in GET /Workshop/bookings/{id}).
+    pendingQuote: item.pendingQuote
+      ? normalizeQuote({ bookingId: id, ...item.pendingQuote })
+      : null,
     createdAt: created ? DATE_TIME_FORMATTER.format(created) : '',
     notes,
     serviceBreakdown: services.map((s) => ({

@@ -11,11 +11,10 @@
     "month": "الشهر"
   },
   "columns": {
-    "bookingid": "رقم الحجز",
+    "booking": "الحجز",
     "customer": "العميل",
     "vehicle": "المركبة",
     "service": "الخدمة",
-    "technician": "الفني",
     "datetime": "التاريخ/الوقت",
     "status": "الحالة",
     "actions": "إجراءات"
@@ -54,5 +53,61 @@
     "noMatchDescription": "جرّب بحثاً أو فلتراً آخر.",
     "clearAll": "مسح البحث والفلاتر"
   },
-  "retry": "حاول مرة أخرى"
+  "retry": "حاول مرة أخرى",
+  "actions": {
+    "status": "الحالة",
+    "updateStatus": "تحديث",
+    "createQuote": "إنشاء عرض سعر لهذا الحجز",
+    "voucher": "قسيمة العميل",
+    "voucherPlaceholder": "أدخل رمز القسيمة",
+    "redeem": "استخدام"
+  },
+  "quotes": {
+    "title": "عروض الأسعار",
+    "none": "لا توجد عروض أسعار لهذا الحجز بعد.",
+    "pending": "بانتظار رد العميل",
+    "total": "الإجمالي",
+    "history": "عروض أسعار سابقة"
+  },
+  "close": "إغلاق",
+  "details": {
+    "customer": "العميل",
+    "vehicle": "المركبة",
+    "scheduled": "التاريخ / الوقت",
+    "jobStage": "مرحلة العمل",
+    "payment": "الدفع",
+    "notes": "ملاحظات العميل",
+    "cancellationReason": "سبب الإلغاء",
+    "noServices": "لا توجد تفاصيل للخدمات.",
+    "confirmationFee": "رسوم تأكيد الحجز",
+    "total": "الإجمالي",
+    "noActivity": "لا يوجد نشاط بعد."
+  },
+  "payment": {
+    "cashOnDelivery": "الدفع في الورشة",
+    "online": "مدفوع إلكترونياً",
+    "card": "بطاقة",
+    "creditCard": "بطاقة",
+    "wallet": "محفظة"
+  },
+  "jobStage": {
+    "new": "جديد",
+    "diagnosing": "قيد الفحص",
+    "in_progress": "قيد التنفيذ",
+    "ready": "جاهز للاستلام",
+    "completed": "مكتمل",
+    "cancelled": "ملغي"
+  },
+  "timeline": {
+    "confirmed": "تم تأكيد الحجز",
+    "completed": "تم إنهاء الخدمة",
+    "cancelled": "تم إلغاء الحجز"
+  },
+  "footer": {
+    "pending": "بانتظار تأكيدك.",
+    "confirmed": "✓ تم قبول هذا الحجز.",
+    "in_progress": "↻ العمل جارٍ على هذا الحجز.",
+    "completed": "✓ تم إكمال هذا الحجز.",
+    "cancelled": "✗ تم إلغاء هذا الحجز."
+  }
 }

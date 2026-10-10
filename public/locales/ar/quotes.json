@@ -35,5 +35,9 @@
     "expired": "منتهي",
     "draft": "مسودة"
   },
-  "emptyDescription": "ستظهر هنا عروض الأسعار التي ترسلها للعملاء."
+  "emptyDescription": "ستظهر هنا عروض الأسعار التي ترسلها للعملاء.",
+  "booking": "الحجز",
+  "chooseBooking": "اختر حجزاً",
+  "noBookingsToQuote": "لا توجد حجوزات عملها قيد التنفيذ",
+  "loadingServices": "جارٍ تحميل خدمات الحجز…"
 }
