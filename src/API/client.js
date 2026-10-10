@@ -12,6 +12,26 @@ const apiClient = axios.create({
 
 let refreshPromise = null;
 
+/** Development only: shows token refreshes in the console (token values shortened). */
+function logRefresh(message, details) {
+  if (!import.meta.env.DEV) return;
+  console.log(`%c[Auth] ${message}`, 'color:#0E5C5B;font-weight:bold', details ?? '');
+}
+
+const shortToken = (value) =>
+  typeof value === 'string' && value.length > 24
+    ? `${value.slice(0, 12)}…${value.slice(-6)}`
+    : value;
+
+/** The claims inside a JWT, e.g. { workshopId, role, exp }; null if unreadable. */
+function readTokenClaims(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+  } catch {
+    return null;
+  }
+}
+
 function clearSavedSession() {
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem('auth_token');
@@ -42,6 +62,19 @@ async function refreshAccessToken() {
   );
 
   const result = response.data;
+  if (import.meta.env.DEV) {
+    const data = result?.data ?? result;
+    const claims = readTokenClaims(data?.accessToken ?? data?.token);
+    logRefresh(`refresh-token → ${response.status}`, {
+      isSuccess: result?.isSuccess,
+      message: result?.message,
+      accessToken: shortToken(data?.accessToken ?? data?.token),
+      refreshToken: shortToken(data?.refreshToken),
+      // The important part: workshop endpoints need workshopId in the new token.
+      newTokenWorkshopId: claims?.workshopId ?? '❌ MISSING',
+      newTokenExpiresAt: claims?.exp ? new Date(claims.exp * 1000).toLocaleTimeString() : '?',
+    });
+  }
   if (result?.isSuccess === false) {
     throw new Error(result.message || 'Unable to refresh the session.');
   }
@@ -59,6 +92,39 @@ async function refreshAccessToken() {
   }
 
   return accessToken;
+}
+
+/** When the access token expires (ms since epoch), read from its "exp" claim; null if unknown. */
+export function getTokenExpiresAt(token = localStorage.getItem('auth_token')) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return payload.exp ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Renews the access token. Used by the timer in AuthContext (before the token
+ * expires) and by the 401 handler below (backup). Calls made at the same time
+ * share one request, so a refresh token is never used twice.
+ *
+ * If the server rejects the refresh, the session ends (back to login).
+ * If the server can't be reached, the session is kept and the error is thrown.
+ */
+export function refreshSession() {
+  if (!refreshPromise) {
+    refreshPromise = refreshAccessToken()
+      .catch((error) => {
+        const serverUnreachable = Boolean(error?.request) && !error?.response;
+        if (!serverUnreachable) clearSavedSession();
+        throw error;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
 }
 
 export const isDemoMode = () =>
@@ -94,7 +160,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    const isRefreshRequest = originalRequest?.url?.includes('/Auth/client/refresh-token');
+    // Login, register, reset and refresh requests answer for themselves; a 401 there is not an expired session.
+    const isRefreshRequest = originalRequest?.url?.includes('/Auth/');
 
     if (
       error.response?.status !== 401 ||
@@ -116,17 +183,12 @@ apiClient.interceptors.response.use(
     originalRequest._retry = true;
 
     try {
-      if (!refreshPromise) {
-        refreshPromise = refreshAccessToken().finally(() => {
-          refreshPromise = null;
-        });
-      }
-
-      const accessToken = await refreshPromise;
+      // Backup for the timer in AuthContext: renew now and retry this request once.
+      logRefresh(`401 on ${originalRequest.url} → refreshing now (backup)`);
+      const accessToken = await refreshSession();
       originalRequest.headers.Authorization = `Bearer ${accessToken}`;
       return apiClient(originalRequest);
     } catch (refreshError) {
-      clearSavedSession();
       return Promise.reject(refreshError);
     }
   }

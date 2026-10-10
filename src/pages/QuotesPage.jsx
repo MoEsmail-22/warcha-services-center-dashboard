@@ -1,7 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Send, Search, FilePenLine, Trash2, FileText } from 'lucide-react';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { useQuotes } from '../contexts/QuotesContext';
+import { useBookings } from '../contexts/BookingsContext';
+import { useNotify } from '../hooks/useNotify';
+import { createLocalError } from '../API/errors';
+import { getBooking } from '../API/bookingsApi';
+import { normalizeBooking } from '../utils/normalizeBooking';
+import { Spinner } from '../components/ui/Spinner';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import Avatar from '../components/ui/Avatar';
 import { StatusBadge } from '../components/widgets';
@@ -17,31 +24,118 @@ export default function QuotesPage() {
     addLineItem,
     updateLineItem,
     removeLineItem,
+    replaceLineItems,
     sendQuote,
     editWorkflowQuote,
     activeWorkflowQuoteId,
   } = useQuotes();
 
-  // Quote header info (customer + vehicle being quoted)
-  const [customerName, setCustomerName] = useState('');
-  const [vehicle, setVehicle] = useState('');
+  const { bookings } = useBookings();
+  const notify = useNotify();
+
+  // The booking being quoted lives in the URL (?booking=13), so a booking can link here.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedBookingId = searchParams.get('booking') ?? '';
+  const selectBooking = (bookingId) =>
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (bookingId) next.set('booking', bookingId);
+        else next.delete('booking');
+        return next;
+      },
+      { replace: true }
+    );
+
+  // The backend only accepts quotes for bookings whose job is in progress.
+  const quotableBookings = bookings.filter((booking) => booking.jobStatus === 'in_progress');
+  const selectedBooking = bookings.find((booking) => String(booking.id) === selectedBookingId);
+
+  // A Jobs board draft brings its own customer/vehicle (it isn't tied to an API booking yet).
+  const [draftHeader, setDraftHeader] = useState(null);
+  const customerName = draftHeader?.customer ?? selectedBooking?.customer.name ?? '';
+  const vehicle = draftHeader?.vehicle ?? selectedBooking?.vehicle ?? '';
+
   const [search, setSearch] = useState('');
   const [futureRepairs, setFutureRepairs] = useState([]);
+  const [sending, setSending] = useState(false);
 
-  const handleSend = (event) => {
+  // Choosing a booking starts the quote from its services (name + price), which can
+  // then be edited, removed or added to. The list may not include services, so the
+  // booking's details are loaded (GET /Workshop/bookings/{id}).
+  const [loadingServices, setLoadingServices] = useState(false);
+  useEffect(() => {
+    if (!selectedBookingId || activeWorkflowQuoteId) return undefined;
+
+    let cancelled = false;
+    setLoadingServices(true);
+    getBooking(selectedBookingId)
+      .then((result) => {
+        if (cancelled) return;
+        const raw = result?.data ?? result;
+        const booking = raw && typeof raw === 'object' ? normalizeBooking(raw) : null;
+        replaceLineItems(
+          (booking?.serviceBreakdown ?? []).map((service, index) => ({
+            id: `${selectedBookingId}-${index}`,
+            label: service.label,
+            amount: Number(service.price) || 0,
+          }))
+        );
+      })
+      .catch((err) => {
+        if (!cancelled) notify.error(err, 'booking.load');
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingServices(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when another booking is chosen
+  }, [selectedBookingId, activeWorkflowQuoteId]);
+
+  const handleSend = async (event) => {
     event.preventDefault();
-    if (lineItems.length === 0 || total === 0) return;
-    sendQuote({
-      customer: customerName,
-      vehicle,
-      futureRepairs: futureRepairs
-        .filter((repair) => repair.description.trim() || repair.remainingKm !== '')
-        .map((repair) => ({
-          description: repair.description.trim(),
-          remainingKm: repair.remainingKm === '' ? null : Number(repair.remainingKm),
-        })),
-    });
-    setFutureRepairs([]);
+    if (sending) return;
+
+    if (!activeWorkflowQuoteId && !selectedBooking) {
+      notify.error(
+        createLocalError('quote.bookingRequired', 'Choose the booking this quote is for.')
+      );
+      return;
+    }
+    const hasValidItem = lineItems.some((item) => item.label.trim() && Number(item.amount) > 0);
+    if (!hasValidItem) {
+      notify.error(
+        createLocalError(
+          'quote.itemsRequired',
+          'Add at least one item with a description and a price.'
+        )
+      );
+      return;
+    }
+
+    setSending(true);
+    try {
+      await sendQuote({
+        bookingId: selectedBooking?.id,
+        futureRepairs: futureRepairs
+          .filter((repair) => repair.description.trim() || repair.remainingKm !== '')
+          .map((repair) => ({
+            description: repair.description.trim(),
+            remainingKm: repair.remainingKm === '' ? null : Number(repair.remainingKm),
+          })),
+      });
+      notify.success('quoteSent');
+      setFutureRepairs([]);
+      setDraftHeader(null);
+      selectBooking('');
+    } catch (err) {
+      notify.error(err, 'quote.create');
+    } finally {
+      setSending(false);
+    }
   };
 
   const addFutureRepair = () => {
@@ -64,8 +158,7 @@ export default function QuotesPage() {
   const handleEditDraft = (quote) => {
     const selected = editWorkflowQuote(quote.id);
     if (!selected) return;
-    setCustomerName(selected.customer.name);
-    setVehicle(selected.vehicle);
+    setDraftHeader({ customer: selected.customer.name, vehicle: selected.vehicle });
     setFutureRepairs(
       (selected.futureRepairs ?? []).map((repair, index) => ({
         ...repair,
@@ -137,27 +230,42 @@ export default function QuotesPage() {
               <p className="text-xs tracking-wide text-[#5A6968] uppercase">
                 {t('vehicle', { defaultValue: 'Vehicle' })}
               </p>
-              <input
-                type="text"
-                value={vehicle}
-                onChange={(e) => setVehicle(e.target.value)}
-                className="mt-0.5 w-full rounded-md border border-gray-200 px-2 py-1 text-right text-sm font-medium text-[#15201F] focus:border-[#0E5C5B] focus:ring-2 focus:ring-[#0E5C5B]/10 focus:outline-none sm:w-48"
-              />
+              <p className="mt-0.5 text-sm font-medium text-[#15201F]">{vehicle || '—'}</p>
             </div>
           </div>
 
           {/* Customer name input (full width) */}
           <div className="mb-4">
-            <label className="mb-1.5 block text-xs font-semibold tracking-wide text-[#5A6968] uppercase">
-              {t('customerName', { defaultValue: 'Customer name' })}
+            <label
+              htmlFor="quote-booking"
+              className="mb-1.5 block text-xs font-semibold tracking-wide text-[#5A6968] uppercase"
+            >
+              {t('booking', { defaultValue: 'Booking' })}
             </label>
-            <input
-              type="text"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              placeholder={t('customerPlaceholder', { defaultValue: 'Search or enter name' })}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0E5C5B] focus:ring-2 focus:ring-[#0E5C5B]/10 focus:outline-none"
-            />
+            {activeWorkflowQuoteId ? (
+              <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700">
+                {customerName}
+              </p>
+            ) : (
+              <select
+                id="quote-booking"
+                value={selectedBookingId}
+                onChange={(e) => selectBooking(e.target.value)}
+                disabled={quotableBookings.length === 0}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[#0E5C5B] focus:ring-2 focus:ring-[#0E5C5B]/10 focus:outline-none disabled:bg-gray-50 disabled:text-gray-400"
+              >
+                <option value="">
+                  {quotableBookings.length === 0
+                    ? t('noBookingsToQuote', { defaultValue: 'No open bookings to quote' })
+                    : t('chooseBooking', { defaultValue: 'Choose a booking' })}
+                </option>
+                {quotableBookings.map((booking) => (
+                  <option key={booking.id} value={booking.id}>
+                    #{booking.id} — {booking.customer.name} — {booking.vehicle}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Line items list */}
@@ -165,8 +273,18 @@ export default function QuotesPage() {
             <p className="text-xs font-semibold tracking-wide text-[#5A6968] uppercase">
               {t('lineItems', { defaultValue: 'Line items' })}
             </p>
-            <span className="text-xs text-[#5A6968]">
-              {lineItems.length} {t('items', { defaultValue: 'items' })}
+            <span className="flex items-center gap-2 text-xs text-[#5A6968]">
+              {loadingServices && (
+                <>
+                  <Spinner size="sm" />
+                  {t('loadingServices', { defaultValue: "Loading the booking's services…" })}
+                </>
+              )}
+              {!loadingServices && (
+                <>
+                  {lineItems.length} {t('items', { defaultValue: 'items' })}
+                </>
+              )}
             </span>
           </div>
 
@@ -290,7 +408,7 @@ export default function QuotesPage() {
             </div>
             <button
               type="submit"
-              disabled={total === 0}
+              disabled={total === 0 || sending}
               className="inline-flex items-center gap-2 rounded-lg px-5 text-white shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               style={{
                 backgroundColor: '#0E5C5B',

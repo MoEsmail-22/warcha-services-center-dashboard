@@ -1,13 +1,13 @@
 /**
  * BookingsContext — the workshop's bookings from GET /Workshop/bookings.
  *
- * Keeps itself up to date: checks for new bookings every REFRESH_EVERY_MS while
+ * Keeps itself up to date: checks for new bookings every POLLING.bookings.intervalMs while
  * the tab is visible, right away when the user comes back to the tab, and shows
  * a toast when a new booking request arrives.
  *
  * Exposes:
- *   { bookings, loading, error, refresh, todaysBookings, todaysCount, yesterdaysCount,
- *     difference, cancelBooking, changeBookingStatus, updateBookingStatus }
+ *   { bookings, loading, error, refresh, todaysBookings, newTodayCount, newYesterdayCount,
+ *     newBookingsDifference, cancelBooking, changeBookingStatus, updateBookingStatus }
  */
 import {
   createContext,
@@ -29,11 +29,10 @@ import { NUMBER_BY_STATUS } from '@/constants/bookingStatuses';
 import { normalizeBooking } from '@/utils/normalizeBooking';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
+import { usePolling } from '@/hooks/usePolling';
+import { POLLING } from '@/constants/polling';
 
 const BookingsContext = createContext(null);
-
-// How often to look for new booking requests while the page is open.
-const REFRESH_EVERY_MS = 30_000;
 
 function readBookingRows(result) {
   const data = result?.data ?? result;
@@ -74,7 +73,7 @@ export function BookingsProvider({ children }) {
         const next = readBookingRows(await getBookings({ page: 1, pageSize: 100 })).map(
           normalizeBooking
         );
-        if (requestId !== latestRequest.current) return;
+        if (requestId !== latestRequest.current) return true;
 
         if (knownIds.current) {
           const newCount = next.filter((booking) => !knownIds.current.has(booking.id)).length;
@@ -92,9 +91,11 @@ export function BookingsProvider({ children }) {
         knownIds.current = new Set(next.map((booking) => booking.id));
         setBookings(next);
         setError(null);
+        return true;
       } catch (err) {
         // A failed background check keeps the current list; only a first load shows the error.
         if (requestId === latestRequest.current && !silent) setError(err);
+        return false;
       } finally {
         if (requestId === latestRequest.current && !silent) setLoading(false);
       }
@@ -112,21 +113,16 @@ export function BookingsProvider({ children }) {
     }
 
     refresh();
-
-    // Only poll while the tab is visible; check right away when the user comes back.
-    const timer = setInterval(() => {
-      if (document.visibilityState === 'visible') refresh({ silent: true });
-    }, REFRESH_EVERY_MS);
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') refresh({ silent: true });
-    };
-    document.addEventListener('visibilitychange', onVisible);
-
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
+    return undefined;
   }, [enabled, user?.id, refresh]);
+
+  // Background checks: every 30 s while visible, slower after errors, never overlapping.
+  usePolling(
+    async () => {
+      if (!(await refresh({ silent: true }))) throw new Error('Bookings check failed');
+    },
+    { ...POLLING.bookings, enabled }
+  );
 
   /** Local-only change, used by the Jobs board workflow (it has its own step names). */
   const updateBookingStatus = useCallback((bookingId, status, extra = {}) => {
@@ -159,8 +155,13 @@ export function BookingsProvider({ children }) {
   const contextValue = useMemo(() => {
     const today = localDay(0);
     const yesterday = localDay(-1);
+    // Scheduled for today (the dashboard's schedule list).
     const todaysBookings = bookings.filter((booking) => booking.date === today);
-    const yesterdaysCount = bookings.filter((booking) => booking.date === yesterday).length;
+    // Received today / yesterday (the "Today's bookings" card).
+    const newTodayCount = bookings.filter((booking) => booking.receivedDate === today).length;
+    const newYesterdayCount = bookings.filter(
+      (booking) => booking.receivedDate === yesterday
+    ).length;
 
     return {
       bookings,
@@ -168,9 +169,9 @@ export function BookingsProvider({ children }) {
       error,
       refresh,
       todaysBookings,
-      todaysCount: todaysBookings.length,
-      yesterdaysCount,
-      difference: todaysBookings.length - yesterdaysCount,
+      newTodayCount,
+      newYesterdayCount,
+      newBookingsDifference: newTodayCount - newYesterdayCount,
       cancelBooking,
       changeBookingStatus,
       updateBookingStatus,

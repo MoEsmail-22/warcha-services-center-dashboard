@@ -134,7 +134,9 @@
     "newBookings_many": "{{count}} طلب حجز جديد",
     "newBookings_other": "{{count}} طلب حجز جديد",
     "bookingCancelled": "تم إلغاء الحجز",
-    "bookingStatusChanged": "تم تحديث حالة الحجز"
+    "bookingStatusChanged": "تم تحديث حالة الحجز",
+    "quoteSent": "تم إرسال عرض السعر للعميل",
+    "voucherRedeemed": "تم استخدام القسيمة"
   },
   "notificationsPanel": {
     "title": "الإشعارات",
@@ -142,10 +144,17 @@
     "markAllRead": "تحديد الكل كمقروء",
     "empty": "لا توجد إشعارات حتى الآن.",
     "unread": "غير مقروء",
-    "loadMore": "عرض المزيد"
+    "loadMore": "عرض المزيد",
+    "newCount": "لديك {{count}} إشعار جديد",
+    "newCount_one": "لديك إشعار جديد",
+    "newCount_two": "لديك إشعاران جديدان",
+    "newCount_few": "لديك {{count}} إشعارات جديدة",
+    "newCount_many": "لديك {{count}} إشعاراً جديداً",
+    "newCount_other": "لديك {{count}} إشعار جديد"
   },
   "toast": {
     "success": "تم بنجاح",
-    "error": "حدث خطأ"
+    "error": "حدث خطأ",
+    "notification": "إشعار جديد"
   }
 }

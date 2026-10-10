@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo, useState } from 'react';
-import { mockJobs } from '@/mocks/JopBoard';
-import { MOCK_AVATAR_COLORS } from '@/mocks/constants';
 import { useBookings } from './BookingsContext';
 
 const JobsContext = createContext(null);
+
+const CUSTOMER_AVATAR_COLOR = '#C8730A';
 
 export const JOB_STAGES = ['new', 'diagnosing', 'in_progress', 'ready'];
 const NEXT_STAGE = {
@@ -28,7 +28,7 @@ const quoteFromJob = (job) => ({
   customer: {
     name: job.customer,
     initials: job.initials || initialsFrom(job.customer),
-    avatarColor: MOCK_AVATAR_COLORS.customer,
+    avatarColor: CUSTOMER_AVATAR_COLOR,
   },
   vehicle: job.vehicle,
   service: job.service,
@@ -39,14 +39,11 @@ const quoteFromJob = (job) => ({
   futureRepairs: [],
 });
 
-// Never infer that billing was sent from the job stage. Only explicit mock
-// quote data can unlock Ready, matching how the backend will validate it.
-const initialWorkflowQuotes = mockJobs.filter((job) => job.quoteStatus).map(quoteFromJob);
-
 export function JobsProvider({ children }) {
   const { updateBookingStatus } = useBookings();
-  const [jobs, setJobs] = useState(mockJobs);
-  const [workflowQuotes, setWorkflowQuotes] = useState(initialWorkflowQuotes);
+  // Empty until GET /Workshop/jobs-board is connected (no mock data).
+  const [jobs, setJobs] = useState([]);
+  const [workflowQuotes, setWorkflowQuotes] = useState([]);
 
   const getQuoteForJob = (jobId) => workflowQuotes.find((quote) => quote.jobId === jobId);
 

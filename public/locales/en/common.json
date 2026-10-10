@@ -127,7 +127,9 @@
     "newBookings_one": "New booking request",
     "newBookings_other": "{{count}} new booking requests",
     "bookingCancelled": "Booking cancelled",
-    "bookingStatusChanged": "Booking status updated"
+    "bookingStatusChanged": "Booking status updated",
+    "quoteSent": "Quote sent to the customer",
+    "voucherRedeemed": "Voucher redeemed"
   },
   "notificationsPanel": {
     "title": "Notifications",
@@ -135,10 +137,13 @@
     "markAllRead": "Mark all as read",
     "empty": "No notifications yet.",
     "unread": "Unread",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "newCount_one": "You have 1 new notification",
+    "newCount_other": "You have {{count}} new notifications"
   },
   "toast": {
     "success": "Success",
-    "error": "Something went wrong"
+    "error": "Something went wrong",
+    "notification": "New notification"
   }
 }

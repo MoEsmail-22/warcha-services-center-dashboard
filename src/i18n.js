@@ -9,7 +9,18 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
-    ns: ['common', 'nav', 'dashboard', 'bookings', 'quotes', 'services', 'reviews', 'settings', 'errors'],
+    // index.html preloads these files too; keep both lists the same.
+    ns: [
+      'common',
+      'nav',
+      'dashboard',
+      'bookings',
+      'quotes',
+      'services',
+      'reviews',
+      'settings',
+      'errors',
+    ],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,

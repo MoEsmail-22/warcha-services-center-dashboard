@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Car, Plus, Search, Trash2 } from 'lucide-react';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { INITIAL_BRANDS, MARKET_BRANDS } from '@/mocks/vehicleBrands';
+import { useAuth } from '@/contexts/AuthContext';
+import { MARKET_BRANDS } from '@/constants/carBrands';
+import { EmptyState } from '@/components/widgets/EmptyState';
 import {
   Button,
   Card,
@@ -22,7 +24,26 @@ export default function VehicleCatalogDemo() {
   const { isRTL } = useLanguage();
   const catalogText = (key, defaultValue, options) =>
     t(`vehicleCatalog.${key}`, { defaultValue, ...options });
-  const [brands, setBrands] = useState(INITIAL_BRANDS);
+  // No backend endpoint for this yet, so each account's brands are saved in the browser.
+  // Starts empty: no sample brands.
+  const { user } = useAuth();
+  const storageKey = `workshop_vehicle_brands:${user?.id ?? user?.userId ?? 'unknown'}`;
+  const [brands, setBrands] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      return Array.isArray(saved) ? saved.filter((item) => item?.id && item?.brand) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(brands));
+    } catch {
+      // Keep the table usable when browser storage is unavailable.
+    }
+  }, [brands, storageKey]);
   const [marketSearch, setMarketSearch] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [brandPickerOpen, setBrandPickerOpen] = useState(false);
@@ -82,7 +103,7 @@ export default function VehicleCatalogDemo() {
 
       <Card padded={false} className="flex flex-1 flex-col">
         <div className="flex-1 overflow-x-auto px-4 pb-4">
-          <Table className="w-full min-w-[520px]">
+          <Table className={brands.length ? 'w-full min-w-[520px]' : 'w-full'}>
             <THead>
               <TR className="hover:bg-gray-50">
                 <TH className="px-3 py-2.5 whitespace-nowrap">
@@ -99,8 +120,15 @@ export default function VehicleCatalogDemo() {
             <TBody>
               {brands.length === 0 ? (
                 <TR>
-                  <TD colSpan={3} className="px-3 py-10 text-center text-sm text-gray-500">
-                    {catalogText('noBrands', 'No brands found.')}
+                  <TD colSpan={3}>
+                    <EmptyState
+                      icon={<Car />}
+                      title={catalogText('noBrands', 'No brands found.')}
+                      description={catalogText(
+                        'emptyDescription',
+                        'Add the car brands your workshop services.'
+                      )}
+                    />
                   </TD>
                 </TR>
               ) : (

@@ -75,5 +75,24 @@
     "status": {
       "server": "The booking status couldn't be changed. Please try again."
     }
+  },
+  "quote": {
+    "bookingRequired": "Choose the booking this quote is for.",
+    "itemsRequired": "Add at least one item with a description and a price.",
+    "create": {
+      "server": "The quote couldn't be sent right now. Please try again."
+    },
+    "load": {
+      "server": "Quotes couldn't be loaded right now. Please try again."
+    },
+    "jobNotInProgress": "A quote can only be sent while the job is in progress. Move the job to \"In progress\" first."
+  },
+  "voucher": {
+    "codeRequired": "Enter the voucher code.",
+    "redeem": {
+      "notFound": "This voucher code was not found.",
+      "validation": "This voucher can't be used. It may be expired or already used.",
+      "server": "The voucher couldn't be redeemed right now. Please try again."
+    }
   }
 }

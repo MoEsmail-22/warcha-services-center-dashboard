@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
-import logo from '@/assets/warsha_logo.png';
+import logo from '@/assets/warsha-logo-sm.png';
 import { Spinner } from './Spinner';
 
 export function LoadingScreen({ variant = 'section', message, delay = 0, className }) {
@@ -57,7 +57,13 @@ export function LoadingScreen({ variant = 'section', message, delay = 0, classNa
     >
       <div className="relative flex h-20 w-20 items-center justify-center">
         <Spinner size="lg" className="absolute inset-0 h-20 w-20" />
-        <img src={logo} alt="" className="h-11 w-11 rounded-lg object-contain" />
+        <img
+          src={logo}
+          alt=""
+          width={44}
+          height={44}
+          className="h-11 w-11 rounded-lg object-contain"
+        />
       </div>
       <p className="text-sm font-medium text-[#15201F]">{text}</p>
     </div>

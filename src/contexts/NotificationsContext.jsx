@@ -12,11 +12,14 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { getNotifications, markNotificationRead } from '@/API/notificationsApi';
 import { isDemoMode } from '@/API/client';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
+import { useTranslation } from 'react-i18next';
+import { usePolling } from '@/hooks/usePolling';
+import { POLLING } from '@/constants/polling';
 
 const NotificationsContext = createContext(null);
 
 const PAGE_SIZE = 20;
-const REFRESH_EVERY_MS = 60_000;
 
 /** Backend field names may vary, so read each one from the likely candidates. */
 function normalizeNotification(item) {
@@ -59,6 +62,35 @@ export function NotificationsProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const latestRequest = useRef(0);
+  const { showToast } = useToast();
+  const { t, i18n } = useTranslation('common', { useSuspense: false });
+
+  // IDs seen so far; null until the first load, so existing notifications don't pop up.
+  const seenIds = useRef(null);
+
+  /** Shows a toast for unread notifications that weren't there at the last check. */
+  const announceNew = (items) => {
+    const lang = i18n.language?.startsWith('ar') ? 'ar' : 'en';
+    if (seenIds.current) {
+      const fresh = items.filter((item) => !item.isRead && !seenIds.current.has(item.id));
+      if (fresh.length === 1) {
+        const [item] = fresh;
+        showToast('notification', item.message[lang] || item.message.en || item.title[lang], {
+          title:
+            item.message[lang] || item.message.en ? item.title[lang] || item.title.en : undefined,
+        });
+      } else if (fresh.length > 1) {
+        showToast(
+          'notification',
+          t('notificationsPanel.newCount', {
+            count: fresh.length,
+            defaultValue: `You have ${fresh.length} new notifications`,
+          })
+        );
+      }
+    }
+    seenIds.current = new Set([...(seenIds.current ?? []), ...items.map((item) => item.id)]);
+  };
 
   const enabled = Boolean(user) && !isDemoMode();
 
@@ -70,13 +102,16 @@ export function NotificationsProvider({ children }) {
 
     try {
       const result = readPage(await getNotifications({ page: 1, pageSize: PAGE_SIZE }));
-      if (requestId !== latestRequest.current) return;
+      if (requestId !== latestRequest.current) return true;
+      announceNew(result.items);
       setItems(result.items);
       setHasMore(result.hasMore);
       setServerUnread(result.unreadCount);
       setPage(1);
+      return true;
     } catch (err) {
       if (requestId === latestRequest.current) setError(err);
+      return false;
     } finally {
       if (requestId === latestRequest.current) setLoading(false);
     }
@@ -103,6 +138,7 @@ export function NotificationsProvider({ children }) {
   useEffect(() => {
     if (!enabled) {
       // Signed out: forget the previous account's notifications.
+      seenIds.current = null;
       setItems([]);
       setServerUnread(null);
       setError(null);
@@ -110,9 +146,15 @@ export function NotificationsProvider({ children }) {
     }
 
     refresh();
-    const timer = setInterval(refresh, REFRESH_EVERY_MS);
-    return () => clearInterval(timer);
+    return undefined;
   }, [enabled, user?.id, refresh]);
+
+  usePolling(
+    async () => {
+      if (!(await refresh())) throw new Error('Notifications check failed');
+    },
+    { ...POLLING.notifications, enabled }
+  );
 
   const setReadState = (ids, isRead) =>
     setItems((current) =>

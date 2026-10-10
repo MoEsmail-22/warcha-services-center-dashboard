@@ -1,7 +1,9 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, SlidersHorizontal, MoreHorizontal, CalendarX2 } from 'lucide-react';
 import { useBookings } from '../contexts/BookingsContext';
+import { getBooking } from '../API/bookingsApi';
+import { normalizeBooking } from '../utils/normalizeBooking';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import { PAGE_SIZE_OPTIONS, usePaginationParams } from '../hooks/usePaginationParams';
 import StatusBadge from '../components/widgets/StatusBadge';
@@ -87,9 +89,48 @@ export default function BookingsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
 
-  const selectedBooking = selectedBookingId
+  const bookingFromList = selectedBookingId
     ? (bookings.find((booking) => String(booking.id) === selectedBookingId) ?? null)
     : null;
+
+  // The list sends fewer fields than GET /Workshop/bookings/{id} (car, services, totals),
+  // and ?booking=13 may point to a booking not in the loaded list. So opening a booking
+  // always loads its full details; the list row is shown until they arrive.
+  const [fetchedBooking, setFetchedBooking] = useState(null);
+  useEffect(() => {
+    if (!selectedBookingId) return undefined;
+    if (fetchedBooking && String(fetchedBooking.id) === selectedBookingId) return undefined;
+
+    let cancelled = false;
+    getBooking(selectedBookingId)
+      .then((result) => {
+        const raw = result?.data ?? result;
+        if (!cancelled && raw && typeof raw === 'object') setFetchedBooking(normalizeBooking(raw));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        notify.error(err, 'booking.load');
+        // Keep the drawer open with the list row if there is one.
+        if (!bookingFromList) updateParams({ booking: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- notify/updateParams are stable enough here
+  }, [selectedBookingId]);
+
+  const details =
+    fetchedBooking && String(fetchedBooking.id) === selectedBookingId ? fetchedBooking : null;
+  // Details win over the list row; the list row fills anything the details lack.
+  // The list's status wins: it is updated right away when the status is changed or cancelled.
+  const selectedBooking =
+    bookingFromList || details
+      ? {
+          ...bookingFromList,
+          ...details,
+          ...(bookingFromList && { status: bookingFromList.status }),
+        }
+      : null;
   // Opening a booking adds a history entry, so the browser's Back button closes it.
   const openBooking = (booking) => updateParams({ booking: booking.id }, { addToHistory: true });
   const closeBooking = () => updateParams({ booking: null });
@@ -224,22 +265,21 @@ export default function BookingsPage() {
             <thead className="border-b border-gray-100 bg-gray-50/50">
               <tr>
                 {[
-                  'Booking ID',
-                  'Customer',
-                  'Vehicle',
-                  'Service',
-                  'Technician',
-                  'Date/Time',
-                  'Status',
-                  'Actions',
-                ].map((header) => (
+                  ['booking', 'Booking'],
+                  ['customer', 'Customer'],
+                  ['vehicle', 'Vehicle'],
+                  ['service', 'Service'],
+                  ['datetime', 'Date/Time'],
+                  ['status', 'Status'],
+                  ['actions', 'Actions'],
+                ].map(([key, fallback]) => (
                   <th
-                    key={header}
+                    key={key}
                     className={`px-4 py-3 text-xs font-semibold tracking-wide text-[#5A6968] uppercase ${
-                      header === 'Actions' ? 'text-right' : 'text-left'
+                      key === 'actions' ? 'text-end' : 'text-start'
                     }`}
                   >
-                    {header}
+                    {t(`columns.${key}`, { defaultValue: fallback })}
                   </th>
                 ))}
               </tr>
@@ -247,13 +287,13 @@ export default function BookingsPage() {
             <tbody>
               {loading && bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={7}>
                     <LoadingScreen variant="section" />
                   </td>
                 </tr>
               ) : error && bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center">
+                  <td colSpan={7} className="py-10 text-center">
                     <p className="text-sm text-red-600">{getErrorMessage(error, 'booking.load')}</p>
                     <button
                       type="button"
@@ -266,7 +306,7 @@ export default function BookingsPage() {
                 </tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={7}>
                     {isFiltering ? (
                       <EmptyState
                         icon={<Search />}
@@ -303,8 +343,9 @@ export default function BookingsPage() {
                     key={booking.id}
                     className="border-b border-gray-50 transition-colors last:border-0 hover:bg-gray-50/50"
                   >
-                    <td className="px-4 py-3.5 text-sm font-medium text-[#5A6968]">
-                      #{booking.id}
+                    <td className="px-4 py-3.5 text-sm font-medium whitespace-nowrap text-[#5A6968]">
+                      {/* e.g. WRSH-261009-474; the numeric id only if the API sent no number */}
+                      {booking.number || `#${booking.id}`}
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2.5">
@@ -321,19 +362,6 @@ export default function BookingsPage() {
                     </td>
                     <td className="px-4 py-3.5 text-sm text-[#15201F]">{booking.vehicle}</td>
                     <td className="px-4 py-3.5 text-sm text-[#15201F]">{booking.service}</td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2.5">
-                        <Avatar
-                          initials={booking.technician.initials}
-                          name={booking.technician.name}
-                          color={booking.technician.avatarColor}
-                          size={32}
-                        />
-                        <span className="text-sm font-medium text-[#15201F]">
-                          {booking.technician.name}
-                        </span>
-                      </div>
-                    </td>
                     <td className="px-4 py-3.5 text-sm text-[#15201F]">
                       <div>
                         <p>{formatBookingDate(booking.date)}</p>

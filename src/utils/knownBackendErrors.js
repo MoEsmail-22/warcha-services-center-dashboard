@@ -11,6 +11,7 @@ export const KNOWN_BACKEND_ERRORS = {
   'nullable object must have a value': 'auth.sessionInvalid',
   'invalid otp': 'auth.invalidOtp',
   'invalid or expired otp': 'auth.invalidOtp',
+  'can only create quotes for in-progress jobs': 'quote.jobNotInProgress',
 };
 
 /**

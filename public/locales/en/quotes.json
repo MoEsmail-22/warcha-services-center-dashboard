@@ -33,5 +33,9 @@
     "expired": "Expired",
     "draft": "Draft"
   },
-  "emptyDescription": "Quotes you send to customers will appear here."
+  "emptyDescription": "Quotes you send to customers will appear here.",
+  "booking": "Booking",
+  "chooseBooking": "Choose a booking",
+  "noBookingsToQuote": "No bookings with a job in progress",
+  "loadingServices": "Loading the booking's services…"
 }

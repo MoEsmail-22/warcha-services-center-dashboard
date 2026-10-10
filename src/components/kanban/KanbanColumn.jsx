@@ -1,10 +1,12 @@
 import { Droppable } from '@hello-pangea/dnd';
 import KanbanCard from './KanbanCard';
+import { useAppTranslation } from '../../hooks/useAppTranslation';
 
+// `label` is the English fallback; the shown name comes from dashboard.json → jobs.stages.
 const STAGE_META = {
   new: { label: 'New', icon: '✦', iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
   diagnosing: {
-    label: 'Diagnosing',
+    label: 'Confirmed',
     icon: '🔧',
     iconBg: 'bg-gray-100',
     iconColor: 'text-gray-600',
@@ -19,6 +21,7 @@ const STAGE_META = {
 };
 
 export default function KanbanColumn({ stage, jobs, onCancel, onCreateQuote }) {
+  const { t } = useAppTranslation('dashboard');
   const meta = STAGE_META[stage] ?? STAGE_META.new;
 
   return (
@@ -31,7 +34,9 @@ export default function KanbanColumn({ stage, jobs, onCancel, onCreateQuote }) {
           >
             {meta.icon}
           </span>
-          <span className="text-sm font-semibold text-gray-900">{meta.label}</span>
+          <span className="text-sm font-semibold text-gray-900">
+            {t(`jobs.stages.${stage}`, { defaultValue: meta.label })}
+          </span>
         </div>
         <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gray-100 px-1.5 text-xs font-semibold text-gray-700">
           {jobs.length}
